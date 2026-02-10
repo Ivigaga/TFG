@@ -1,17 +1,38 @@
 import cv2
 import mediapipe as mp
+from functools import partial
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 import vgamepad as vg
 import time
 
 CONTINUOS_MODE = True
-def changeMovementMode():
-    global CONTINUOS_MODE
-    CONTINUOS_MODE = not CONTINUOS_MODE
+
+
+def changeMovementMode(input):
+    if input["score"] > input["threshold"]:
+        if not input["active"]:
+            global CONTINUOS_MODE
+            CONTINUOS_MODE = not CONTINUOS_MODE
+            input["active"]=True
+        else:
+            input["active"]=False
+
+
+def pushInputButton(input):
+    if input["score"] > input["threshold"]:
+        gamepad.press_button(button=input["input"])
+        input["active"]=True
+        #cv2.putText(frame, 'BTN A (BOCA)', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    else:
+        gamepad.release_button(button=input["input"])
+        input["active"]=False
+
+
+
 # --- CONFIGURACIÓN ---
 MODEL_PATH = 'face_landmarker.task' 
-INPUT_STRUCTURE={"jawOpen":{"input":vg.XUSB_BUTTON.XUSB_GAMEPAD_B,"threshold":0.4,"active":True},"eyeBrowsUp":{"input":vg.XUSB_BUTTON.XUSB_GAMEPAD_START,"threshold":0.4,"active":True},"mouthPucker":{"input":vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK,"threshold":0.8,"active":True},"smile":{"input":changeMovementMode,"threshold":0.5,"active":False},"eyeBlinkRight":{"input":vg.XUSB_BUTTON.XUSB_GAMEPAD_A,"threshold":0.5,"active":True},"noseLeft":{"input":None,"threshold":0.6,"active":False},"noseRight":{"input":None,"threshold":0.4,"active":False},"noseUp":{"input":None,"threshold":0.4,"active":False},"noseDown":{"input":None,"threshold":0.6,"active":False}}
+INPUT_STRUCTURE={"jawOpen":{"function":pushInputButton,"input":vg.XUSB_BUTTON.XUSB_GAMEPAD_B,"threshold":0.4,"active":True},"eyeBrowsUp":{"function":pushInputButton,"input":vg.XUSB_BUTTON.XUSB_GAMEPAD_START,"threshold":0.4,"active":True},"mouthPucker":{"function":pushInputButton,"input":vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK,"threshold":0.8,"active":True},"smile":{"function":changeMovementMode,"input":None,"threshold":0.5,"active":False},"eyeBlinkRight":{"function":pushInputButton,"input":vg.XUSB_BUTTON.XUSB_GAMEPAD_A,"threshold":0.5,"active":True},"noseLeft":{"function":None,"input":None,"threshold":0.6,"active":False},"noseRight":{"function":None,"input":None,"threshold":0.4,"active":False},"noseUp":{"function":None,"input":None,"threshold":0.4,"active":False},"noseDown":{"function":None,"input":None,"threshold":0.6,"active":False}}
 
 # Variables globales
 CURRENT_RESULT = None
@@ -62,18 +83,20 @@ def main():
             eyebrow_up_L = next((x.score for x in gestures if x.category_name == 'browOuterUpLeft'), 0.0)
             eyebrow_up_R = next((x.score for x in gestures if x.category_name == 'browOuterUpRight'), 0.0)
             val_eyebrows_up = max(eyebrow_up_L, eyebrow_up_R)
-
+            INPUT_STRUCTURE["eyeBrowsUp"]["score"]=val_eyebrows_up
             # Sonrisa: (Da igual, es simétrica)
             smile_L = next((x.score for x in gestures if x.category_name == 'mouthSmileLeft'), 0.0)
             smile_R = next((x.score for x in gestures if x.category_name == 'mouthSmileRight'), 0.0)
             val_smile = (smile_L + smile_R) / 2
-            
+            INPUT_STRUCTURE["smile"]["score"]=val_smile
             # Morritos y Boca: (Son gestos centrales, no afectan el espejo)
             val_mouth_pucker = next((x.score for x in gestures if x.category_name == 'mouthPucker'), 0.0)
-
+            INPUT_STRUCTURE["mouthPucker"]["score"]=val_mouth_pucker
             # Usamos una forma optimizada de buscar los valores
             score_right_twink = next((x.score for x in gestures if x.category_name == 'eyeBlinkRight'), 0.0)
+            INPUT_STRUCTURE["eyeBlinkRight"]["score"]=score_right_twink
             score_open_mouth = next((x.score for x in gestures if x.category_name == 'jawOpen'), 0.0)
+            INPUT_STRUCTURE["jawOpen"]["score"]=score_open_mouth
 
             if CURRENT_RESULT.face_landmarks:
                 nose = CURRENT_RESULT.face_landmarks[0][1] # Índice 1
@@ -83,44 +106,9 @@ def main():
             frame = cv2.flip(frame, 1)
 
 
-            # --- 3. DIBUJAR TEXTO (Ahora saldrá bien) ---
-            # Como estamos dibujando sobre el frame YA invertido, el texto sale derecho.
-            if score_open_mouth > INPUT_STRUCTURE["jawOpen"]["threshold"]:
-                gamepad.press_button(button=INPUT_STRUCTURE["jawOpen"]["input"])
-                cv2.putText(frame, 'BTN A (BOCA)', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-            else:
-                gamepad.release_button(button=INPUT_STRUCTURE["jawOpen"]["input"])
-
-
-            if val_eyebrows_up > INPUT_STRUCTURE["eyeBrowsUp"]["threshold"]:
-                gamepad.press_button(button=INPUT_STRUCTURE["eyeBrowsUp"]["input"])
-                cv2.putText(frame, 'BTN Y (CEJAS)', (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2)
-            else:
-                gamepad.release_button(button=INPUT_STRUCTURE["eyeBrowsUp"]["input"])
-
-            if val_mouth_pucker > INPUT_STRUCTURE["mouthPucker"]["threshold"]:
-                gamepad.press_button(button=INPUT_STRUCTURE["mouthPucker"]["input"])
-                cv2.putText(frame, 'BTN X (MORRITOS)', (50, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
-            else:
-                gamepad.release_button(button=INPUT_STRUCTURE["mouthPucker"]["input"])
-
-
-            if val_smile > INPUT_STRUCTURE["smile"]["threshold"] :
-                # gamepad.press_button(button=INPUT_STRUCTURE["smile"]["input"])
-                # cv2.putText(frame, 'BTN B (SONRISA)', (50, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
-                if not INPUT_STRUCTURE["smile"]["active"]:
-                    INPUT_STRUCTURE["smile"]["input"]()
-                    INPUT_STRUCTURE["smile"]["active"]=True
-            else:
-                INPUT_STRUCTURE["smile"]["active"]=False
-                # gamepad.release_button(button=INPUT_STRUCTURE["smile"]["input"])
-
-
-            if score_right_twink > INPUT_STRUCTURE["eyeBlinkRight"]["threshold"]:
-                gamepad.press_button(button=INPUT_STRUCTURE["eyeBlinkRight"]["input"])
-                cv2.putText(frame, 'BTN A (GUIÑO)', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-            else:
-                gamepad.release_button(button=INPUT_STRUCTURE["eyeBlinkRight"]["input"])
+            for key, input in INPUT_STRUCTURE.items():
+                if input["function"]!=None and "score" in input:
+                    input["function"](input)
 
 
             if CURRENT_RESULT.face_landmarks:
