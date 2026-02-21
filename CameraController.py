@@ -43,7 +43,7 @@ def pushInputButton(input_data, frame):
         input_data["active"] = False
 
 INPUT_STRUCTURE={
-    "jawOpen":{"function":pushInputButton,"input":vg.XUSB_BUTTON.XUSB_GAMEPAD_B,"threshold":0.3,"active":False},
+    "jawOpen":{"function":pushInputButton,"input":vg.XUSB_BUTTON.XUSB_GAMEPAD_B,"threshold":0.5,"active":False},
     "eyeBrowsUp":{"function":pushInputButton,"input":vg.XUSB_BUTTON.XUSB_GAMEPAD_START,"threshold":0.4,"active":False},
     "mouthPucker":{"function":pushInputButton,"input":vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK,"threshold":0.8,"active":False},
     "smile":{"function":changeMovementMode,"input":None,"threshold":0.5,"active":False},
@@ -64,8 +64,8 @@ def main():
             # 1. INFERENCIA LIGERA (Resize agresivo)
             current_now = time.perf_counter()
             if (current_now - last_inference_time) > 0.033: # Máximo 30 inferencias por seg
-                small = cv2.resize(frame, (192, 192)) # Aún más pequeño para ganar velocidad
-                rgb_small = cv2.cvtColor(small, cv2.COLOR_BGR2RGB)
+                
+                rgb_small = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_small)
                 detector.detect_async(mp_image, int(current_now * 1000))
                 last_inference_time = current_now
