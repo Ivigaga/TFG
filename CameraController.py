@@ -4,13 +4,20 @@ from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 import vgamepad as vg
 import time
+import ctypes
 from CameraStream import CameraStream
+
+# Fuerza resolución del timer de Windows a 1ms (por defecto es 15.6ms)
+# Esto hace que time.sleep() y waitKey() sean precisos
+timeBeginPeriod = ctypes.windll.winmm.timeBeginPeriod
+timeEndPeriod = ctypes.windll.winmm.timeEndPeriod
+timeBeginPeriod(1)
 
 # --- CONFIGURACIÓN GLOBAL ---
 CONTINUOS_MODE = True
 TIME_DURATION_SECONDS = 0.05
 MODEL_PATH = 'face_landmarker.task' 
-TARGET_FPS = 45  # Súbelo a 60; si el PC no llega, irá al máximo posible sin "quedarse dormido"
+TARGET_FPS = 60
 
 CURRENT_RESULT = None
 gamepad = vg.VX360Gamepad()
@@ -91,25 +98,28 @@ def main():
                 
                 gamepad.update()
 
-            # 3. ESPERA ACTIVA (Busy Wait) - Esto evita el lag de Windows
-            # En lugar de sleep(), nos quedamos en un bucle vacío hasta que sea el momento
-            while (time.perf_counter() - loop_start) < frame_target_time:
-                pass # Consume CPU pero garantiza FPS exactos
-
-            # 4. FPS REALES
-            actual_now = time.perf_counter()
-            fps = 1.0 / (actual_now - prev_time)
-            prev_time = actual_now
-            
+            # 3. Mostrar frame
+            fps = 1.0 / (loop_start - prev_time) if prev_time > 0 else TARGET_FPS
             cv2.putText(frame, f'FPS: {int(fps)}', (frame.shape[1]-120, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
             cv2.imshow('Control Turbo Precise', frame)
-            
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
+
+            # 4. ESPERA HÍBRIDA: sleep grueso + spin fino
+            # timeBeginPeriod(1) garantiza que sleep sea preciso a ~1ms en Windows
+            elapsed = time.perf_counter() - loop_start
+            remaining = frame_target_time - elapsed
+            if remaining > 0.002:
+                time.sleep(remaining - 0.002)
+            while (time.perf_counter() - loop_start) < frame_target_time:
+                pass  # Spin solo los últimos ~2ms para precisión
+
+            prev_time = loop_start  # Mide de loop_start a loop_start
     finally:
         cleanup(cam)
 
 def cleanup(cam):
+    timeEndPeriod(1)  # Restaurar resolución del timer de Windows
     cam.stop()
     cv2.destroyAllWindows()
     gamepad.reset()
@@ -130,7 +140,7 @@ def initialice():
     cam = CameraStream(src=0).start()
     
     frame_target_time = 1.0 / TARGET_FPS
-    prev_time = time.perf_counter() # Usamos perf_counter para máxima precisión
+    prev_time = 0  # 0 indica primer frame, se inicializa en el loop
     last_inference_time = 0
     y_activation_start_time = None
 
