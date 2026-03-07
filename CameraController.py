@@ -1,3 +1,5 @@
+import os
+import sys
 import cv2
 import mediapipe as mp
 from mediapipe.tasks import python
@@ -7,6 +9,22 @@ import time
 import ctypes
 from CameraStream import CameraStream
 
+def resolver_ruta(ruta_relativa):
+    """Obtiene la ruta absoluta al recurso, sin importar dónde se mueva la carpeta"""
+    if getattr(sys, 'frozen', False):
+        # 1. Si es un .exe, miramos primero en la carpeta donde está el propio .exe
+        ruta_base = os.path.dirname(sys.executable)
+        ruta_completa = os.path.join(ruta_base, ruta_relativa)
+        
+        # 2. Si no lo encuentra ahí, miramos en la subcarpeta _internal (sys._MEIPASS)
+        if not os.path.exists(ruta_completa) and hasattr(sys, '_MEIPASS'):
+            ruta_completa = os.path.join(sys._MEIPASS, ruta_relativa)
+            
+        return ruta_completa
+    else:
+        # 3. Si estamos ejecutando el código fuente desde VS Code
+        return os.path.join(os.path.abspath("."), ruta_relativa)
+    
 # Fuerza resolución del timer de Windows a 1ms (por defecto es 15.6ms)
 # Esto hace que time.sleep() y waitKey() sean precisos
 timeBeginPeriod = ctypes.windll.winmm.timeBeginPeriod
@@ -16,8 +34,9 @@ timeBeginPeriod(1)
 # --- CONFIGURACIÓN GLOBAL ---
 CONTINUOS_MODE = True
 TIME_DURATION_SECONDS = 0.05
-MODEL_PATH = 'face_landmarker.task' 
+MODEL_PATH = resolver_ruta('face_landmarker.task')
 TARGET_FPS = 60
+FPS_OPTIONS = [30, 60, 120]
 
 CURRENT_RESULT = None
 gamepad = vg.VX360Gamepad()
@@ -39,6 +58,12 @@ def changeMovementMode(input_data, frame):
     texto_modo = "CONTINUO" if CONTINUOS_MODE else "PASOS"
     color = (0, 255, 0) if CONTINUOS_MODE else (0, 165, 255)
     cv2.putText(frame, f'MODO: {texto_modo}', (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
+
+def changeFPS(newLimit):
+    global TARGET_FPS
+    TARGET_FPS = newLimit
+
+
 
 def pushInputButton(input_data, frame):
     if input_data.get("score", 0) > input_data["threshold"]:
@@ -108,6 +133,7 @@ def main():
             # 4. ESPERA HÍBRIDA: sleep grueso + spin fino
             # timeBeginPeriod(1) garantiza que sleep sea preciso a ~1ms en Windows
             elapsed = time.perf_counter() - loop_start
+            frame_target_time = 1.0 / TARGET_FPS
             remaining = frame_target_time - elapsed
             if remaining > 0.002:
                 time.sleep(remaining - 0.002)
@@ -156,14 +182,37 @@ def read_gestures(gestures):
 
 def move_left_joystick(x, y, start_time, frame):
     jx, jy = 0, 0
-    if x > INPUT_STRUCTURE["noseLeft"]["threshold"]: jx = -20000
-    elif x < INPUT_STRUCTURE["noseRight"]["threshold"]: jx = 20000
-    if y > INPUT_STRUCTURE["noseDown"]["threshold"]: jy = -20000
-    elif y < INPUT_STRUCTURE["noseUp"]["threshold"]: jy = 20000
+    movinx, moviny = False, False
+    if x > INPUT_STRUCTURE["noseLeft"]["threshold"]: 
+        jx = -20000 
+        movinx = True
+    elif x < INPUT_STRUCTURE["noseRight"]["threshold"]: 
+        jx = 20000
+        movinx = True
+    if y > INPUT_STRUCTURE["noseDown"]["threshold"]: 
+        jy = -20000
+        moviny = True
+    elif y < INPUT_STRUCTURE["noseUp"]["threshold"]: 
+        jy = 20000
+        moviny = True
 
     # Lógica de pasos simplificada
-    if not CONTINUOS_MODE and jy != 0:
-        cv2.putText(frame, 'MODO PASOS', (50, 200), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+    if not CONTINUOS_MODE and (INPUT_STRUCTURE["noseUp"]["active"] is True or INPUT_STRUCTURE["noseDown"]["active"] is True):
+        jy=0
+
+    if(movinx):
+        INPUT_STRUCTURE["noseLeft"]["active"] = True
+        INPUT_STRUCTURE["noseRight"]["active"] = True
+    else:
+        INPUT_STRUCTURE["noseLeft"]["active"] = False
+        INPUT_STRUCTURE["noseRight"]["active"] = False
+
+    if(moviny):
+        INPUT_STRUCTURE["noseUp"]["active"] = True
+        INPUT_STRUCTURE["noseDown"]["active"] = True
+    else:
+        INPUT_STRUCTURE["noseUp"]["active"] = False
+        INPUT_STRUCTURE["noseDown"]["active"] = False   
 
     gamepad.left_joystick(x_value=jx, y_value=jy)
 

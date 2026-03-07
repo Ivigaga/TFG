@@ -1,0 +1,21 @@
+# Entornos virtuales
+venv/
+env/
+
+# Caché de Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Configuración del editor (VS Code)
+.vscode/
+
+# --- AÑADIDOS RECOMENDADOS PARA TU TFG ---
+
+# Archivos de compilación de PyInstaller (No subir ejecutables)
+build/
+dist/
+*.spec
+
+# Archivos de modelo de IA (Opcional: Descomenta si el .task pesa más de 100MB o prefieres no subirlo)
+# *.task
