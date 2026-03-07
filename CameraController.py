@@ -151,6 +151,23 @@ def cleanup(cam):
     gamepad.reset()
     gamepad.update()
 
+def encontrar_camara_activa():
+    """Busca automáticamente el primer índice de cámara disponible que devuelva imagen"""
+    print("Buscando cámara disponible...")
+    for indice in range(5):  # Probamos los índices del 0 al 4
+        cap = cv2.VideoCapture(indice)
+        if cap.isOpened():
+            # Comprobamos si realmente da imagen (a veces abre pero está en negro)
+            ret, frame = cap.read()
+            if ret and frame is not None:
+                print(f"¡Cámara encontrada en el puerto/índice {indice}!")
+                cap.release()
+                return indice
+        cap.release()
+        
+    print("ERROR CRÍTICO: No se ha detectado ninguna cámara.")
+    return 0  # Por defecto devolvemos 0 aunque falle
+
 def initialice():
     global CURRENT_RESULT
     base_options = python.BaseOptions(model_asset_path=MODEL_PATH)
@@ -163,7 +180,7 @@ def initialice():
     )
     
     detector = vision.FaceLandmarker.create_from_options(options)
-    cam = CameraStream(src=0).start()
+    cam = CameraStream(src=encontrar_camara_activa()).start()
     
     frame_target_time = 1.0 / TARGET_FPS
     prev_time = 0  # 0 indica primer frame, se inicializa en el loop
