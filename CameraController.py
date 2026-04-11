@@ -10,23 +10,15 @@ import ctypes
 from CameraStream import CameraStream
 
 def resolver_ruta(ruta_relativa):
-    """Obtiene la ruta absoluta al recurso, sin importar dónde se mueva la carpeta"""
     if getattr(sys, 'frozen', False):
-        # 1. Si es un .exe, miramos primero en la carpeta donde está el propio .exe
         ruta_base = os.path.dirname(sys.executable)
         ruta_completa = os.path.join(ruta_base, ruta_relativa)
-        
-        # 2. Si no lo encuentra ahí, miramos en la subcarpeta _internal (sys._MEIPASS)
         if not os.path.exists(ruta_completa) and hasattr(sys, '_MEIPASS'):
             ruta_completa = os.path.join(sys._MEIPASS, ruta_relativa)
-            
         return ruta_completa
     else:
-        # 3. Si estamos ejecutando el código fuente desde VS Code
         return os.path.join(os.path.abspath("."), ruta_relativa)
     
-# Fuerza resolución del timer de Windows a 1ms (por defecto es 15.6ms)
-# Esto hace que time.sleep() y waitKey() sean precisos
 timeBeginPeriod = ctypes.windll.winmm.timeBeginPeriod
 timeEndPeriod = ctypes.windll.winmm.timeEndPeriod
 timeBeginPeriod(1)
@@ -45,11 +37,10 @@ def resultado_callback(result, output_image, timestamp_ms):
     global CURRENT_RESULT
     CURRENT_RESULT = result
 
-# --- ESTRUCTURA Y FUNCIONES ---
 def changeMovementMode(input_data, frame):
+    global CONTINUOS_MODE
     if input_data.get("score", 0) > input_data["threshold"]:
         if not input_data["active"]:
-            global CONTINUOS_MODE
             CONTINUOS_MODE = not CONTINUOS_MODE
             input_data["active"] = True
     else:
@@ -58,12 +49,6 @@ def changeMovementMode(input_data, frame):
     texto_modo = "CONTINUO" if CONTINUOS_MODE else "PASOS"
     color = (0, 255, 0) if CONTINUOS_MODE else (0, 165, 255)
     cv2.putText(frame, f'MODO: {texto_modo}', (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
-
-def changeFPS(newLimit):
-    global TARGET_FPS
-    TARGET_FPS = newLimit
-
-
 
 def pushInputButton(input_data, frame):
     if input_data.get("score", 0) > input_data["threshold"]:
@@ -84,89 +69,19 @@ INPUT_STRUCTURE={
     "noseUp":{"threshold":0.4}, "noseDown":{"threshold":0.6}
 }
 
-def main():
-    detector, cam, frame_target_time, prev_time, last_inference_time, y_activation_start_time = initialice()
-    try:
-        while True:
-            loop_start = time.perf_counter()
-
-            frame = cam.read()
-            if frame is None: continue
-
-            # 1. INFERENCIA LIGERA (Resize agresivo)
-            current_now = time.perf_counter()
-            if (current_now - last_inference_time) > 0.033: # Máximo 30 inferencias por seg
-                
-                rgb_small = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_small)
-                detector.detect_async(mp_image, int(current_now * 1000))
-                last_inference_time = current_now
-
-            frame = cv2.flip(frame, 1)
-
-            # 2. LÓGICA DE CONTROL (Solo si hay datos, pero el frame NO espera)
-            if CURRENT_RESULT and CURRENT_RESULT.face_blendshapes:
-                gestures = {cat.category_name: cat.score for cat in CURRENT_RESULT.face_blendshapes[0]}
-                
-                # Mapeo de scores
-                read_gestures(gestures)
-
-                # Ejecutamos funciones de cada input
-                for key in ["jawOpen", "eyeBrowsUp", "mouthPucker", "smile", "eyeBlinkRight"]:
-                    INPUT_STRUCTURE[key]["function"](INPUT_STRUCTURE[key], frame)
-
-                # Control del joystick basado en la posición de la nariz
-                if CURRENT_RESULT.face_landmarks:
-                    nose = CURRENT_RESULT.face_landmarks[0][1]
-                    # Joystick
-                    move_left_joystick(nose.x, nose.y, y_activation_start_time, frame)
-                
-                gamepad.update()
-
-            # 3. Mostrar frame
-            fps = 1.0 / (loop_start - prev_time) if prev_time > 0 else TARGET_FPS
-            cv2.putText(frame, f'FPS: {int(fps)}', (frame.shape[1]-120, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
-            cv2.imshow('Control Turbo Precise', frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-
-            # 4. ESPERA HÍBRIDA: sleep grueso + spin fino
-            # timeBeginPeriod(1) garantiza que sleep sea preciso a ~1ms en Windows
-            elapsed = time.perf_counter() - loop_start
-            frame_target_time = 1.0 / TARGET_FPS
-            remaining = frame_target_time - elapsed
-            if remaining > 0.002:
-                time.sleep(remaining - 0.002)
-            while (time.perf_counter() - loop_start) < frame_target_time:
-                pass  # Spin solo los últimos ~2ms para precisión
-
-            prev_time = loop_start  # Mide de loop_start a loop_start
-    finally:
-        cleanup(cam)
-
-def cleanup(cam):
-    timeEndPeriod(1)  # Restaurar resolución del timer de Windows
-    cam.stop()
-    cv2.destroyAllWindows()
-    gamepad.reset()
-    gamepad.update()
-
 def encontrar_camara_activa():
-    """Busca automáticamente el primer índice de cámara disponible que devuelva imagen"""
     print("Buscando cámara disponible...")
-    for indice in range(5):  # Probamos los índices del 0 al 4
+    for indice in range(5):
         cap = cv2.VideoCapture(indice)
         if cap.isOpened():
-            # Comprobamos si realmente da imagen (a veces abre pero está en negro)
             ret, frame = cap.read()
             if ret and frame is not None:
                 print(f"¡Cámara encontrada en el puerto/índice {indice}!")
                 cap.release()
                 return indice
         cap.release()
-        
     print("ERROR CRÍTICO: No se ha detectado ninguna cámara.")
-    return 0  # Por defecto devolvemos 0 aunque falle
+    return 0
 
 def initialice():
     global CURRENT_RESULT
@@ -178,17 +93,9 @@ def initialice():
         output_face_blendshapes=True,
         num_faces=1
     )
-    
     detector = vision.FaceLandmarker.create_from_options(options)
     cam = CameraStream(src=encontrar_camara_activa()).start()
-    
-    frame_target_time = 1.0 / TARGET_FPS
-    prev_time = 0  # 0 indica primer frame, se inicializa en el loop
-    last_inference_time = 0
-    y_activation_start_time = None
-
-    print(f"Sistema High-Performance. Target: {TARGET_FPS} FPS.")
-    return detector,cam,frame_target_time,prev_time,last_inference_time,y_activation_start_time
+    return detector, cam
 
 def read_gestures(gestures):
     INPUT_STRUCTURE["eyeBrowsUp"]["score"] = max(gestures["browOuterUpLeft"], gestures["browOuterUpRight"])
@@ -213,25 +120,74 @@ def move_left_joystick(x, y, start_time, frame):
         jy = 20000
         moviny = True
 
-    # Lógica de pasos simplificada
     if not CONTINUOS_MODE and (INPUT_STRUCTURE["noseUp"]["active"] is True or INPUT_STRUCTURE["noseDown"]["active"] is True):
         jy=0
 
-    if(movinx):
-        INPUT_STRUCTURE["noseLeft"]["active"] = True
-        INPUT_STRUCTURE["noseRight"]["active"] = True
-    else:
-        INPUT_STRUCTURE["noseLeft"]["active"] = False
-        INPUT_STRUCTURE["noseRight"]["active"] = False
-
-    if(moviny):
-        INPUT_STRUCTURE["noseUp"]["active"] = True
-        INPUT_STRUCTURE["noseDown"]["active"] = True
-    else:
-        INPUT_STRUCTURE["noseUp"]["active"] = False
-        INPUT_STRUCTURE["noseDown"]["active"] = False   
+    INPUT_STRUCTURE["noseLeft"]["active"] = movinx
+    INPUT_STRUCTURE["noseRight"]["active"] = movinx
+    INPUT_STRUCTURE["noseUp"]["active"] = moviny
+    INPUT_STRUCTURE["noseDown"]["active"] = moviny
 
     gamepad.left_joystick(x_value=jx, y_value=jy)
 
-if __name__ == "__main__":
-    main()
+# --- CLASE CONTROLADORA PARA LA GUI ---
+class GestosControlador:
+    def __init__(self):
+        self.detector, self.cam = initialice()
+        self.frame_target_time = 1.0 / TARGET_FPS
+        self.prev_time = 0
+        self.last_inference_time = 0
+        self.y_activation_start_time = None
+
+    def procesar_frame_unico(self):
+        """Procesa un solo frame y lo devuelve. Equivalente a una iteración de tu 'while True'."""
+        loop_start = time.perf_counter()
+        
+        frame = self.cam.read()
+        if frame is None:
+            return None
+
+        # 1. INFERENCIA
+        current_now = time.perf_counter()
+        if (current_now - self.last_inference_time) > 0.033:
+            rgb_small = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_small)
+            self.detector.detect_async(mp_image, int(current_now * 1000))
+            self.last_inference_time = current_now
+
+        frame = cv2.flip(frame, 1)
+
+        # 2. LÓGICA DE CONTROL
+        if CURRENT_RESULT and CURRENT_RESULT.face_blendshapes:
+            gestures = {cat.category_name: cat.score for cat in CURRENT_RESULT.face_blendshapes[0]}
+            read_gestures(gestures)
+
+            for key in ["jawOpen", "eyeBrowsUp", "mouthPucker", "smile", "eyeBlinkRight"]:
+                INPUT_STRUCTURE[key]["function"](INPUT_STRUCTURE[key], frame)
+
+            if CURRENT_RESULT.face_landmarks:
+                nose = CURRENT_RESULT.face_landmarks[0][1]
+                move_left_joystick(nose.x, nose.y, self.y_activation_start_time, frame)
+            
+            gamepad.update()
+
+        # 3. Mostrar Texto/FPS en el frame
+        fps = 1.0 / (loop_start - self.prev_time) if self.prev_time > 0 else TARGET_FPS
+        cv2.putText(frame, f'FPS: {int(fps)}', (frame.shape[1]-120, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
+
+        # 4. ESPERA HÍBRIDA
+        elapsed = time.perf_counter() - loop_start
+        remaining = self.frame_target_time - elapsed
+        if remaining > 0.002:
+            time.sleep(remaining - 0.002)
+        while (time.perf_counter() - loop_start) < self.frame_target_time:
+            pass
+
+        self.prev_time = loop_start
+        return frame
+
+    def cerrar_recursos(self):
+        timeEndPeriod(1)
+        self.cam.stop()
+        gamepad.reset()
+        gamepad.update()
