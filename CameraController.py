@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 import cv2
@@ -7,6 +8,10 @@ from mediapipe.tasks.python import vision
 import vgamepad as vg
 import time
 from CameraStream import CameraStream
+
+
+
+
 
 def resolver_ruta(ruta_relativa):
     """Obtiene la ruta absoluta al recurso, sin importar dónde se mueva la carpeta"""
@@ -55,15 +60,24 @@ def pushInputButton(input_data, frame):
         gamepad.release_button(button=input_data["input"])
         input_data["active"] = False
 
-INPUT_STRUCTURE = {
-    "jawOpen": {"function": pushInputButton, "input": vg.XUSB_BUTTON.XUSB_GAMEPAD_B, "threshold": 0.5, "active": False},
-    "eyeBrowsUp": {"function": pushInputButton, "input": vg.XUSB_BUTTON.XUSB_GAMEPAD_START, "threshold": 0.4, "active": False},
-    "mouthPucker": {"function": pushInputButton, "input": vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK, "threshold": 0.8, "active": False},
-    "smile": {"function": changeMovementMode, "input": None, "threshold": 0.5, "active": False},
-    "eyeBlinkRight": {"function": pushInputButton, "input": vg.XUSB_BUTTON.XUSB_GAMEPAD_A, "threshold": 0.6, "active": False},
-    "noseLeft": {"threshold": 0.6}, "noseRight": {"threshold": 0.4},
-    "noseUp": {"threshold": 0.4}, "noseDown": {"threshold": 0.6}
+# Mapeo de texto a función de Python
+FUNCIONES_MAP = {
+    "pushInputButton": pushInputButton,
+    "changeMovementMode": changeMovementMode
 }
+
+# Mapeo de texto a botón de vgamepad
+BOTONES_MAP = {
+    "XUSB_GAMEPAD_B": vg.XUSB_BUTTON.XUSB_GAMEPAD_B,
+    "XUSB_GAMEPAD_START": vg.XUSB_BUTTON.XUSB_GAMEPAD_START,
+    "XUSB_GAMEPAD_BACK": vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK,
+    "XUSB_GAMEPAD_A": vg.XUSB_BUTTON.XUSB_GAMEPAD_A
+}
+
+# Para facilitar el guardado, creamos un mapeo inverso de los botones (de valor a texto)
+BOTONES_INVERSE_MAP = {v: k for k, v in BOTONES_MAP.items()}
+
+INPUT_STRUCTURE = {}
 
 def encontrar_camara_activa():
     print("Buscando cámara disponible...")
@@ -129,6 +143,47 @@ def move_left_joystick(x, y, start_time, frame):
 
     gamepad.left_joystick(x_value=jx, y_value=jy)
 
+
+def save_inputs_to_file(file_path="default_inputs.json"):
+    file_json={}
+    for gesture, data in INPUT_STRUCTURE.items():
+        file_json[gesture] = {}
+        for key, value in data.items():
+            if key == "function" and value is not None:
+                # Obtenemos el nombre de la función (ej. "pushInputButton")
+                file_json[gesture][key] = value.__name__
+                
+            elif key == "input" and value is not None:
+                # Buscamos el nombre del botón en texto usando el mapa inverso
+                file_json[gesture][key] = BOTONES_INVERSE_MAP.get(value, None)
+                
+            else:
+                # Guardamos thresholds, actives y scores tal cual (son números/booleanos)
+                file_json[gesture][key] = value
+
+    with open(file_path, 'w') as f:
+        json.dump(file_json, f, indent=4)
+
+def load_inputs_from_file(file_path="default_inputs.json"):
+    global INPUT_STRUCTURE
+
+    with open(file_path, 'r') as f:
+        file_json = json.load(f)
+    temp_structure = {}
+    for gesture, data in file_json.items():
+        temp_structure[gesture] = {}
+        for key, value in data.items():
+            if key == "function" and value is not None:
+                temp_structure[gesture][key] = FUNCIONES_MAP.get(value, None)
+                
+            elif key == "input" and value is not None:
+                temp_structure[gesture][key] = BOTONES_MAP.get(value, None)
+                
+            else:
+                temp_structure[gesture][key] = value
+
+    INPUT_STRUCTURE = temp_structure
+
 # --- CLASE CONTROLADORA PARA LA GUI ---
 class GestosControlador:
     def __init__(self):
@@ -136,6 +191,7 @@ class GestosControlador:
         self.last_inference_time = 0
         self.y_activation_start_time = None
         self.prev_time = 0
+        load_inputs_from_file()
 
     def procesar_frame_unico(self):
         loop_start = time.perf_counter()
@@ -180,3 +236,6 @@ class GestosControlador:
         self.cam.stop()
         gamepad.reset()
         gamepad.update()
+
+
+

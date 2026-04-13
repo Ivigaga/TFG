@@ -1,0 +1,44 @@
+{
+    "jawOpen": {
+        "function": "pushInputButton",
+        "input": "XUSB_GAMEPAD_B",
+        "threshold": 0.5,
+        "active": false
+    },
+    "eyeBrowsUp": {
+        "function": "pushInputButton",
+        "input": "XUSB_GAMEPAD_START",
+        "threshold": 0.4,
+        "active": false
+    },
+    "mouthPucker": {
+        "function": "pushInputButton",
+        "input": "XUSB_GAMEPAD_BACK",
+        "threshold": 0.8,
+        "active": false
+    },
+    "smile": {
+        "function": "changeMovementMode",
+        "input": null,
+        "threshold": 0.5,
+        "active": false
+    },
+    "eyeBlinkRight": {
+        "function": "pushInputButton",
+        "input": "XUSB_GAMEPAD_A",
+        "threshold": 0.6,
+        "active": false
+    },
+    "noseLeft": {
+        "threshold": 0.6
+    },
+    "noseRight": {
+        "threshold": 0.4
+    },
+    "noseUp": {
+        "threshold": 0.4
+    },
+    "noseDown": {
+        "threshold": 0.6
+    }
+}
