@@ -6,10 +6,10 @@ from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 import vgamepad as vg
 import time
-import ctypes
 from CameraStream import CameraStream
 
 def resolver_ruta(ruta_relativa):
+    """Obtiene la ruta absoluta al recurso, sin importar dónde se mueva la carpeta"""
     if getattr(sys, 'frozen', False):
         ruta_base = os.path.dirname(sys.executable)
         ruta_completa = os.path.join(ruta_base, ruta_relativa)
@@ -18,17 +18,12 @@ def resolver_ruta(ruta_relativa):
         return ruta_completa
     else:
         return os.path.join(os.path.abspath("."), ruta_relativa)
-    
-timeBeginPeriod = ctypes.windll.winmm.timeBeginPeriod
-timeEndPeriod = ctypes.windll.winmm.timeEndPeriod
-timeBeginPeriod(1)
 
 # --- CONFIGURACIÓN GLOBAL ---
 CONTINUOS_MODE = True
 TIME_DURATION_SECONDS = 0.05
 MODEL_PATH = resolver_ruta('face_landmarker.task')
 TARGET_FPS = 60
-FPS_OPTIONS = [30, 60, 120]
 
 CURRENT_RESULT = None
 gamepad = vg.VX360Gamepad()
@@ -37,6 +32,7 @@ def resultado_callback(result, output_image, timestamp_ms):
     global CURRENT_RESULT
     CURRENT_RESULT = result
 
+# --- FUNCIONES DE CONTROL ---
 def changeMovementMode(input_data, frame):
     global CONTINUOS_MODE
     if input_data.get("score", 0) > input_data["threshold"]:
@@ -59,14 +55,14 @@ def pushInputButton(input_data, frame):
         gamepad.release_button(button=input_data["input"])
         input_data["active"] = False
 
-INPUT_STRUCTURE={
-    "jawOpen":{"function":pushInputButton,"input":vg.XUSB_BUTTON.XUSB_GAMEPAD_B,"threshold":0.5,"active":False},
-    "eyeBrowsUp":{"function":pushInputButton,"input":vg.XUSB_BUTTON.XUSB_GAMEPAD_START,"threshold":0.4,"active":False},
-    "mouthPucker":{"function":pushInputButton,"input":vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK,"threshold":0.8,"active":False},
-    "smile":{"function":changeMovementMode,"input":None,"threshold":0.5,"active":False},
-    "eyeBlinkRight":{"function":pushInputButton,"input":vg.XUSB_BUTTON.XUSB_GAMEPAD_A,"threshold":0.6,"active":False},
-    "noseLeft":{"threshold":0.6}, "noseRight":{"threshold":0.4},
-    "noseUp":{"threshold":0.4}, "noseDown":{"threshold":0.6}
+INPUT_STRUCTURE = {
+    "jawOpen": {"function": pushInputButton, "input": vg.XUSB_BUTTON.XUSB_GAMEPAD_B, "threshold": 0.5, "active": False},
+    "eyeBrowsUp": {"function": pushInputButton, "input": vg.XUSB_BUTTON.XUSB_GAMEPAD_START, "threshold": 0.4, "active": False},
+    "mouthPucker": {"function": pushInputButton, "input": vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK, "threshold": 0.8, "active": False},
+    "smile": {"function": changeMovementMode, "input": None, "threshold": 0.5, "active": False},
+    "eyeBlinkRight": {"function": pushInputButton, "input": vg.XUSB_BUTTON.XUSB_GAMEPAD_A, "threshold": 0.6, "active": False},
+    "noseLeft": {"threshold": 0.6}, "noseRight": {"threshold": 0.4},
+    "noseUp": {"threshold": 0.4}, "noseDown": {"threshold": 0.6}
 }
 
 def encontrar_camara_activa():
@@ -95,6 +91,7 @@ def initialice():
     )
     detector = vision.FaceLandmarker.create_from_options(options)
     cam = CameraStream(src=encontrar_camara_activa()).start()
+    print(f"Sistema High-Performance. Target: {TARGET_FPS} FPS.")
     return detector, cam
 
 def read_gestures(gestures):
@@ -107,12 +104,14 @@ def read_gestures(gestures):
 def move_left_joystick(x, y, start_time, frame):
     jx, jy = 0, 0
     movinx, moviny = False, False
+    
     if x > INPUT_STRUCTURE["noseLeft"]["threshold"]: 
         jx = -20000 
         movinx = True
     elif x < INPUT_STRUCTURE["noseRight"]["threshold"]: 
         jx = 20000
         movinx = True
+        
     if y > INPUT_STRUCTURE["noseDown"]["threshold"]: 
         jy = -20000
         moviny = True
@@ -121,7 +120,7 @@ def move_left_joystick(x, y, start_time, frame):
         moviny = True
 
     if not CONTINUOS_MODE and (INPUT_STRUCTURE["noseUp"]["active"] is True or INPUT_STRUCTURE["noseDown"]["active"] is True):
-        jy=0
+        jy = 0
 
     INPUT_STRUCTURE["noseLeft"]["active"] = movinx
     INPUT_STRUCTURE["noseRight"]["active"] = movinx
@@ -134,20 +133,18 @@ def move_left_joystick(x, y, start_time, frame):
 class GestosControlador:
     def __init__(self):
         self.detector, self.cam = initialice()
-        self.frame_target_time = 1.0 / TARGET_FPS
-        self.prev_time = 0
         self.last_inference_time = 0
         self.y_activation_start_time = None
+        self.prev_time = 0
 
     def procesar_frame_unico(self):
-        """Procesa un solo frame y lo devuelve. Equivalente a una iteración de tu 'while True'."""
         loop_start = time.perf_counter()
         
         frame = self.cam.read()
         if frame is None:
             return None
 
-        # 1. INFERENCIA
+        # 1. INFERENCIA LIGERA
         current_now = time.perf_counter()
         if (current_now - self.last_inference_time) > 0.033:
             rgb_small = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -162,8 +159,9 @@ class GestosControlador:
             gestures = {cat.category_name: cat.score for cat in CURRENT_RESULT.face_blendshapes[0]}
             read_gestures(gestures)
 
-            for key in ["jawOpen", "eyeBrowsUp", "mouthPucker", "smile", "eyeBlinkRight"]:
-                INPUT_STRUCTURE[key]["function"](INPUT_STRUCTURE[key], frame)
+            for key, input in INPUT_STRUCTURE.items():
+                if "function" in input and input["function"]!=None and "score" in input:
+                    input["function"](input,frame)
 
             if CURRENT_RESULT.face_landmarks:
                 nose = CURRENT_RESULT.face_landmarks[0][1]
@@ -171,23 +169,14 @@ class GestosControlador:
             
             gamepad.update()
 
-        # 3. Mostrar Texto/FPS en el frame
+        # 3. FPS Info (Opcional, para mantener tu texto original)
         fps = 1.0 / (loop_start - self.prev_time) if self.prev_time > 0 else TARGET_FPS
         cv2.putText(frame, f'FPS: {int(fps)}', (frame.shape[1]-120, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
-
-        # 4. ESPERA HÍBRIDA
-        elapsed = time.perf_counter() - loop_start
-        remaining = self.frame_target_time - elapsed
-        if remaining > 0.002:
-            time.sleep(remaining - 0.002)
-        while (time.perf_counter() - loop_start) < self.frame_target_time:
-            pass
-
         self.prev_time = loop_start
+
         return frame
 
     def cerrar_recursos(self):
-        timeEndPeriod(1)
         self.cam.stop()
         gamepad.reset()
         gamepad.update()
