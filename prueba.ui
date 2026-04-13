@@ -98,14 +98,14 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
-           <widget class="QPushButton" name="pushButton_7">
+           <widget class="QPushButton" name="pipButton">
             <property name="text">
              <string>PushButton</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton_6">
+           <widget class="QPushButton" name="stopButton">
             <property name="text">
              <string>PushButton</string>
             </property>

@@ -10,6 +10,7 @@ from CameraController import GestosControlador
 
 # --- VENTANA FLOTANTE PiP ---
 class VentanaVideoFlotante(QWidget):
+    
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Video PiP")
@@ -47,8 +48,8 @@ class MainWindow(QMainWindow):
 
         # Variables de control PiP
         self.ventana_flotante = None
-        self.ui.pushButton.setText("Modo PiP")
-        self.ui.pushButton.clicked.connect(self.toggle_pip)
+        
+        self.assignButtons()
 
         # 1. Iniciamos la lógica de la cámara y Mediapipe
         self.controlador = GestosControlador()
@@ -56,7 +57,7 @@ class MainWindow(QMainWindow):
         # 2. Configurar el evento de reloj (QTimer) a ~60 FPS
         self.timer_video = QTimer(self)
         self.timer_video.timeout.connect(self.capturar_y_enrutar)
-        self.timer_video.start(16) # 16 milisegundos
+        self.startVideo()
 
     def capturar_y_enrutar(self):
         # Pedimos un frame a la lógica
@@ -78,12 +79,16 @@ class MainWindow(QMainWindow):
             # Control de seguridad si el usuario cerró el PiP manualmente con la 'X'
             if self.ventana_flotante:
                 self.ventana_flotante = None
-                self.ui.pushButton.setText("Modo PiP")
+                self.ui.pipButton.setText("Modo PiP")
                 
             # Si no hay PiP, pintamos en la ventana principal
             self.ui.videoLabel.setPixmap(pixmap.scaled(
                 self.ui.videoLabel.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
             ))
+
+    def assignButtons(self):
+        self.ui.pipButton.clicked.connect(self.toggle_pip)
+        self.ui.stopButton.clicked.connect(self.controlVideo)
 
     def toggle_pip(self):
         if not self.ventana_flotante:
@@ -91,12 +96,12 @@ class MainWindow(QMainWindow):
             self.ventana_flotante = VentanaVideoFlotante()
             self.ventana_flotante.show()
             self.ui.videoLabel.setText("Modo PiP activo. Mira la ventana flotante.")
-            self.ui.pushButton.setText("Volver a UI Principal")
+            self.ui.pipButton.setText("Volver a UI Principal")
         else:
             # Desactivar ventana PiP
             self.ventana_flotante.close()
             self.ventana_flotante = None
-            self.ui.pushButton.setText("Modo PiP")
+            self.ui.pipButton.setText("Modo PiP")
 
     def closeEvent(self, event):
         # Detener la cámara y el reloj limpiamente al cerrar la App
@@ -105,6 +110,29 @@ class MainWindow(QMainWindow):
         if self.ventana_flotante:
             self.ventana_flotante.close()
         event.accept()
+
+    def controlVideo(self):
+        if self.timer_video.isActive():
+            self.stopVideo()
+        else:
+            self.startVideo()
+
+    def startVideo(self):
+        self.timer_video.start(16) # Reiniciar el timer si es necesario
+        self.ui.pipButton.setEnabled(True)
+        self.ui.stopButton.setText("Pausar video")
+    
+    def stopVideo(self):
+        self.timer_video.stop() # Detener el timer si es necesario
+        self.ui.pipButton.setEnabled(False)
+        self.ui.videoLabel.setText("Video pausado.")
+        self.ui.stopButton.setText("Reanudar video")
+        if self.ventana_flotante:
+            # Desactivar ventana PiP
+            self.ventana_flotante.close()
+            self.ventana_flotante = None
+            self.ui.pipButton.setText("Modo PiP")
+            
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
