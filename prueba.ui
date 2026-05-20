@@ -109,6 +109,12 @@
             <property name="text">
              <string>PushButton</string>
             </property>
+            <property name="iconSize">
+             <size>
+              <width>27</width>
+              <height>16</height>
+             </size>
+            </property>
            </widget>
           </item>
           <item>
@@ -131,7 +137,7 @@
              </sizepolicy>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="mainPage">
              <property name="sizePolicy">
@@ -157,7 +163,7 @@
                  </widget>
                 </item>
                 <item row="0" column="0">
-                 <widget class="QPushButton" name="pushButton">
+                 <widget class="QPushButton" name="changeControlsButton">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
                     <horstretch>0</horstretch>
@@ -206,7 +212,7 @@
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayout_4">
                   <item>
-                   <widget class="QPushButton" name="pushButton_6">
+                   <widget class="QPushButton" name="controlsCancelButton">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
                       <horstretch>0</horstretch>
@@ -265,7 +271,7 @@
                    <enum>QLayout::SizeConstraint::SetMaximumSize</enum>
                   </property>
                   <item row="0" column="2">
-                   <widget class="QPushButton" name="pushButton_12">
+                   <widget class="QPushButton" name="Start_button">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
                       <horstretch>0</horstretch>
@@ -275,10 +281,13 @@
                     <property name="text">
                      <string>Start</string>
                     </property>
+                    <property name="gamepadInput" stdset="0">
+                     <string>XUSB_GAMEPAD_START</string>
+                    </property>
                    </widget>
                   </item>
                   <item row="0" column="1">
-                   <widget class="QPushButton" name="pushButton_11">
+                   <widget class="QPushButton" name="B_button">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
                       <horstretch>0</horstretch>
@@ -288,10 +297,13 @@
                     <property name="text">
                      <string>B</string>
                     </property>
+                    <property name="gamepadInput" stdset="0">
+                     <string>XUSB_GAMEPAD_B</string>
+                    </property>
                    </widget>
                   </item>
                   <item row="0" column="3">
-                   <widget class="QPushButton" name="pushButton_13">
+                   <widget class="QPushButton" name="Select_button">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
                       <horstretch>0</horstretch>
@@ -301,10 +313,13 @@
                     <property name="text">
                      <string>Select</string>
                     </property>
+                    <property name="gamepadInput" stdset="0">
+                     <string>XUSB_GAMEPAD_BACK</string>
+                    </property>
                    </widget>
                   </item>
                   <item row="0" column="0">
-                   <widget class="QPushButton" name="pushButton_10">
+                   <widget class="QPushButton" name="A_button">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
                       <horstretch>0</horstretch>
@@ -314,10 +329,13 @@
                     <property name="text">
                      <string>A</string>
                     </property>
+                    <property name="gamepadInput" stdset="0">
+                     <string>XUSB_GAMEPAD_A</string>
+                    </property>
                    </widget>
                   </item>
                   <item row="1" column="0">
-                   <widget class="QPushButton" name="pushButton_14">
+                   <widget class="QPushButton" name="L_button">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
                       <horstretch>0</horstretch>
@@ -356,7 +374,7 @@
                  <number>9</number>
                 </property>
                 <item>
-                 <widget class="QPushButton" name="pushButton_16">
+                 <widget class="QPushButton" name="gesturesBackButton">
                   <property name="text">
                    <string>Atrás</string>
                   </property>
@@ -370,9 +388,9 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLabel" name="label">
+                 <widget class="QLabel" name="buttonLabel">
                   <property name="text">
-                   <string>Gesto</string>
+                   <string>Botón</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -457,6 +475,9 @@ QSlider::add-page:horizontal {
                   <property name="autoExclusive">
                    <bool>true</bool>
                   </property>
+                  <property name="gesture" stdset="0">
+                   <string>eyeBlinkRight</string>
+                  </property>
                   <attribute name="buttonGroup">
                    <string notr="true">buttonGroup</string>
                   </attribute>
@@ -484,6 +505,9 @@ QSlider::add-page:horizontal {
                   </property>
                   <property name="autoExclusive">
                    <bool>true</bool>
+                  </property>
+                  <property name="gesture" stdset="0">
+                   <string>mouthPucker</string>
                   </property>
                   <attribute name="buttonGroup">
                    <string notr="true">buttonGroup</string>
@@ -549,6 +573,12 @@ QSlider::add-page:horizontal {
                   <property name="autoExclusive">
                    <bool>true</bool>
                   </property>
+                  <property name="autoRepeatInterval">
+                   <number>93</number>
+                  </property>
+                  <property name="gesture" stdset="0">
+                   <string>smile</string>
+                  </property>
                   <attribute name="buttonGroup">
                    <string notr="true">buttonGroup</string>
                   </attribute>
@@ -577,6 +607,9 @@ QSlider::add-page:horizontal {
                   <property name="autoExclusive">
                    <bool>true</bool>
                   </property>
+                  <property name="gesture" stdset="0">
+                   <string>eyeBrowsUp</string>
+                  </property>
                   <attribute name="buttonGroup">
                    <string notr="true">buttonGroup</string>
                   </attribute>
@@ -598,6 +631,9 @@ QSlider::add-page:horizontal {
                   </property>
                   <property name="autoExclusive">
                    <bool>true</bool>
+                  </property>
+                  <property name="gesture" stdset="0">
+                   <string>jawOpen</string>
                   </property>
                   <attribute name="buttonGroup">
                    <string notr="true">buttonGroup</string>

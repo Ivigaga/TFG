@@ -89,6 +89,13 @@ class MainWindow(QMainWindow):
     def assignButtons(self):
         self.ui.pipButton.clicked.connect(self.toggle_pip)
         self.ui.stopButton.clicked.connect(self.controlVideo)
+        self.ui.changeControlsButton.clicked.connect(lambda: self.ui.stackedWidget.setCurrentIndex(1))
+        self.ui.controlsCancelButton.clicked.connect(lambda: self.ui.stackedWidget.setCurrentIndex(0))
+        self.ui.gesturesBackButton.clicked.connect(lambda: self.ui.stackedWidget.setCurrentIndex(1))
+        self.ui.A_button.clicked.connect(lambda: self.showChangeControls(self.ui.A_button))
+        self.ui.B_button.clicked.connect(lambda: self.showChangeControls(self.ui.B_button))
+        self.ui.Select_button.clicked.connect(lambda: self.showChangeControls(self.ui.Select_button))
+        self.ui.Start_button.clicked.connect(lambda: self.showChangeControls(self.ui.Start_button))
 
     def toggle_pip(self):
         if not self.ventana_flotante:
@@ -132,6 +139,26 @@ class MainWindow(QMainWindow):
             self.ventana_flotante.close()
             self.ventana_flotante = None
             self.ui.pipButton.setText("Modo PiP")
+
+    def showChangeControls(self,button):
+        self.ui.stackedWidget.setCurrentIndex(2)
+        self.ui.buttonLabel.setProperty("button", button.property("gamepadInput"))
+        self.ui.buttonLabel.setText(button.text())
+        gestureButton = self.getGestureButtonForInput(button.property("gamepadInput"))
+        if gestureButton:
+            gestureButton.setChecked(True)
+
+    def getGestureButtonForInput(self, button):
+        gesture=self.controlador.getGestureForButton(button)
+        if gesture:
+            gesture_buttons = self.ui.buttonGroup.buttons()
+            # Recorres la lista con un bucle for
+            for button in gesture_buttons:
+                if button.property("gesture") == gesture:
+                    return button
+        return None
+
+
             
 
 if __name__ == "__main__":

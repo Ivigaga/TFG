@@ -231,6 +231,12 @@ class GestosControlador:
         self.prev_time = loop_start
 
         return frame
+    
+    def getGestureForButton(self, button):
+        for gesture, data in INPUT_STRUCTURE.items():
+            if BOTONES_INVERSE_MAP.get(data.get("input")) == button:
+                return gesture
+        return None
 
     def cerrar_recursos(self):
         self.cam.stop()
