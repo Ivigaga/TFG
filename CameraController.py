@@ -202,7 +202,7 @@ class GestosControlador:
 
         # 1. INFERENCIA LIGERA
         current_now = time.perf_counter()
-        if (current_now - self.last_inference_time) > 0.033:
+        if (current_now - self.last_inference_time) >(1/TARGET_FPS):
             rgb_small = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_small)
             self.detector.detect_async(mp_image, int(current_now * 1000))
@@ -237,6 +237,9 @@ class GestosControlador:
             if BOTONES_INVERSE_MAP.get(data.get("input")) == button:
                 return gesture
         return None
+    
+    def getGestureScore(self, gesture):
+        return INPUT_STRUCTURE.get(gesture, {}).get("score", 0)
 
     def cerrar_recursos(self):
         self.cam.stop()

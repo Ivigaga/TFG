@@ -1,4 +1,5 @@
 import sys
+import time
 import cv2
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel
 from PySide6.QtCore import QTimer, Qt
@@ -49,6 +50,8 @@ class MainWindow(QMainWindow):
         # Variables de control PiP
         self.ventana_flotante = None
         
+        self.readScore=False
+        self.ultimo_update_score = 0  # <-- NUEVO: Control de FPS para la barra
         self.assignButtons()
 
         # 1. Iniciamos la lógica de la cámara y Mediapipe
@@ -64,7 +67,31 @@ class MainWindow(QMainWindow):
         frame = self.controlador.procesar_frame_unico()
         if frame is None: 
             return
-
+        
+        tiempo_actual = time.perf_counter()
+        
+        if self.readScore:
+            # Comprobamos si han pasado 0.066 segundos (15 FPS)
+            
+            gesture = self.ui.scoreBar.property("gesture")
+            if gesture:
+                score = self.controlador.getGestureScore(gesture)
+                score_entero = int(score * 100)
+                print(f"Score para {gesture}: {score_entero}")
+                print(f"Tiempo desde última actualización: {tiempo_actual - self.ultimo_update_score:.3f} segundos")
+                print(f"Valor actual de la barra: {self.ui.scoreBar.value()}")
+                if (tiempo_actual - self.ultimo_update_score) >= 0.1:  # 0.133 segundos = ~7.5 FPS
+                    # Evitamos repintar si el valor es exactamente el mismo
+                    if self.ui.scoreBar.value() != score_entero:
+                        self.ui.scoreBar.setValue(score_entero)
+                        if(score_entero >= self.ui.scoreSlider.value()):
+                            self.ui.scoreBar.setStyleSheet(
+                            "QProgressBar::chunk { background-color: #FF5722; border-radius: 2px; }"
+                            )
+                        
+                        # Actualizamos el cronómetro de la barra
+                    self.ultimo_update_score = tiempo_actual
+                
         # Convertimos la imagen de OpenCV (BGR) a formato Qt (RGB)
         color_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         h, w, ch = color_frame.shape
@@ -92,10 +119,17 @@ class MainWindow(QMainWindow):
         self.ui.changeControlsButton.clicked.connect(lambda: self.ui.stackedWidget.setCurrentIndex(1))
         self.ui.controlsCancelButton.clicked.connect(lambda: self.ui.stackedWidget.setCurrentIndex(0))
         self.ui.gesturesBackButton.clicked.connect(lambda: self.ui.stackedWidget.setCurrentIndex(1))
+        self.ui.gesturesBackButton.clicked.connect(lambda: setattr(self, 'readScore', False))
         self.ui.A_button.clicked.connect(lambda: self.showChangeControls(self.ui.A_button))
         self.ui.B_button.clicked.connect(lambda: self.showChangeControls(self.ui.B_button))
         self.ui.Select_button.clicked.connect(lambda: self.showChangeControls(self.ui.Select_button))
         self.ui.Start_button.clicked.connect(lambda: self.showChangeControls(self.ui.Start_button))
+
+        gesture_buttons = self.ui.buttonGroup.buttons()
+        # Recorres la lista con un bucle for
+        for button in gesture_buttons:
+            button.clicked.connect(lambda checked=False, b=button: self.ui.scoreBar.setProperty("gesture", b.property("gesture")))
+            button.clicked.connect(lambda: setattr(self, 'readScore', True))
 
     def toggle_pip(self):
         if not self.ventana_flotante:
@@ -146,7 +180,7 @@ class MainWindow(QMainWindow):
         self.ui.buttonLabel.setText(button.text())
         gestureButton = self.getGestureButtonForInput(button.property("gamepadInput"))
         if gestureButton:
-            gestureButton.setChecked(True)
+            gestureButton.click()
 
     def getGestureButtonForInput(self, button):
         gesture=self.controlador.getGestureForButton(button)
