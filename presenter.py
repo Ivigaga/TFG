@@ -1,7 +1,7 @@
 import cv2
 import time
 import vgamepad as vg
-from PySide6.QtCore import QTimer, QObject
+from PySide6.QtCore import QObject
 from PySide6.QtGui import QImage, QPixmap
 
 class MainPresenter(QObject):
@@ -22,11 +22,15 @@ class MainPresenter(QObject):
         self.fps_counter = 0
         self.last_fps_time = time.perf_counter()
         
+        # Nueva variable para sustituir al QTimer
+        self.is_video_playing = False 
+        
         self._connect_view_signals()
         
-        # Configure Main Loop (60 FPS)
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self._main_loop)
+        # CONEXIÓN MÁGICA: Conectamos la Señal del QThread con nuestro método
+        self.vision.frame_processed.connect(self._on_frame_processed)
+        
+        # Arrancamos el hilo
         self.start_video()
 
     def _connect_view_signals(self):
@@ -42,15 +46,21 @@ class MainPresenter(QObject):
     # --- PRESENTER LOGIC ---
 
     def start_video(self):
-        self.timer.start(16) # ~60 FPS
+        self.is_video_playing = True
+        
+        # Si el hilo de la cámara no está corriendo, lo arrancamos
+        if not self.vision.isRunning():
+            self.vision.start()
+            
         self.view.ui.stopButton.setText("Pause Video")
 
     def stop_video(self):
-        self.timer.stop()
+        # Al poner esto a False, _on_frame_processed ignorará los frames
+        self.is_video_playing = False
         self.view.ui.stopButton.setText("Resume Video")
 
     def toggle_video(self):
-        if self.timer.isActive():
+        if self.is_video_playing:
             self.stop_video()
         else:
             self.start_video()
@@ -84,36 +94,30 @@ class MainPresenter(QObject):
 
     # --- MAIN LOOP ---
 
-    def _main_loop(self):
-        # 1. Desempaquetamos el cuarto valor (is_new_processing)
-        frame, blendshapes, landmarks, is_new_processing = self.vision.get_processed_frame()
-        if frame is None:
+    def _on_frame_processed(self, frame, blendshapes, landmarks, is_new_processing):
+        # Si hemos pausado el vídeo desde la interfaz, ignoramos el paquete
+        if not self.is_video_playing:
             return
 
         # ==========================================
         # BLOQUE 1: LÓGICA CORE (Limitada por TARGET_FPS)
         # ==========================================
         if is_new_processing:
-            # Actualizamos el modelo y el mando SOLO si hay nuevos datos
             self.model.update_gesture_scores(blendshapes)
             self._process_gamepad_logic()
 
-            # El contador de FPS ahora mide el cerebro de la IA, no la interfaz
             self.fps_counter += 1
             current_time = time.perf_counter()
             
             if (current_time - self.last_fps_time) >= 1.0:
                 fps_reales = int(self.fps_counter / (current_time - self.last_fps_time))
                 self.view.update_fps(fps_reales)
-                
                 self.fps_counter = 0
                 self.last_fps_time = current_time
 
         # ==========================================
         # BLOQUE 2: LÓGICA DE INTERFAZ (Máxima velocidad)
         # ==========================================
-        
-        # View Update: Score Bar (at ~10 FPS)
         tiempo_actual = time.perf_counter()
         if self.is_reading_score and self.current_mapped_gesture:
             if (tiempo_actual - self.last_ui_update_time) >= 0.1:
@@ -124,7 +128,6 @@ class MainPresenter(QObject):
                 self.view.update_score_bar(score_int, score_int >= threshold)
                 self.last_ui_update_time = tiempo_actual
 
-        # View Update: Video Stream
         color_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         h, w, ch = color_frame.shape
         qt_img = QImage(color_frame.data, w, h, ch * w, QImage.Format_RGB888)
@@ -143,7 +146,7 @@ class MainPresenter(QObject):
         self.gamepad.update()
 
     def shutdown(self):
-        self.timer.stop()
+        # Ya no hay timer que detener, solo liberamos la cámara y el mando
         self.vision.release_resources()
         self.gamepad.reset()
         self.gamepad.update()

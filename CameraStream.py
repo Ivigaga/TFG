@@ -1,8 +1,19 @@
 import threading
 import cv2
 class CameraStream:
-    def __init__(self, src=0):
-        self.cap = cv2.VideoCapture(src)
+    def __init__(self, src=0, target_fps=60):
+        # 1. En Windows, CAP_DSHOW acelera drásticamente el inicio y el framerate
+        self.cap = cv2.VideoCapture(src, cv2.CAP_DSHOW)
+        
+        # 2. Forzamos el codec MJPG (vital para que las webcams USB pasen de 30 FPS)
+        self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+        
+        # 3. Pedimos resolución estándar (bajar la resolución aumenta los FPS libres de hardware)
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+        
+        # 4. Solicitamos físicamente los 60 FPS a la lente
+        self.cap.set(cv2.CAP_PROP_FPS, target_fps)
         
         self.ret, self.frame = self.cap.read()
         self.stopped = False
