@@ -13,6 +13,14 @@ class MainPresenter(QObject):
         
         self.gamepad = vg.VX360Gamepad()
         
+        # Mapeo exacto que tenías en CameraController.py
+        self.botones_map = {
+            "XUSB_GAMEPAD_B": vg.XUSB_BUTTON.XUSB_GAMEPAD_B,
+            "XUSB_GAMEPAD_START": vg.XUSB_BUTTON.XUSB_GAMEPAD_START,
+            "XUSB_GAMEPAD_BACK": vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK,
+            "XUSB_GAMEPAD_A": vg.XUSB_BUTTON.XUSB_GAMEPAD_A
+        }
+        
         # State variables
         self.is_reading_score = False
         self.current_mapped_gesture = None
@@ -104,7 +112,7 @@ class MainPresenter(QObject):
         # ==========================================
         if is_new_processing:
             self.model.update_gesture_scores(blendshapes)
-            self._process_gamepad_logic()
+            self._process_gamepad_logic(landmarks)
 
             self.fps_counter += 1
             current_time = time.perf_counter()
@@ -138,11 +146,90 @@ class MainPresenter(QObject):
         else:
             self.view.update_main_video(pixmap)
 
-    def _process_gamepad_logic(self):
-        """Evaluates thresholds and triggers vgamepad events."""
-        # For MVP, we encapsulate hardware calls here based on model data.
-        # Example for A button mapping (Blink Right):
-        # In a real scenario, you iterate over self.model.input_structure
+    def _process_gamepad_logic(self, landmarks):
+        """Evaluates thresholds, triggers vgamepad events, and moves joysticks."""
+        inputs = self.model.input_structure
+
+        # 1. EVALUAR GESTOS (Botones y Modos)
+        for gesture_name, data in inputs.items():
+            # Saltamos los gestos de la nariz en este bucle, van por separado
+            if gesture_name.startswith("nose"):
+                continue
+
+            score = data.get("score", 0.0)
+            threshold = data.get("threshold", 0.5)
+            is_currently_active = data.get("active", False)
+            
+            # Qué debe hacer este gesto (pushInputButton o changeMovementMode)
+            funcion_asignada = data.get("function")
+            button_name = data.get("input")
+
+            if score > threshold:
+                if not is_currently_active:
+                    # EL USUARIO ACABA DE SUPERAR EL UMBRAL
+                    self.model.input_structure[gesture_name]["active"] = True
+
+                    if funcion_asignada == "pushInputButton" and button_name:
+                        # Pulsar el botón físico
+                        self.gamepad.press_button(button=self.botones_map[button_name])
+
+                    elif funcion_asignada == "changeMovementMode":
+                        # Cambiar el modo de movimiento del sistema
+                        self.model.is_continuous_mode = not self.model.is_continuous_mode
+                        
+            else:
+                if is_currently_active:
+                    # EL USUARIO HA BAJADO DEL UMBRAL
+                    self.model.input_structure[gesture_name]["active"] = False
+
+                    if funcion_asignada == "pushInputButton" and button_name:
+                        # Soltar el botón físico
+                        self.gamepad.release_button(button=self.botones_map[button_name])
+
+        # 2. EVALUAR JOYSTICK (Movimiento de la nariz)
+        if landmarks:
+            # En MediaPipe, el índice 1 corresponde a la punta de la nariz
+            nose = landmarks[1]
+
+            jx, jy = 0, 0
+            movinx, moviny = False, False
+
+            # Obtenemos los umbrales configurados
+            th_left = inputs.get("noseLeft", {}).get("threshold", 0.6)
+            th_right = inputs.get("noseRight", {}).get("threshold", 0.4)
+            th_up = inputs.get("noseUp", {}).get("threshold", 0.4)
+            th_down = inputs.get("noseDown", {}).get("threshold", 0.6)
+
+            # Eje X
+            if nose.x > th_left:
+                jx = -20000
+                movinx = True
+            elif nose.x < th_right:
+                jx = 20000
+                movinx = True
+
+            # Eje Y
+            if nose.y > th_down:
+                jy = -20000
+                moviny = True
+            elif nose.y < th_up:
+                jy = 20000
+                moviny = True
+
+            # Control de modo continuo vs pasos (replicado de tu código original)
+            if not self.model.is_continuous_mode and (inputs.get("noseUp", {}).get("active") or inputs.get("noseDown", {}).get("active")):
+                jy = 0
+
+            # Guardamos el estado de activación en el modelo por si se necesita
+            if "noseLeft" in inputs: inputs["noseLeft"]["active"] = movinx
+            if "noseRight" in inputs: inputs["noseRight"]["active"] = movinx
+            if "noseUp" in inputs: inputs["noseUp"]["active"] = moviny
+            if "noseDown" in inputs: inputs["noseDown"]["active"] = moviny
+
+            # Mover el joystick izquierdo del mando de Xbox
+            self.gamepad.left_joystick(x_value=jx, y_value=jy)
+
+        # 3. ENVIAR SEÑAL AL DRIVER
         self.gamepad.update()
 
     def shutdown(self):
