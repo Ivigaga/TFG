@@ -19,3 +19,7 @@ dist/
 
 # Archivos de modelo de IA (Opcional: Descomenta si el .task pesa más de 100MB o prefieres no subirlo)
 # *.task
+/venv
+/venv
+/venv/Lib
+/venv/Lib/site-packages/__pycache__
