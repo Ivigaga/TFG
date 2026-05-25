@@ -1,0 +1,110 @@
+/* Estilo base para todas las ventanas y contenedores */
+QWidget {
+    background-color: #2b2b2b;
+    color: #ffffff;
+    font-family: "Arial";
+}
+
+/* Estilo para etiquetas informativas principales */
+QLabel {
+    font-size: 14px;
+}
+
+/* --- BOTONES DE ACCIÓN GIGANTES (Interactuables con la cara) --- */
+QPushButton {
+    background-color: #3d3d3d;
+    border: 2px solid #555555;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #4d4d4d;
+    border: 2px solid #0078D7;
+}
+
+QPushButton:checked {
+    background-color: #FF5722;
+    border: 2px solid #ffffff;
+    color: #ffffff;
+}
+
+/* --- BOTONES DE NAVEGACIÓN ANIDADA (Estilo discontinuo gris) --- */
+QPushButton[type="secondary"] {
+    background-color: #444444;
+    border: 2px dashed #777777;
+    color: #cccccc;
+}
+
+QPushButton[type="secondary"]:hover {
+    background-color: #555555;
+    border: 2px dashed #aaaaaa;
+    color: #ffffff;
+}
+
+/* --- BOTÓN PRINCIPAL DE GUARDADO (Destacado en azul) --- */
+QPushButton[type="primary"] {
+    background-color: #0078D7;
+    color: #ffffff;
+    border: 2px solid #005a9e;
+}
+
+QPushButton[type="primary"]:hover {
+    background-color: #0086f0;
+    border: 2px solid #0078D7;
+}
+
+/* --- BARRA DE PROGRESO DE SENSIBILIDAD --- */
+QProgressBar {
+    border: 2px solid #555555;
+    border-radius: 10px;
+    background-color: #222222;
+    text-align: center;
+}
+
+QProgressBar::chunk {
+    background-color: #0078D7;
+    border-radius: 8px;
+}
+
+/* Propiedad dinámica cuando la barra supera el umbral activo */
+QProgressBar[is_above_threshold="true"]::chunk {
+    background-color: #FF5722;
+}
+
+/* --- SLIDER DE UMBRAL (MARCADOR FLOTANTE) --- */
+
+/* 1. Fondo general transparente */
+QSlider {
+    background: transparent;
+}
+
+/* 2. Riel invisible (sin color, sin bordes, altura 0) */
+QSlider::groove:horizontal {
+    background: transparent;
+    border: none;
+    height: 0px; 
+}
+
+/* 3. Ocultar el relleno de progreso nativo del slider a izquierda y derecha */
+QSlider::sub-page:horizontal, 
+QSlider::add-page:horizontal {
+    background: transparent;
+    border: none;
+}
+
+/* 4. El "Thumb" (Tirador) */
+QSlider::handle:horizontal {
+    background-color: #FFEB3B; /* Amarillo brillante para contrastar con azul y naranja */
+    border: 2px solid #1e1e1e; /* Borde muy oscuro para darle relieve */
+    width: 12px;               /* Fino (más estrecho que alto) */
+    height: 60px;              /* Muy alto (para que parezca que cruza la barra) */
+    margin: -30px 0;           /* Centrado vertical matemático (la mitad de la altura) */
+    border-radius: 5px;        /* Ligeramente redondeado en las puntas */
+}
+
+/* Efecto visual opcional para saber que es interactivo al pasar el ratón */
+QSlider::handle:horizontal:hover {
+    background-color: #FFFFFF; /* Se ilumina en blanco al apuntarlo */
+}
