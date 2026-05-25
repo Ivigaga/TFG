@@ -54,20 +54,18 @@ class MainView(QMainWindow):
         self.ui.gesturesBackButton.clicked.connect(lambda: self.navigation_requested.emit(0))
         self.ui.gesturesBackButton.clicked.connect(self.stop_reading_score.emit)
         
-        # Gamepad Button Mapping Requests
-       # self.ui.A_button.clicked.connect(lambda: self.mapping_requested.emit(self.ui.A_button))
-        #self.ui.B_button.clicked.connect(lambda: self.mapping_requested.emit(self.ui.B_button))
-        #self.ui.Select_button.clicked.connect(lambda: self.mapping_requested.emit(self.ui.Select_button))
-        #self.ui.Start_button.clicked.connect(lambda: self.mapping_requested.emit(self.ui.Start_button))
+        # --- NAVEGACIÓN ANIDADA DE ACCIONES ---
+        self.ui.btn_cat_mando.clicked.connect(lambda: self.ui.stackedWidgetAcciones.setCurrentIndex(1))
+        self.ui.btn_cat_sys.clicked.connect(lambda: self.ui.stackedWidgetAcciones.setCurrentIndex(2))
+        self.ui.btn_volver_cat1.clicked.connect(lambda: self.ui.stackedWidgetAcciones.setCurrentIndex(0))
+        self.ui.btn_volver_cat2.clicked.connect(lambda: self.ui.stackedWidgetAcciones.setCurrentIndex(0))
 
-         # Gesture Selection
-        #for btn in self.ui.controlButtons.buttons():
-         #   btn.clicked.connect(lambda checked=False, b=btn: lambda: self.mapping_requested.emit(b))
+        # Botón Guardar (Por ahora solo hace navegación de vuelta al catálogo)
+        self.ui.controlSaveButon.clicked.connect(lambda: self.navigation_requested.emit(1))
 
         # Gesture Selection
         for btn in self.ui.gestureButtons.buttons():
             btn.clicked.connect(lambda checked=False, b=btn: self.gesture_selected.emit(b))
-
     # --- PUBLIC METHODS FOR THE PRESENTER TO CONTROL THE UI ---
 
     def show_page(self, index):
