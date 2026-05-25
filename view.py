@@ -29,7 +29,7 @@ class MainView(QMainWindow):
     video_control_toggled = Signal()
     navigation_requested = Signal(int)  # Sends the page index
     mapping_requested = Signal(object)  # Sends the button object
-    gesture_selected = Signal(str)      # Sends the gesture string
+    gesture_selected = Signal(object)      # Sends the gesture button object
     stop_reading_score = Signal()
 
     def __init__(self):
@@ -50,33 +50,43 @@ class MainView(QMainWindow):
         
         # Navigation
         self.ui.changeControlsButton.clicked.connect(lambda: self.navigation_requested.emit(1))
-        self.ui.controlsCancelButton.clicked.connect(lambda: self.navigation_requested.emit(0))
-        self.ui.gesturesBackButton.clicked.connect(lambda: self.navigation_requested.emit(1))
+        self.ui.controlsCancelButton.clicked.connect(lambda: self.navigation_requested.emit(1))
+        self.ui.gesturesBackButton.clicked.connect(lambda: self.navigation_requested.emit(0))
         self.ui.gesturesBackButton.clicked.connect(self.stop_reading_score.emit)
         
         # Gamepad Button Mapping Requests
-        self.ui.A_button.clicked.connect(lambda: self.mapping_requested.emit(self.ui.A_button))
-        self.ui.B_button.clicked.connect(lambda: self.mapping_requested.emit(self.ui.B_button))
-        self.ui.Select_button.clicked.connect(lambda: self.mapping_requested.emit(self.ui.Select_button))
-        self.ui.Start_button.clicked.connect(lambda: self.mapping_requested.emit(self.ui.Start_button))
+       # self.ui.A_button.clicked.connect(lambda: self.mapping_requested.emit(self.ui.A_button))
+        #self.ui.B_button.clicked.connect(lambda: self.mapping_requested.emit(self.ui.B_button))
+        #self.ui.Select_button.clicked.connect(lambda: self.mapping_requested.emit(self.ui.Select_button))
+        #self.ui.Start_button.clicked.connect(lambda: self.mapping_requested.emit(self.ui.Start_button))
+
+         # Gesture Selection
+        #for btn in self.ui.controlButtons.buttons():
+         #   btn.clicked.connect(lambda checked=False, b=btn: lambda: self.mapping_requested.emit(b))
 
         # Gesture Selection
-        for btn in self.ui.buttonGroup.buttons():
-            btn.clicked.connect(lambda checked=False, b=btn: self.gesture_selected.emit(b.property("gesture")))
+        for btn in self.ui.gestureButtons.buttons():
+            btn.clicked.connect(lambda checked=False, b=btn: self.gesture_selected.emit(b))
 
     # --- PUBLIC METHODS FOR THE PRESENTER TO CONTROL THE UI ---
 
     def show_page(self, index):
         self.ui.stackedWidget.setCurrentIndex(index)
 
-    def set_mapping_label(self, input_name, display_text):
-        self.ui.buttonLabel.setProperty("button", input_name)
-        self.ui.buttonLabel.setText(display_text)
+    def set_mapping_label(self,gesture_code, gesture_name):
+        self.ui.gestureLabel.setProperty("gesture", gesture_code)
+        self.ui.gestureLabel.setText(gesture_name)
 
     def click_gesture_button(self, gesture_name):
         """Clicks the corresponding UI button if a gesture is already mapped."""
         for btn in self.ui.buttonGroup.buttons():
             if btn.property("gesture") == gesture_name:
+                btn.click()
+                break
+    def click_input_button(self, input_name):
+        """Clicks the corresponding UI button if an input is already mapped."""
+        for btn in self.ui.controlButtons.buttons():
+            if btn.property("gamepadInput") == input_name:
                 btn.click()
                 break
 
@@ -100,18 +110,14 @@ class MainView(QMainWindow):
         current_state = self.ui.scoreBar.property("is_above_threshold") or False
         
         if is_above_threshold and not current_state:
-            self.ui.scoreBar.setStyleSheet("""
-                QProgressBar { border: 1px solid #bcbcbc; border-radius: 5px; background-color: #e0e0e0; }
-                QProgressBar::chunk { background-color: #FF5722; border-radius: 4px; }
-            """)
             self.ui.scoreBar.setProperty("is_above_threshold", True)
+            self.ui.scoreBar.style().unpolish(self.ui.scoreBar)
+            self.ui.scoreBar.style().polish(self.ui.scoreBar)
             
         elif not is_above_threshold and current_state:
-            self.ui.scoreBar.setStyleSheet("""
-                QProgressBar { border: 1px solid #bcbcbc; border-radius: 5px; background-color: #e0e0e0; }
-                QProgressBar::chunk { background-color: #0078D7; border-radius: 4px; }
-            """)
             self.ui.scoreBar.setProperty("is_above_threshold", False)
+            self.ui.scoreBar.style().unpolish(self.ui.scoreBar)
+            self.ui.scoreBar.style().polish(self.ui.scoreBar)
 
     def get_slider_threshold(self):
         return self.ui.scoreSlider.value()

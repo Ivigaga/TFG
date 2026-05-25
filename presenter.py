@@ -78,6 +78,7 @@ class MainPresenter(QObject):
 
     def handle_mapping_request(self, button_obj):
         """Fired when user wants to map a gamepad button (A, B, Start...)."""
+        return
         input_id = button_obj.property("gamepadInput")
         self.view.set_mapping_label(input_id, button_obj.text())
         
@@ -86,8 +87,8 @@ class MainPresenter(QObject):
         self.view.uncheck_all_gestures()
         
         # Enable reading and check if previously mapped
-        self.is_reading_score = True
-        self.current_mapped_gesture = None
+        #self.is_reading_score = True
+        #self.current_mapped_gesture = None
         
         mapped_gesture = self.model.get_gesture_by_input(input_id)
         if mapped_gesture:
@@ -95,10 +96,19 @@ class MainPresenter(QObject):
             
         self.view.show_page(2)
 
-    def handle_gesture_selection(self, gesture_name):
+    def handle_gesture_selection(self, gesture_button):
         """Fired when user clicks 'Smile', 'Blink', etc."""
-        self.current_mapped_gesture = gesture_name
+        gesture_name = gesture_button.text()
+        gesture_code = gesture_button.property("gesture")
+        self.current_mapped_gesture = gesture_code
+        self.view.set_mapping_label(gesture_code,gesture_name)
         self.is_reading_score = True
+        gesture_input = self.model.get_input_from_gesture(gesture_code)
+        if gesture_input:
+            self.view.click_input_button(gesture_input)
+            
+        self.view.show_page(2)
+
 
     # --- MAIN LOOP ---
 

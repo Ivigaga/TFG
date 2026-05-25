@@ -1,13 +1,22 @@
 import sys
 from PySide6.QtWidgets import QApplication
-from model import AppModel
+from model import AppModel, resolve_path
 from view import MainView
 from vision import VisionEngine
 from presenter import MainPresenter
 
+
 def main():
     app = QApplication(sys.argv)
     
+    # 1. Cargar y aplicar la hoja de estilos externa
+    ruta_estilos = resolve_path("style.qss") # Cambia a .css si prefieres esa extensión
+    try:
+        with open(ruta_estilos, "r", encoding="utf-8") as archivo_estilo:
+            app.setStyleSheet(archivo_estilo.read())
+    except FileNotFoundError:
+        print(f"Advertencia: No se encontró el archivo de estilos en {ruta_estilos}.")
+
     # 1. Instantiate the Model (Data & Logic)
     model = AppModel("default_inputs.json")
     
