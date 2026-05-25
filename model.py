@@ -75,3 +75,30 @@ class AppModel:
     def get_type_from_gesture(self, gesture):
         """Returns the category type ('gamepad', 'system', 'none') associated with a gesture."""
         return self.input_structure.get(gesture, {}).get("category_type", "none")
+    
+    def save_control_mapping(self, gesture_code, input_code, threshold):
+        """Updates the gesture mapping in memory only (does not write to disk)."""
+        if gesture_code not in self.input_structure:
+            self.input_structure[gesture_code] = {}
+
+        # 1. El slider de la UI va de 0 a 100, pero la IA usa de 0.0 a 1.0
+        self.input_structure[gesture_code]["threshold"] = threshold / 100.0
+        
+        # 2. Si el usuario selecciona "Ninguna" o desmarca todo
+        if not input_code or input_code == "NONE":
+            self.input_structure[gesture_code]["category_type"] = "none"
+            self.input_structure[gesture_code]["function"] = "none"
+            self.input_structure[gesture_code]["input"] = None
+            
+        # 3. Si el usuario asignó un botón del mando
+        elif input_code.startswith("XUSB"):
+            self.input_structure[gesture_code]["category_type"] = "gamepad"
+            self.input_structure[gesture_code]["function"] = "pushInputButton"
+            self.input_structure[gesture_code]["input"] = input_code
+            
+        # 4. Si el usuario asignó una acción de sistema (ej. Cambiar Modo)
+        elif input_code.startswith("SYS"):
+            self.input_structure[gesture_code]["category_type"] = "system"
+            self.input_structure[gesture_code]["input"] = input_code
+            if input_code == "SYS_CHANGE_MODE":
+                self.input_structure[gesture_code]["function"] = "changeMovementMode"

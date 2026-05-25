@@ -31,6 +31,7 @@ class MainView(QMainWindow):
     mapping_requested = Signal(object)  # Sends the button object
     gesture_selected = Signal(object)      # Sends the gesture button object
     stop_reading_score = Signal()
+    save_controls = Signal(str, str, int)  # gesture_code, input_code, threshold
 
     def __init__(self):
         super().__init__()
@@ -51,9 +52,12 @@ class MainView(QMainWindow):
         # Navigation
         self.ui.changeControlsButton.clicked.connect(lambda: self.navigation_requested.emit(1))
         self.ui.controlsCancelButton.clicked.connect(lambda: self.navigation_requested.emit(1))
+        self.ui.controlsCancelButton.clicked.connect(lambda: self.ui.stackedWidgetAcciones.setCurrentIndex(0))
+        self.ui.controlsCancelButton.clicked.connect(self.stop_reading_score.emit)
         self.ui.gesturesBackButton.clicked.connect(lambda: self.navigation_requested.emit(0))
-        self.ui.gesturesBackButton.clicked.connect(self.stop_reading_score.emit)
         
+        
+
         # --- NAVEGACIÓN ANIDADA DE ACCIONES ---
         self.ui.btn_cat_mando.clicked.connect(lambda: self.ui.stackedWidgetAcciones.setCurrentIndex(1))
         self.ui.btn_cat_sys.clicked.connect(lambda: self.ui.stackedWidgetAcciones.setCurrentIndex(2))
@@ -61,7 +65,11 @@ class MainView(QMainWindow):
         self.ui.btn_volver_cat2.clicked.connect(lambda: self.ui.stackedWidgetAcciones.setCurrentIndex(0))
 
         # Botón Guardar (Por ahora solo hace navegación de vuelta al catálogo)
-        self.ui.controlSaveButon.clicked.connect(lambda: self.navigation_requested.emit(1))
+        self.ui.controlsSaveButon.clicked.connect(lambda: self.save_controls.emit(self.get_selected_gesture(),self.get_selected_control(),self.get_slider_threshold()))
+        self.ui.controlsSaveButon.clicked.connect(self.stop_reading_score.emit)
+
+        # Botón Limpiar/Deseleccionar
+        self.ui.controlsCleanButton.clicked.connect(self.clear_selection)
 
         # Gesture Selection
         for btn in self.ui.gestureButtons.buttons():
@@ -69,6 +77,14 @@ class MainView(QMainWindow):
         
         # Escuchar clics en las opciones para iluminar la categoría en tiempo real
         self.ui.controlButtons.buttonClicked.connect(self._on_action_button_clicked)
+
+        # --- CONTROL DINÁMICO DEL SLIDER Y UMBRALES ---
+        # Sincronizar el texto informativo con el valor real del slider
+        self.ui.scoreSlider.valueChanged.connect(self._on_slider_value_changed)
+        
+        # Hacer que los botones masivos incrementen o decrementen el slider
+        self.ui.btn_plus.clicked.connect(lambda: self.ui.scoreSlider.setValue(self.ui.scoreSlider.value() + 5))
+        self.ui.btn_minus.clicked.connect(lambda: self.ui.scoreSlider.setValue(self.ui.scoreSlider.value() - 5))
 
     # --- PUBLIC METHODS FOR THE PRESENTER TO CONTROL THE UI ---
 
@@ -167,3 +183,44 @@ class MainView(QMainWindow):
         for btn in [self.ui.btn_cat_mando, self.ui.btn_cat_sys]:
             btn.style().unpolish(btn)
             btn.style().polish(btn)
+
+    def get_selected_control(self):
+        """Returns the gamepad input code of the currently selected control button."""
+        checked_btn = self.ui.controlButtons.checkedButton()
+        if checked_btn:
+            return checked_btn.property("gamepadInput")
+        return None
+    
+    def get_selected_gesture(self):
+        """Returns the gesture code of the currently selected gesture"""
+        return self.ui.gestureLabel.property("gesture")
+
+    def clear_selection(self):
+        """Deselects any selected action and removes category highlights."""
+        # 1. Desmarcar cualquier botón de acción (A, B, Start, Cambiar Modo...)
+        checked_btn = self.ui.controlButtons.checkedButton()
+        if checked_btn:
+            # En Qt, para desmarcar un botón de un grupo exclusivo por código,
+            # hay que apagar la exclusividad temporalmente.
+            self.ui.controlButtons.setExclusive(False)
+            checked_btn.setChecked(False)
+            self.ui.controlButtons.setExclusive(True)
+            
+        # 2. Apagar el borde azul de las categorías (Mando / Sistema)
+        self.ui.btn_cat_mando.setProperty("active_category", False)
+        self.ui.btn_cat_sys.setProperty("active_category", False)
+        
+        # 3. Obligar a Qt a repintar las categorías para que desaparezca el borde
+        for btn in [self.ui.btn_cat_mando, self.ui.btn_cat_sys]:
+            btn.style().unpolish(btn)
+            btn.style().polish(btn)
+
+
+    def _on_slider_value_changed(self, value):
+        """Actualiza el texto informativo cada vez que cambia el slider."""
+        self.ui.info_calib.setText(f"Umbral actual: {value}%")
+
+    def set_slider_threshold(self, value):
+        """Establece el valor numérico del slider al cargar la pantalla."""
+        self.ui.scoreSlider.setValue(value)
+        self.ui.info_calib.setText(f"Umbral actual: {value}%")

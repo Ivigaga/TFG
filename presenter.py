@@ -51,6 +51,8 @@ class MainPresenter(QObject):
         self.view.gesture_selected.connect(self.handle_gesture_selection)
         self.view.stop_reading_score.connect(self.stop_reading)
 
+        self.view.save_controls.connect(self.save_control_mapping)
+
     # --- PRESENTER LOGIC ---
 
     def start_video(self):
@@ -265,5 +267,44 @@ class MainPresenter(QObject):
         gesture_input = self.model.get_input_from_gesture(gesture_code)
         if gesture_input:
             self.view.click_input_button(gesture_input)
+            
+        self.view.show_page(2)
+
+    def save_control_mapping(self, gesture_code, input_code, threshold):
+        """Recibe la señal del botón Guardar en la UI, actualiza la memoria y vuelve al menú."""
+        # 1. Ejecutamos la actualización en memoria
+        self.model.save_control_mapping(gesture_code, input_code, threshold)
+        
+        # 2. Detenemos la actualización rápida de la barra de progreso
+        self.is_reading_score = False
+        self.current_mapped_gesture = None
+
+        self.view.ui.stackedWidgetAcciones.setCurrentIndex(0)
+        
+        # 3. Ordenamos a la Vista que vuelva a la página 1 (El catálogo de gestos)
+        self.view.show_page(1)
+
+    def handle_gesture_selection(self, gesture_button):
+        """Fired when user clicks 'Smile', 'Blink', etc."""
+        gesture_name = gesture_button.text()
+        gesture_code = gesture_button.property("gesture")
+        
+        self.current_mapped_gesture = gesture_code
+        self.view.set_mapping_label(gesture_code, gesture_name)
+        self.is_reading_score = True
+        
+        # 1. Leemos el tipo de categoría guardada en el JSON y la iluminamos
+        gesture_type = self.model.get_type_from_gesture(gesture_code)
+        self.view.highlight_category(gesture_type)
+        
+        # 2. Hacemos clic automático en la opción de la sub-pestaña si la hay
+        gesture_input = self.model.get_input_from_gesture(gesture_code)
+        if gesture_input:
+            self.view.click_input_button(gesture_input)
+            
+        # 3. Sincronizamos el Slider con el umbral actual guardado en el modelo
+        gesture_data = self.model.input_structure.get(gesture_code, {})
+        current_threshold = int(gesture_data.get("threshold", 0.5) * 100)
+        self.view.set_slider_threshold(current_threshold)
             
         self.view.show_page(2)
