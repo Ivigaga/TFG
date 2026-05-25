@@ -92,5 +92,21 @@ class VisionEngine(QThread):
 
     def release_resources(self):
         self.is_running = False
-        self.wait() # Espera a que el hilo termine limpiamente
-        self.cam.stop()
+        
+        # 1. Avisamos a la cámara que pare ANTES de bloquear el hilo
+        if hasattr(self, 'cam') and self.cam:
+            self.cam.stop()
+            time.sleep(0.2)  # Dar tiempo a que el thread interno se cierre
+            
+        # 2. Esperamos limpiamente a que el QThread termine su bucle run()
+        # Con un timeout para evitar bloqueos
+        self.wait(2000)  # Esperar máximo 2 segundos
+        
+        # 3. Forzar quit() si aún está corriendo
+        if self.isRunning():
+            self.quit()
+            self.wait(1000)  # Esperar de nuevo con timeout más corto
+        
+        # 4. CRÍTICO: Apagar el motor de MediaPipe (libera los hilos en C++)
+        if hasattr(self, 'detector') and self.detector:
+            self.detector.close()

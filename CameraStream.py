@@ -31,6 +31,10 @@ class CameraStream:
             with self.lock:
                 self.ret = ret
                 self.frame = frame
+                
+        # CRÍTICO: Liberar la cámara físicamente al salir del bucle
+        if hasattr(self, 'cap') and self.cap.isOpened():
+            self.cap.release()
 
     def read(self):
         with self.lock:

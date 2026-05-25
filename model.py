@@ -67,6 +67,11 @@ class AppModel:
             if data.get("input") == gamepad_input:
                 return gesture
         return None
+    
     def get_input_from_gesture(self, gesture):
         """Returns the gamepad input associated with a gesture."""
         return self.input_structure.get(gesture, {}).get("input", None)
+    
+    def get_type_from_gesture(self, gesture):
+        """Returns the category type ('gamepad', 'system', 'none') associated with a gesture."""
+        return self.input_structure.get(gesture, {}).get("category_type", "none")

@@ -247,3 +247,23 @@ class MainPresenter(QObject):
         self.vision.release_resources()
         self.gamepad.reset()
         self.gamepad.update()
+    
+    def handle_gesture_selection(self, gesture_button):
+        """Fired when user clicks 'Smile', 'Blink', etc."""
+        gesture_name = gesture_button.text()
+        gesture_code = gesture_button.property("gesture")
+        
+        self.current_mapped_gesture = gesture_code
+        self.view.set_mapping_label(gesture_code, gesture_name)
+        self.is_reading_score = True
+        
+        # 1. Leemos el tipo de categoría guardada en el JSON y la iluminamos
+        gesture_type = self.model.get_type_from_gesture(gesture_code)
+        self.view.highlight_category(gesture_type)
+        
+        # 2. Hacemos clic automático en la opción de la sub-pestaña si la hay
+        gesture_input = self.model.get_input_from_gesture(gesture_code)
+        if gesture_input:
+            self.view.click_input_button(gesture_input)
+            
+        self.view.show_page(2)

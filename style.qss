@@ -108,3 +108,8 @@ QSlider::handle:horizontal {
 QSlider::handle:horizontal:hover {
     background-color: #FFFFFF; /* Se ilumina en blanco al apuntarlo */
 }
+
+QPushButton[active_category="true"] {
+    border: 3px solid #ff9100;
+    
+}

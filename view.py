@@ -66,6 +66,10 @@ class MainView(QMainWindow):
         # Gesture Selection
         for btn in self.ui.gestureButtons.buttons():
             btn.clicked.connect(lambda checked=False, b=btn: self.gesture_selected.emit(b))
+        
+        # Escuchar clics en las opciones para iluminar la categoría en tiempo real
+        self.ui.controlButtons.buttonClicked.connect(self._on_action_button_clicked)
+
     # --- PUBLIC METHODS FOR THE PRESENTER TO CONTROL THE UI ---
 
     def show_page(self, index):
@@ -143,3 +147,23 @@ class MainView(QMainWindow):
     def update_fps(self, fps):
         """Displays the current FPS in the window's bottom status bar."""
         self.ui.statusbar.showMessage(f"Estabilidad del Sistema: {fps} FPS")
+
+    def _on_action_button_clicked(self, button):
+        """Detects which option was clicked and highlights its parent category."""
+        input_code = button.property("gamepadInput")
+        if input_code:
+            if input_code.startswith("XUSB"):
+                self.highlight_category("gamepad")
+            elif input_code.startswith("SYS"):
+                self.highlight_category("system")
+
+    def highlight_category(self, category_type):
+        """Highlights the correct category button and unhighlights the other."""
+        # Aplicamos la propiedad dinámica booleana
+        self.ui.btn_cat_mando.setProperty("active_category", category_type == "gamepad")
+        self.ui.btn_cat_sys.setProperty("active_category", category_type == "system")
+        
+        # Forzamos a Qt a repintar los botones con la nueva regla QSS
+        for btn in [self.ui.btn_cat_mando, self.ui.btn_cat_sys]:
+            btn.style().unpolish(btn)
+            btn.style().polish(btn)

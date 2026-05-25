@@ -34,6 +34,7 @@ def main():
     def custom_close(event):
         presenter.shutdown()
         original_close_event(event)
+        sys.exit(0)  # Forzar salida completa de la aplicación
     view.closeEvent = custom_close
 
     # Start the app
