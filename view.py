@@ -28,10 +28,10 @@ class MainView(QMainWindow):
     pip_toggled = Signal()
     video_control_toggled = Signal()
     navigation_requested = Signal(int)  # Sends the page index
-    mapping_requested = Signal(object)  # Sends the button object
     gesture_selected = Signal(object)      # Sends the gesture button object
     stop_reading_score = Signal()
     save_controls = Signal(str, str, int)  # gesture_code, input_code, threshold
+    save_mapping_current = Signal()  # Signal to save the mapping on already loaded file
 
     def __init__(self):
         super().__init__()
@@ -74,6 +74,7 @@ class MainView(QMainWindow):
         # Gesture Selection
         for btn in self.ui.gestureButtons.buttons():
             btn.clicked.connect(lambda checked=False, b=btn: self.gesture_selected.emit(b))
+        self.ui.gesturesSaveLocalButton.clicked.connect(self.save_mapping_current.emit) 
         
         # Escuchar clics en las opciones para iluminar la categoría en tiempo real
         self.ui.controlButtons.buttonClicked.connect(self._on_action_button_clicked)

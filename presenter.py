@@ -47,11 +47,12 @@ class MainPresenter(QObject):
         self.view.video_control_toggled.connect(self.toggle_video)
         self.view.navigation_requested.connect(self.view.show_page)
         
-        self.view.mapping_requested.connect(self.handle_mapping_request)
         self.view.gesture_selected.connect(self.handle_gesture_selection)
         self.view.stop_reading_score.connect(self.stop_reading)
 
         self.view.save_controls.connect(self.save_control_mapping)
+
+        self.view.save_mapping_current.connect(self.save_control_mapping_current)
 
     # --- PRESENTER LOGIC ---
 
@@ -78,25 +79,9 @@ class MainPresenter(QObject):
     def stop_reading(self):
         self.is_reading_score = False
 
-    def handle_mapping_request(self, button_obj):
-        """Fired when user wants to map a gamepad button (A, B, Start...)."""
-        return
-        input_id = button_obj.property("gamepadInput")
-        self.view.set_mapping_label(input_id, button_obj.text())
-        
-        # Reset View State
-        self.view.ui.scoreBar.setValue(0)
-        self.view.uncheck_all_gestures()
-        
-        # Enable reading and check if previously mapped
-        #self.is_reading_score = True
-        #self.current_mapped_gesture = None
-        
-        mapped_gesture = self.model.get_gesture_by_input(input_id)
-        if mapped_gesture:
-            self.view.click_gesture_button(mapped_gesture)
-            
-        self.view.show_page(2)
+    def save_control_mapping_current(self):
+        self.model.save_inputs()  # Guardamos el JSON con la configuración actual en memoria
+        self.view.show_page(0)  # Volvemos a la página principal del catálogo de gestos
 
     def handle_gesture_selection(self, gesture_button):
         """Fired when user clicks 'Smile', 'Blink', etc."""
