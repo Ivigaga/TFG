@@ -1,6 +1,6 @@
-from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QGridLayout, QLabel, QPushButton, QButtonGroup, QToolButton, QSizePolicy
+from PySide6.QtGui import QIcon, QAction
+from PySide6.QtCore import Signal, Qt, QSize
 from PySide6.QtUiTools import QUiLoader
 
 class PipWindow(QWidget):
@@ -32,6 +32,8 @@ class MainView(QMainWindow):
     stop_reading_score = Signal()
     save_controls = Signal(str, str, int)  # gesture_code, input_code, threshold
     save_mapping_current = Signal()  # Signal to save the mapping on already loaded file
+    load_profiles_requested = Signal()
+    profile_accepted = Signal(str)
 
     def __init__(self):
         super().__init__()
@@ -42,6 +44,7 @@ class MainView(QMainWindow):
 
         self.pip_window = None
         self._connect_signals()
+        
 
     def _connect_signals(self):
         """Connects UI events to our custom Signals."""
@@ -86,6 +89,15 @@ class MainView(QMainWindow):
         # Hacer que los botones masivos incrementen o decrementen el slider
         self.ui.btn_plus.clicked.connect(lambda: self.ui.scoreSlider.setValue(self.ui.scoreSlider.value() + 5))
         self.ui.btn_minus.clicked.connect(lambda: self.ui.scoreSlider.setValue(self.ui.scoreSlider.value() - 5))
+
+        self.ui.gesturesLoadButton.clicked.connect(self.load_profiles_requested.emit)
+        
+        # Grupo exclusivo para los botones de perfiles (actúan como Radio Buttons)
+        self.profile_button_group = QButtonGroup(self)
+        self.profile_button_group.setExclusive(True)
+        
+        self.ui.loadBackButton.clicked.connect(lambda: self.navigation_requested.emit(1))
+        self.ui.loadAcceptButton.clicked.connect(self._on_accept_profile)
 
     # --- PUBLIC METHODS FOR THE PRESENTER TO CONTROL THE UI ---
 
@@ -225,3 +237,66 @@ class MainView(QMainWindow):
         """Establece el valor numérico del slider al cargar la pantalla."""
         self.ui.scoreSlider.setValue(value)
         self.ui.info_calib.setText(f"Umbral actual: {value}%")
+
+
+    def populate_profiles(self, profiles_list):
+        """Genera QToolButtons dinámicos (Composición Vertical: Icono sobre Texto)"""
+        # 1. Limpiar el grid actual por completo
+        while self.ui.layoutProfiles.count():
+            item = self.ui.layoutProfiles.takeAt(0)
+            widget = item.widget()
+            if widget:
+                self.profile_button_group.removeButton(widget)
+                widget.deleteLater()
+                
+        # Si no hay perfiles, no hacemos nada más
+        if not profiles_list:
+            return
+            
+        # 2. Calcular columnas ideales para la forma cuadrada
+        import math
+        columnas_ideales = math.ceil(math.sqrt(len(profiles_list)))
+                
+        # 3. Generar los nuevos QToolButtons
+        row, col = 0, 0
+        
+        # Obtenemos la ruta absoluta al icono que el usuario puso en la raíz
+        from model import resolve_path
+        icon_path = resolve_path('file_icon.png') # <-- Asegúrate de que existe este archivo
+        file_icon = QIcon(icon_path)
+
+        for profile in profiles_list:
+            clean_name = profile.replace('.json', '')
+            
+            # --- CREACIÓN DEL COMPONENTE TIPO DIBUJO ---
+            btn = QToolButton()
+            btn.setText(clean_name.upper()) # Texto limpio en mayúsculas
+            btn.setIcon(file_icon)          # El icono PNG real
+            btn.setIconSize(QSize(64, 64))  # Icono grande (ajusta si lo prefieres mayor)
+            
+            # ESTILO CLAVE: Icono arriba, texto abajo
+            btn.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+            
+            # Comportamiento: Es un botón de radio
+            btn.setCheckable(True)
+            btn.setProperty("filename", profile)
+            
+            # Política de tamaño: Que ocupe todo el ancho y alto disponible en su celda del grid
+            btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            btn.setMinimumHeight(150) # Altura mínima para que quepa bien verticalmente
+            
+            self.profile_button_group.addButton(btn)
+            # Inyectamos en el layout
+            self.ui.layoutProfiles.addWidget(btn, row, col)
+            
+            # Lógica dinámica cuadrada
+            col += 1
+            if col >= columnas_ideales: 
+                col = 0
+                row += 1
+
+    def _on_accept_profile(self):
+        """Envía el nombre del archivo seleccionado al presentador."""
+        checked_btn = self.profile_button_group.checkedButton()
+        if checked_btn:
+            self.profile_accepted.emit(checked_btn.property("filename"))

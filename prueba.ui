@@ -862,6 +862,102 @@
               </item>
              </layout>
             </widget>
+            <widget class="QWidget" name="loadPage">
+             <layout class="QVBoxLayout" name="verticalLayout_load">
+              <item>
+               <widget class="QLabel" name="label_load_title">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>20</pointsize>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>SELECCIONAR PERFIL</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QScrollArea" name="scrollAreaProfiles">
+                <property name="widgetResizable">
+                 <bool>true</bool>
+                </property>
+                <property name="styleSheet">
+                 <string>QScrollArea { border: none; background: transparent; } QWidget#scrollAreaWidgetContents { background: transparent; }</string>
+                </property>
+                <widget class="QWidget" name="scrollAreaWidgetContents">
+                 <property name="geometry">
+                  <rect>
+                   <x>0</x>
+                   <y>0</y>
+                   <width>200</width>
+                   <height>200</height>
+                  </rect>
+                 </property>
+                 <layout class="QGridLayout" name="layoutProfiles">
+                  </layout>
+                </widget>
+               </widget>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_load_buttons">
+                <item>
+                 <widget class="QPushButton" name="loadBackButton">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>80</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>◀ VOLVER</string>
+                  </property>
+                  <property name="type" stdset="0">
+                   <string>secondary</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="loadAcceptButton">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>80</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>✔ ACEPTAR</string>
+                  </property>
+                  <property name="type" stdset="0">
+                   <string>primary</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
            </widget>
           </item>
          </layout>

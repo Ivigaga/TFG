@@ -54,6 +54,9 @@ class MainPresenter(QObject):
 
         self.view.save_mapping_current.connect(self.save_control_mapping_current)
 
+        self.view.load_profiles_requested.connect(self.handle_load_profiles_requested)
+        self.view.profile_accepted.connect(self.handle_profile_accepted)
+
     # --- PRESENTER LOGIC ---
 
     def start_video(self):
@@ -293,3 +296,22 @@ class MainPresenter(QObject):
         self.view.set_slider_threshold(current_threshold)
             
         self.view.show_page(2)
+
+    def handle_load_profiles_requested(self):
+        """El usuario ha pulsado 'Cargar Archivo'."""
+        # 1. Pedir al modelo los archivos disponibles
+        profiles = self.model.get_available_profiles()
+        
+        # 2. Ordenar a la vista que los dibuje
+        self.view.populate_profiles(profiles)
+        
+        # 3. Viajar a la Página 3 (La nueva pantalla de Cargar)
+        self.view.show_page(3)
+        
+    def handle_profile_accepted(self, filename):
+        """El usuario ha seleccionado un perfil y pulsado 'Aceptar'."""
+        # 1. Cambiar el archivo en el modelo y recargar la RAM
+        self.model.load_profile(filename)
+        
+        # 2. Volver al catálogo de gestos (Página 1)
+        self.view.show_page(1)

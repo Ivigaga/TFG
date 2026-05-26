@@ -113,3 +113,26 @@ QPushButton[active_category="true"] {
     border: 3px solid #ff9100;
     
 }
+
+#scrollAreaWidgetContents QToolButton {
+    background-color: #2b2b2b; /* Fondo oscuro integrado en la app */
+    color: #ffffff;           /* Texto blanco */
+    border: 2px solid #555555; /* Borde gris suave por defecto */
+    border-radius: 20px;      /* Bordes muy redondeados como el dibujo */
+    padding: 20px;            /* Espaciado interno generoso para el icono y texto */
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Efecto al pasar el ratón */
+#scrollAreaWidgetContents QToolButton:hover {
+    background-color: #4d4d4d;
+    border: 2px solid #0078D7;
+}
+
+/* Efecto cuando está seleccionado (El "Radio Button" activo) */
+#scrollAreaWidgetContents QToolButton:checked {
+    background-color: #FF5722;
+    border: 2px solid #ffffff;
+    color: #ffffff;
+}

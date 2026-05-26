@@ -16,7 +16,8 @@ class AppModel:
         self.is_continuous_mode = True
         self.target_fps = 60
         self.model_path = resolve_path('face_landmarker.task')
-        
+        self.controls_dir = resolve_path('controls')
+        os.makedirs(self.controls_dir, exist_ok=True)
         self.load_inputs()
 
     def load_inputs(self):
@@ -102,3 +103,15 @@ class AppModel:
             self.input_structure[gesture_code]["input"] = input_code
             if input_code == "SYS_CHANGE_MODE":
                 self.input_structure[gesture_code]["function"] = "changeMovementMode"
+                
+    def get_available_profiles(self):
+        """Devuelve una lista con los nombres de los archivos .json en la carpeta controls."""
+        if not os.path.exists(self.controls_dir):
+            return []
+        # Filtramos solo los archivos JSON
+        return [f for f in os.listdir(self.controls_dir) if f.endswith('.json')]
+
+    def load_profile(self, filename):
+        """Cambia el archivo objetivo y recarga la estructura en memoria."""
+        self.json_path = os.path.join(self.controls_dir, filename)
+        self.load_inputs()
