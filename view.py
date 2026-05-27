@@ -34,6 +34,7 @@ class MainView(QMainWindow):
     save_mapping_current = Signal()  # Signal to save the mapping on already loaded file
     load_profiles_requested = Signal()
     profile_accepted = Signal(str)
+    save_as_requested = Signal(str) # Envía el nombre del nuevo archivo
 
     def __init__(self):
         super().__init__()
@@ -98,6 +99,17 @@ class MainView(QMainWindow):
         
         self.ui.loadBackButton.clicked.connect(lambda: self.navigation_requested.emit(1))
         self.ui.loadAcceptButton.clicked.connect(self._on_accept_profile)
+
+        # El botón de "Guardar Archivo" del catálogo ahora abre el teclado (Página 4)
+        self.ui.gesturesSaveExternalButton.clicked.connect(self.open_virtual_keyboard)
+        
+        # Controles del teclado
+        self.ui.keyboardCancelButton.clicked.connect(lambda: self.navigation_requested.emit(1))
+        self.ui.keyboardBackspaceButton.clicked.connect(self._on_keyboard_backspace)
+        self.ui.keyboardAcceptButton.clicked.connect(self._on_keyboard_accept)
+        
+        # Construimos el teclado al iniciar
+        self.build_virtual_keyboard()
 
     # --- PUBLIC METHODS FOR THE PRESENTER TO CONTROL THE UI ---
 
@@ -300,3 +312,134 @@ class MainView(QMainWindow):
         checked_btn = self.profile_button_group.checkedButton()
         if checked_btn:
             self.profile_accepted.emit(checked_btn.property("filename"))
+
+    def build_virtual_keyboard(self):
+        """Construye un teclado dinámico simétrico de 13 columnas por fila."""
+        from PySide6.QtWidgets import QPushButton, QSizePolicy
+
+        self.is_caps = False   # CORRECCIÓN: El teclado ahora nace en minúsculas
+        self.is_shift = False 
+        self.keyboard_buttons = [] 
+
+        # Distribución perfectamente equilibrada (13 elementos por fila)
+        teclas = [
+            ['º', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '?', '¡'],
+            ['TAB', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '`', '+'],
+            ['BLOQ', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ñ', '´', 'Ç'],
+            ['SHIFT', '<', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '-', 'SHIFT'],
+            ['ESPACIO']
+        ]
+        
+        for row_idx, fila in enumerate(teclas):
+            for col_idx, tecla in enumerate(fila):
+                btn = QPushButton()
+                btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+                btn.setMinimumHeight(60)
+                
+                if tecla == 'ESPACIO':
+                    self.ui.keyboardGridLayout.addWidget(btn, row_idx, 0, 1, 13)
+                else:
+                    self.ui.keyboardGridLayout.addWidget(btn, row_idx, col_idx)
+
+                btn.clicked.connect(lambda checked=False, char=tecla: self._on_key_pressed(char))
+                self.keyboard_buttons.append({'btn': btn, 'base': tecla})
+
+        self._update_keyboard_labels()
+
+    def _update_keyboard_labels(self):
+        """Repinta las etiquetas de la matriz según el estado de BLOQ MAYÚS y SHIFT."""
+        # Añadido el mapa de caracteres para la nueva tecla 'º' -> 'ª'
+        shift_map = {
+            'º': 'ª', '1': '!', '2': '"', '3': '·', '4': '$', '5': '%', '6': '&&', '7': '/',
+            '8': '(', '9': ')', '0': '=', '?': "'", '¡': '¿',
+            '`': '^', '+': '*', '´': '¨', '<': '>', ',': ';', '.': ':', '-': '_'
+        }
+
+        for item in self.keyboard_buttons:
+            btn = item['btn']
+            base = item['base']
+
+            # Teclas de control (No se alteran con shift/mayúsculas textualmente)
+            if base in ['BLOQ', 'SHIFT', 'ESPACIO', 'TAB']:
+                btn.setText(base)
+                # Iluminación de estado para ambos botones SHIFT y el BLOQ
+                if base == 'BLOQ':
+                    btn.setStyleSheet("background-color: #0078D7; border-color: #ffffff;" if self.is_caps else "")
+                elif base == 'SHIFT':
+                    btn.setStyleSheet("background-color: #0078D7; border-color: #ffffff;" if self.is_shift else "")
+            
+            # Letras básicas
+            elif base.isalpha() and len(base) == 1 and base != 'º':
+                if self.is_caps ^ self.is_shift: 
+                    btn.setText(base.upper())
+                else:
+                    btn.setText(base.lower())
+            
+            # Números y símbolos especiales
+            else:
+                if self.is_shift:
+                    btn.setText(shift_map.get(base, base))
+                else:
+                    btn.setText(base)
+                
+            
+
+    def _on_key_pressed(self, char):
+        """Procesa la inserción de texto o los cambios de estado del teclado."""
+        current_text = self.ui.keyboardDisplay.text()
+        
+        if char == 'BLOQ':
+            self.is_caps = not self.is_caps
+            self._update_keyboard_labels()
+            return
+            
+        elif char == 'SHIFT':
+            self.is_shift = not self.is_shift
+            self._update_keyboard_labels()
+            return
+            
+        elif char == 'ESPACIO':
+            if len(current_text) < 30:
+                self.ui.keyboardDisplay.setText(current_text + " ")
+                
+        elif char == 'TAB':
+            if len(current_text) < 30:
+                # El tabulador inserta un bloque de 4 espacios para mantener un espaciado limpio
+                self.ui.keyboardDisplay.setText(current_text + "    ")
+                
+        else:
+            if len(current_text) < 30:
+                # Recupera de forma segura el texto pintado en el botón pulsado actualmente
+                for item in self.keyboard_buttons:
+                    if item['base'] == char:
+                        char_to_write = item['btn'].text()
+                        if(char_to_write == '&&'):
+                            char_to_write = '&'  # Corrección para mostrar '&' en el display en lugar de '&&'
+                        self.ui.keyboardDisplay.setText(current_text + char_to_write)
+                        break
+
+        # Desactivar el shift tras una pulsación ordinaria de escritura
+        if self.is_shift and char not in ['BLOQ', 'SHIFT', 'TAB']:
+            self.is_shift = False
+            self._update_keyboard_labels()
+
+    def open_virtual_keyboard(self):
+        """Limpia la pantalla del teclado y resetea los modificadores al entrar."""
+        self.ui.keyboardDisplay.setText("")
+        self.is_shift = False
+        self.is_caps = False # CORRECCIÓN: Minúsculas por defecto al abrir la pantalla de escritura
+        self._update_keyboard_labels()
+        self.show_page(4)
+
+   
+
+    def _on_keyboard_backspace(self):
+        """Borra la última letra."""
+        texto_actual = self.ui.keyboardDisplay.text()
+        self.ui.keyboardDisplay.setText(texto_actual[:-1])
+
+    def _on_keyboard_accept(self):
+        """Envía el texto al presentador si no está vacío."""
+        filename = self.ui.keyboardDisplay.text().strip()
+        if filename:
+            self.save_as_requested.emit(filename)

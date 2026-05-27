@@ -23,3 +23,6 @@ dist/
 /venv
 /venv/Lib
 /venv/Lib/site-packages/__pycache__
+
+
+controls/

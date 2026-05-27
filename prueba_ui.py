@@ -527,7 +527,7 @@ class Ui_MainWindow(object):
         self.scrollAreaProfiles.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 200, 200))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 100, 30))
         self.layoutProfiles = QGridLayout(self.scrollAreaWidgetContents)
         self.layoutProfiles.setObjectName(u"layoutProfiles")
         self.scrollAreaProfiles.setWidget(self.scrollAreaWidgetContents)
@@ -556,6 +556,57 @@ class Ui_MainWindow(object):
         self.verticalLayout_load.addLayout(self.horizontalLayout_load_buttons)
 
         self.stackedWidget.addWidget(self.loadPage)
+        self.keyboardPage = QWidget()
+        self.keyboardPage.setObjectName(u"keyboardPage")
+        self.verticalLayout_kb = QVBoxLayout(self.keyboardPage)
+        self.verticalLayout_kb.setObjectName(u"verticalLayout_kb")
+        self.keyboardDisplay = QLabel(self.keyboardPage)
+        self.keyboardDisplay.setObjectName(u"keyboardDisplay")
+        font1 = QFont()
+        font1.setPointSize(24)
+        font1.setBold(True)
+        self.keyboardDisplay.setFont(font1)
+        self.keyboardDisplay.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.verticalLayout_kb.addWidget(self.keyboardDisplay)
+
+        self.keyboardContainerWidget = QWidget(self.keyboardPage)
+        self.keyboardContainerWidget.setObjectName(u"keyboardContainerWidget")
+        self.keyboardGridLayout = QGridLayout(self.keyboardContainerWidget)
+        self.keyboardGridLayout.setObjectName(u"keyboardGridLayout")
+
+        self.verticalLayout_kb.addWidget(self.keyboardContainerWidget)
+
+        self.horizontalLayout_kb_buttons = QHBoxLayout()
+        self.horizontalLayout_kb_buttons.setObjectName(u"horizontalLayout_kb_buttons")
+        self.keyboardCancelButton = QPushButton(self.keyboardPage)
+        self.keyboardCancelButton.setObjectName(u"keyboardCancelButton")
+        sizePolicy.setHeightForWidth(self.keyboardCancelButton.sizePolicy().hasHeightForWidth())
+        self.keyboardCancelButton.setSizePolicy(sizePolicy)
+
+        self.horizontalLayout_kb_buttons.addWidget(self.keyboardCancelButton)
+
+        self.keyboardBackspaceButton = QPushButton(self.keyboardPage)
+        self.keyboardBackspaceButton.setObjectName(u"keyboardBackspaceButton")
+        sizePolicy.setHeightForWidth(self.keyboardBackspaceButton.sizePolicy().hasHeightForWidth())
+        self.keyboardBackspaceButton.setSizePolicy(sizePolicy)
+
+        self.horizontalLayout_kb_buttons.addWidget(self.keyboardBackspaceButton)
+
+        self.keyboardAcceptButton = QPushButton(self.keyboardPage)
+        self.keyboardAcceptButton.setObjectName(u"keyboardAcceptButton")
+        sizePolicy.setHeightForWidth(self.keyboardAcceptButton.sizePolicy().hasHeightForWidth())
+        self.keyboardAcceptButton.setSizePolicy(sizePolicy)
+
+        self.horizontalLayout_kb_buttons.addWidget(self.keyboardAcceptButton)
+
+
+        self.verticalLayout_kb.addLayout(self.horizontalLayout_kb_buttons)
+
+        self.verticalLayout_kb.setStretch(0, 1)
+        self.verticalLayout_kb.setStretch(1, 5)
+        self.verticalLayout_kb.setStretch(2, 1)
+        self.stackedWidget.addWidget(self.keyboardPage)
 
         self.verticalLayout_6.addWidget(self.stackedWidget)
 
@@ -583,7 +634,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.stackedWidget.setCurrentIndex(0)
+        self.stackedWidget.setCurrentIndex(1)
         self.stackedWidgetAcciones.setCurrentIndex(0)
 
 
@@ -649,5 +700,12 @@ class Ui_MainWindow(object):
         self.loadBackButton.setProperty(u"type", QCoreApplication.translate("MainWindow", u"secondary", None))
         self.loadAcceptButton.setText(QCoreApplication.translate("MainWindow", u"\u2714 ACEPTAR", None))
         self.loadAcceptButton.setProperty(u"type", QCoreApplication.translate("MainWindow", u"primary", None))
+        self.keyboardDisplay.setStyleSheet(QCoreApplication.translate("MainWindow", u"background-color: #1e1e1e; border: 2px solid #555555; border-radius: 10px; padding: 10px; color: #FFEB3B;", None))
+        self.keyboardDisplay.setText("")
+        self.keyboardCancelButton.setText(QCoreApplication.translate("MainWindow", u"\u25c0 CANCELAR", None))
+        self.keyboardCancelButton.setProperty(u"type", QCoreApplication.translate("MainWindow", u"secondary", None))
+        self.keyboardBackspaceButton.setText(QCoreApplication.translate("MainWindow", u"\u232b BORRAR", None))
+        self.keyboardAcceptButton.setText(QCoreApplication.translate("MainWindow", u"\u2714 GUARDAR", None))
+        self.keyboardAcceptButton.setProperty(u"type", QCoreApplication.translate("MainWindow", u"primary", None))
     # retranslateUi
 

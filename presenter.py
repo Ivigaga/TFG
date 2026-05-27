@@ -57,6 +57,8 @@ class MainPresenter(QObject):
         self.view.load_profiles_requested.connect(self.handle_load_profiles_requested)
         self.view.profile_accepted.connect(self.handle_profile_accepted)
 
+        self.view.save_as_requested.connect(self.handle_save_as_requested)
+
     # --- PRESENTER LOGIC ---
 
     def start_video(self):
@@ -314,4 +316,12 @@ class MainPresenter(QObject):
         self.model.load_profile(filename)
         
         # 2. Volver al catálogo de gestos (Página 1)
+        self.view.show_page(1)
+
+    def handle_save_as_requested(self, filename):
+        """El usuario ha escrito un nombre y pulsado guardar."""
+        # 1. El modelo crea el JSON y guarda los datos de la memoria
+        self.model.save_as_profile(filename)
+        
+        # 2. Volvemos al catálogo de gestos
         self.view.show_page(1)

@@ -137,7 +137,7 @@
              </sizepolicy>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="mainPage">
              <property name="sizePolicy">
@@ -888,23 +888,22 @@
               </item>
               <item>
                <widget class="QScrollArea" name="scrollAreaProfiles">
-                <property name="widgetResizable">
-                 <bool>true</bool>
-                </property>
                 <property name="styleSheet">
                  <string>QScrollArea { border: none; background: transparent; } QWidget#scrollAreaWidgetContents { background: transparent; }</string>
+                </property>
+                <property name="widgetResizable">
+                 <bool>true</bool>
                 </property>
                 <widget class="QWidget" name="scrollAreaWidgetContents">
                  <property name="geometry">
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>200</width>
-                   <height>200</height>
+                   <width>100</width>
+                   <height>30</height>
                   </rect>
                  </property>
-                 <layout class="QGridLayout" name="layoutProfiles">
-                  </layout>
+                 <layout class="QGridLayout" name="layoutProfiles"/>
                 </widget>
                </widget>
               </item>
@@ -958,6 +957,65 @@
               </item>
              </layout>
             </widget>
+            <widget class="QWidget" name="keyboardPage">
+             <layout class="QVBoxLayout" name="verticalLayout_kb" stretch="1,5,1">
+              <item>
+               <widget class="QLabel" name="keyboardDisplay">
+                <property name="font">
+                 <font>
+                  <pointsize>24</pointsize>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string>background-color: #1e1e1e; border: 2px solid #555555; border-radius: 10px; padding: 10px; color: #FFEB3B;</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QWidget" name="keyboardContainerWidget" native="true">
+                <layout class="QGridLayout" name="keyboardGridLayout">
+                 </layout>
+               </widget>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_kb_buttons">
+                <item>
+                 <widget class="QPushButton" name="keyboardCancelButton">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding"><horstretch>0</horstretch><verstretch>0</verstretch></sizepolicy>
+                  </property>
+                  <property name="text"><string>◀ CANCELAR</string></property>
+                  <property name="type" stdset="0"><string>secondary</string></property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="keyboardBackspaceButton">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding"><horstretch>0</horstretch><verstretch>0</verstretch></sizepolicy>
+                  </property>
+                  <property name="text"><string>⌫ BORRAR</string></property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="keyboardAcceptButton">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding"><horstretch>0</horstretch><verstretch>0</verstretch></sizepolicy>
+                  </property>
+                  <property name="text"><string>✔ GUARDAR</string></property>
+                  <property name="type" stdset="0"><string>primary</string></property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
            </widget>
           </item>
          </layout>
@@ -983,7 +1041,7 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="gestureButtons"/>
   <buttongroup name="controlButtons"/>
+  <buttongroup name="gestureButtons"/>
  </buttongroups>
 </ui>

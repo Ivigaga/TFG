@@ -115,3 +115,15 @@ class AppModel:
         """Cambia el archivo objetivo y recarga la estructura en memoria."""
         self.json_path = os.path.join(self.controls_dir, filename)
         self.load_inputs()
+    
+    def save_as_profile(self, new_filename):
+        """Crea un nuevo archivo JSON, guarda la configuración actual y lo establece como activo."""
+        # Asegurarnos de que termina en .json
+        if not new_filename.lower().endswith('.json'):
+            new_filename += '.json'
+            
+        # Actualizamos la ruta actual al nuevo archivo
+        self.json_path = os.path.join(self.controls_dir, new_filename)
+        
+        # Llamamos al método que ya tenías para que vuelque la memoria al disco
+        self.save_inputs()
