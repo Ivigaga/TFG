@@ -59,6 +59,11 @@ class MainPresenter(QObject):
 
         self.view.save_as_requested.connect(self.handle_save_as_requested)
 
+        self.view.games_catalog_requested.connect(self.handle_games_catalog_requested)
+        self.view.scan_games_requested.connect(self.handle_scan_games)
+        # Conexión para el lanzamiento de videojuegos
+        self.view.game_launch_requested.connect(self.handle_game_launch)
+
     # --- PRESENTER LOGIC ---
 
     def start_video(self):
@@ -325,3 +330,43 @@ class MainPresenter(QObject):
         
         # 2. Volvemos al catálogo de gestos
         self.view.show_page(1)
+
+    def handle_games_catalog_requested(self):
+        """Solicita los juegos al modelo, ordena pintarlos y cambia a la pantalla de catálogo."""
+        lista_juegos = self.model.get_installed_games()
+        self.view.populate_games_catalog(lista_juegos)
+        self.view.show_page(5) # Muestra la nueva gamesPage
+
+    def handle_scan_games(self):
+        """Ejecuta el escáner del modelo y recarga la vista si encuentra algo nuevo."""
+        # 1. Cambiamos el texto temporalmente para dar feedback visual
+        self.view.ui.gamesScanButton.setText("ESCANEANDO...")
+        self.view.ui.gamesScanButton.setEnabled(False)
+        
+        # 2. Ejecutar la lógica de detección
+        nuevos_encontrados = self.model.auto_detect_steam_games()
+        
+        # 3. Restaurar botón
+        self.view.ui.gamesScanButton.setText("🔍 ESCANEAR STEAM")
+        self.view.ui.gamesScanButton.setEnabled(True)
+        
+        # 4. Si ha encontrado juegos, repintamos la cuadrícula
+        if nuevos_encontrados:
+            lista_actualizada = self.model.get_installed_games()
+            self.view.populate_games_catalog(lista_actualizada)
+
+    def handle_game_launch(self, exe_path):
+        """Lanza de forma asíncrona el ejecutable del juego o la URI de Steam."""
+        if not exe_path:
+            print("Advertencia: Este juego no tiene una ruta de ejecución válida configurada.")
+            return
+
+        import os
+        try:
+            # Justificación para el TFG: os.startfile delega la ejecución al núcleo de Windows.
+            # Al ser no bloqueante (no espera a que el programa termine), la interfaz de Python
+            # sigue respondiendo y procesando la cámara en segundo plano sin sufrir microtirones.
+            os.startfile(exe_path)
+            print(f"Lanzando con éxito: {exe_path}")
+        except Exception as e:
+            print(f"Error crítico al intentar abrir el juego en '{exe_path}': {e}")

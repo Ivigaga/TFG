@@ -36,6 +36,10 @@ class MainView(QMainWindow):
     profile_accepted = Signal(str)
     save_as_requested = Signal(str) # Envía el nombre del nuevo archivo
 
+    games_catalog_requested = Signal()
+    scan_games_requested = Signal()
+    game_launch_requested = Signal(str)  # Envía la ruta o URI del juego seleccionado
+
     def __init__(self):
         super().__init__()
         self.ui = QUiLoader().load("prueba.ui", None) 
@@ -110,6 +114,15 @@ class MainView(QMainWindow):
         
         # Construimos el teclado al iniciar
         self.build_virtual_keyboard()
+
+    
+        # Abrir catálogo desde la pantalla principal
+        self.ui.gamesButton.clicked.connect(self.games_catalog_requested.emit)
+        
+        # Volver al menú principal (Página 0) desde el catálogo de juegos
+        self.ui.gamesBackButton.clicked.connect(lambda: self.navigation_requested.emit(0))
+
+        self.ui.gamesScanButton.clicked.connect(self.scan_games_requested.emit)
 
     # --- PUBLIC METHODS FOR THE PRESENTER TO CONTROL THE UI ---
 
@@ -443,3 +456,62 @@ class MainView(QMainWindow):
         filename = self.ui.keyboardDisplay.text().strip()
         if filename:
             self.save_as_requested.emit(filename)
+
+
+    def populate_games_catalog(self, games_list):
+        """Genera QToolButtons dinámicos en distribución cuadrada para los juegos."""
+        # 1. Limpiar el grid por completo para actualizaciones limpias
+        while self.ui.layoutGames.count():
+            item = self.ui.layoutGames.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+
+        if not games_list:
+            return
+
+        # 2. Calcular la distribución de columnas ideal para formar un cuadrado
+        import math
+        columnas_ideales = math.ceil(math.sqrt(len(games_list)))
+
+        # 3. Preparar icono genérico por si el juego no especifica uno personalizado
+        from PySide6.QtGui import QIcon
+        from PySide6.QtCore import QSize, Qt
+        from PySide6.QtWidgets import QToolButton, QSizePolicy
+        from model import resolve_path
+        
+        icono_defecto = QIcon(resolve_path('game_default.png')) # Asegúrate de tener una imagen base
+
+        row, col = 0, 0
+        import textwrap # Añade esto justo antes del bucle si no lo tienes arriba
+
+        for juego in games_list:
+            titulo_crudo = juego.get("title", "JUEGO DESCONOCIDO").upper()
+            exe_path = juego.get("exe_path", "") 
+            
+            # Formateamos el texto para que salte de línea cada 12 caracteres (aprox)
+            # sin romper las palabras por la mitad gracias a textwrap
+            titulo_multilinea = textwrap.fill(titulo_crudo, width=12)
+            
+            btn = QToolButton()
+            btn.setText(titulo_multilinea)
+            
+            ruta_icono = juego.get("icon")
+            btn.setIcon(QIcon(resolve_path(ruta_icono)) if ruta_icono else icono_defecto)
+            btn.setIconSize(QSize(100,80))
+            btn.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+            
+            from PySide6.QtWidgets import QSizePolicy
+            btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+            
+            # NUEVO: Al hacer clic, emitimos la señal con la ruta/URI específica de este juego
+            btn.clicked.connect(lambda checked=False, path=exe_path: self.game_launch_requested.emit(path))
+            
+            # Inyectamos en el grid layout
+            self.ui.layoutGames.addWidget(btn, row, col)
+            
+            # Control de la matriz cuadrada
+            col += 1
+            if col >= columnas_ideales:
+                col = 0
+                row += 1

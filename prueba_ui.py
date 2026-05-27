@@ -128,12 +128,12 @@ class Ui_MainWindow(object):
 
         self.gridLayout_2.addWidget(self.changeControlsButton, 0, 0, 1, 1)
 
-        self.pushButton_2 = QPushButton(self.mainPage)
-        self.pushButton_2.setObjectName(u"pushButton_2")
-        sizePolicy2.setHeightForWidth(self.pushButton_2.sizePolicy().hasHeightForWidth())
-        self.pushButton_2.setSizePolicy(sizePolicy2)
+        self.gamesButton = QPushButton(self.mainPage)
+        self.gamesButton.setObjectName(u"gamesButton")
+        sizePolicy2.setHeightForWidth(self.gamesButton.sizePolicy().hasHeightForWidth())
+        self.gamesButton.setSizePolicy(sizePolicy2)
 
-        self.gridLayout_2.addWidget(self.pushButton_2, 0, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.gamesButton, 0, 1, 1, 1)
 
         self.pushButton_5 = QPushButton(self.mainPage)
         self.pushButton_5.setObjectName(u"pushButton_5")
@@ -607,6 +607,52 @@ class Ui_MainWindow(object):
         self.verticalLayout_kb.setStretch(1, 5)
         self.verticalLayout_kb.setStretch(2, 1)
         self.stackedWidget.addWidget(self.keyboardPage)
+        self.gamesPage = QWidget()
+        self.gamesPage.setObjectName(u"gamesPage")
+        self.verticalLayout_games = QVBoxLayout(self.gamesPage)
+        self.verticalLayout_games.setObjectName(u"verticalLayout_games")
+        self.label_games_title = QLabel(self.gamesPage)
+        self.label_games_title.setObjectName(u"label_games_title")
+        sizePolicy6.setHeightForWidth(self.label_games_title.sizePolicy().hasHeightForWidth())
+        self.label_games_title.setSizePolicy(sizePolicy6)
+        self.label_games_title.setFont(font)
+        self.label_games_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.verticalLayout_games.addWidget(self.label_games_title)
+
+        self.scrollAreaGames = QScrollArea(self.gamesPage)
+        self.scrollAreaGames.setObjectName(u"scrollAreaGames")
+        self.scrollAreaGames.setWidgetResizable(True)
+        self.scrollAreaGamesContents = QWidget()
+        self.scrollAreaGamesContents.setObjectName(u"scrollAreaGamesContents")
+        self.layoutGames = QGridLayout(self.scrollAreaGamesContents)
+        self.layoutGames.setObjectName(u"layoutGames")
+        self.scrollAreaGames.setWidget(self.scrollAreaGamesContents)
+
+        self.verticalLayout_games.addWidget(self.scrollAreaGames)
+
+        self.horizontalLayout_games_buttons = QHBoxLayout()
+        self.horizontalLayout_games_buttons.setObjectName(u"horizontalLayout_games_buttons")
+        self.gamesBackButton = QPushButton(self.gamesPage)
+        self.gamesBackButton.setObjectName(u"gamesBackButton")
+        sizePolicy3.setHeightForWidth(self.gamesBackButton.sizePolicy().hasHeightForWidth())
+        self.gamesBackButton.setSizePolicy(sizePolicy3)
+        self.gamesBackButton.setMinimumSize(QSize(0, 80))
+
+        self.horizontalLayout_games_buttons.addWidget(self.gamesBackButton)
+
+        self.gamesScanButton = QPushButton(self.gamesPage)
+        self.gamesScanButton.setObjectName(u"gamesScanButton")
+        sizePolicy3.setHeightForWidth(self.gamesScanButton.sizePolicy().hasHeightForWidth())
+        self.gamesScanButton.setSizePolicy(sizePolicy3)
+        self.gamesScanButton.setMinimumSize(QSize(0, 80))
+
+        self.horizontalLayout_games_buttons.addWidget(self.gamesScanButton)
+
+
+        self.verticalLayout_games.addLayout(self.horizontalLayout_games_buttons)
+
+        self.stackedWidget.addWidget(self.gamesPage)
 
         self.verticalLayout_6.addWidget(self.stackedWidget)
 
@@ -649,7 +695,7 @@ class Ui_MainWindow(object):
         self.pushButton_3.setText(QCoreApplication.translate("MainWindow", u"PushButton", None))
         self.pushButton_4.setText(QCoreApplication.translate("MainWindow", u"PushButton", None))
         self.changeControlsButton.setText(QCoreApplication.translate("MainWindow", u"Cambiar controles", None))
-        self.pushButton_2.setText(QCoreApplication.translate("MainWindow", u"PushButton", None))
+        self.gamesButton.setText(QCoreApplication.translate("MainWindow", u"\U0001f3ae MIS JUEGOS", None))
         self.pushButton_5.setText(QCoreApplication.translate("MainWindow", u"PushButton", None))
         self.gesturesBackButton.setText(QCoreApplication.translate("MainWindow", u"\u25c0 Volver  sin guardar", None))
         self.gesturesBackButton.setProperty(u"type", "")
@@ -707,5 +753,11 @@ class Ui_MainWindow(object):
         self.keyboardBackspaceButton.setText(QCoreApplication.translate("MainWindow", u"\u232b BORRAR", None))
         self.keyboardAcceptButton.setText(QCoreApplication.translate("MainWindow", u"\u2714 GUARDAR", None))
         self.keyboardAcceptButton.setProperty(u"type", QCoreApplication.translate("MainWindow", u"primary", None))
+        self.label_games_title.setText(QCoreApplication.translate("MainWindow", u"CAT\u00c1LOGO DE JUEGOS", None))
+        self.scrollAreaGames.setStyleSheet(QCoreApplication.translate("MainWindow", u"QScrollArea { border: none; background: transparent; } QWidget#scrollAreaGamesContents { background: transparent; }", None))
+        self.gamesBackButton.setText(QCoreApplication.translate("MainWindow", u"\u25c0 VOLVER AL MEN\u00da", None))
+        self.gamesBackButton.setProperty(u"type", QCoreApplication.translate("MainWindow", u"secondary", None))
+        self.gamesScanButton.setText(QCoreApplication.translate("MainWindow", u"\U0001f50d ESCANEAR STEAM", None))
+        self.gamesScanButton.setProperty(u"type", QCoreApplication.translate("MainWindow", u"primary", None))
     # retranslateUi
 

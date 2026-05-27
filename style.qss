@@ -136,3 +136,52 @@ QPushButton[active_category="true"] {
     border: 2px solid #ffffff;
     color: #ffffff;
 }
+
+/* --- ESTILO DE TARJETAS (TIPO DIBUJO) PARA FICHEROS Y JUEGOS --- */
+
+/* --- ESTILO DE TARJETAS CUADRADAS Y COMPACTAS --- */
+
+#scrollAreaWidgetContents QToolButton,
+#scrollAreaGamesContents QToolButton {
+    background-color: #2b2b2b;
+    color: #ffffff;
+    border: 2px solid #555555;
+    border-radius: 15px;       /* Reducido proporcionalmente al nuevo tamaño */
+    
+    /* EL SECRETO: Forzar tamaño fijo y cuadrado */
+    min-width: 130px;
+    max-width: 130px;
+    min-height: 130px;
+    max-height: 130px;
+    
+    padding: 10px;
+    margin: 8px;               /* Un poco más de margen para que la cuadrícula respire */
+    font-weight: bold;
+    font-size: 12px;           /* Fuente ajustada al tamaño del botón */
+}
+
+/* Efecto al mirar/pasar por encima */
+#scrollAreaWidgetContents QToolButton:hover,
+#scrollAreaGamesContents QToolButton:hover {
+    background-color: #3d3d3d;
+    border-color: #777777;
+}
+
+/* Efecto al hacer la pulsación facial */
+#scrollAreaWidgetContents QToolButton:pressed,
+#scrollAreaGamesContents QToolButton:pressed {
+    background-color: #1e1e1e;
+    border-color: #444444;
+}
+
+/* Estado de perfil seleccionado */
+#scrollAreaWidgetContents QToolButton:checked {
+    background-color: #3d3d3d;
+    border-color: #0078D7; 
+}
+
+/* Espaciado del icono interno */
+#scrollAreaWidgetContents QToolButton::icon,
+#scrollAreaGamesContents QToolButton::icon {
+    padding-bottom: 5px;
+}
