@@ -22,7 +22,18 @@ class AppModel:
         os.makedirs(self.controls_dir, exist_ok=True)
         self.games_dir = resolve_path('games')
         os.makedirs(self.games_dir, exist_ok=True)
+        
+        # NUEVO: Configuración de rutas y Caché en RAM
+        self.rom_folders_file = resolve_path('games/rom_folders.json') 
+        self.steam_games_file = resolve_path('games/steam_games.json')
+        self._cached_roms = None 
+        
+        os.makedirs(self.games_dir, exist_ok=True)
+
+
         self.load_inputs()
+
+
 
     def load_inputs(self):
         """Loads the configuration from the JSON file."""
@@ -133,13 +144,15 @@ class AppModel:
         self.save_inputs()
 
     def auto_detect_steam_games(self):
-        """Escanea las bibliotecas de Steam. Registra juegos nuevos y actualiza rutas/iconos de los ya existentes."""
+        """Escanea Steam y consolida todos los perfiles en una única base de datos JSON."""
+        import os, glob, json, winreg
+        
         try:
             key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\Valve\Steam")
             steam_path, _ = winreg.QueryValueEx(key, "InstallPath")
             winreg.CloseKey(key)
         except FileNotFoundError:
-            print("Steam no está instalado en el sistema.")
+            print("Steam no está instalado.")
             return False
 
         steam_library_cache = os.path.join(steam_path, "appcache", "librarycache")
@@ -156,15 +169,23 @@ class AppModel:
                             if len(partes) >= 4:
                                 ruta_limpia = partes[3].replace('\\\\', '\\')
                                 library_paths.append(ruta_limpia)
-            except Exception as e:
-                print(f"Error leyendo libraryfolders.vdf: {e}")
+            except Exception:
                 library_paths.append(steam_path)
         else:
             library_paths.append(steam_path)
 
-        # Contador de cualquier modificación (tanto nuevos como actualizaciones)
+        # --- CARGAMOS LA BASE DE DATOS ACTUAL A MEMORIA ---
+        steam_data = {}
+        if os.path.exists(self.steam_games_file):
+            try:
+                with open(self.steam_games_file, 'r', encoding='utf-8') as f:
+                    steam_data = json.load(f)
+            except Exception:
+                steam_data = {} # Si no existe o está corrupto, empezamos de cero
+
         hubo_cambios = False
 
+        # Comenzamos el escaneo
         for lib_path in library_paths:
             steamapps_path = os.path.join(lib_path, "steamapps")
             if not os.path.exists(steamapps_path):
@@ -175,9 +196,7 @@ class AppModel:
                     with open(file_path, 'r', encoding='utf-8') as f:
                         content = f.read()
 
-                    name = ""
-                    app_id = ""
-                    
+                    name, app_id = "", ""
                     for line in content.split('\n'):
                         if '"name"' in line:
                             name = line.split('"')[3]
@@ -187,17 +206,12 @@ class AppModel:
                     if name and app_id:
                         app_id = str(app_id).strip()
                         
-                        # Lista negra de IDs (Steamworks, etc.)
-                        ids_ignorados = ["228980"]
-                        if app_id in ids_ignorados:
+                        if app_id in ["228980"]: # Lista negra
                             continue
-                            
-                        safe_filename = "".join(c for c in name if c.isalnum() or c in (' ', '_')).replace(' ', '_').lower()
-                        json_path = os.path.join(self.games_dir, f"{safe_filename}.json")
 
-                        # --- BÚSQUEDA RECURSIVA DE LOGO.PNG ---
+                        # --- BÚSQUEDA DEL LOGO ---
                         best_image = ""
-                        app_folder = os.path.join(steam_library_cache, str(app_id))
+                        app_folder = os.path.join(steam_library_cache, app_id)
                         
                         if os.path.exists(app_folder) and os.path.isdir(app_folder):
                             for root, dirs, files in os.walk(app_folder):
@@ -205,8 +219,7 @@ class AppModel:
                                     if archivo.lower() == 'logo.png':
                                         best_image = os.path.join(root, archivo)
                                         break
-                                if best_image:
-                                    break
+                                if best_image: break
                             
                             if not best_image:
                                 archivos = os.listdir(app_folder)
@@ -218,69 +231,193 @@ class AppModel:
                             if best_image:
                                 best_image = best_image.replace('\\\\', '\\')
 
-                        # Datos detectados en el escaneo actual
+                        # Datos estructurados
                         scanned_data = {
                             "title": name,
                             "exe_path": f"steam://rungameid/{app_id}",
                             "icon": best_image
                         }
 
-                        guardar_fichero = False
-
-                        # LÓGICA DE DETECCIÓN / ACTUALIZACIÓN
-                        if os.path.exists(json_path):
-                            # El juego ya existe: comprobamos si la ruta o el icono han cambiado
-                            try:
-                                with open(json_path, 'r', encoding='utf-8') as jf:
-                                    existing_data = json.load(jf)
+                        # LÓGICA DE ACTUALIZACIÓN DEL DICCIONARIO
+                        if app_id in steam_data:
+                            existing = steam_data[app_id]
+                            if (existing.get("exe_path") != scanned_data["exe_path"] or 
+                                existing.get("icon") != scanned_data["icon"] or
+                                existing.get("title") != scanned_data["title"]):
                                 
-                                # Si cambia el ejecutable o la ruta del icono, actualizamos
-                                if (existing_data.get("exe_path") != scanned_data["exe_path"] or 
-                                    existing_data.get("icon") != scanned_data["icon"]):
-                                    
-                                    existing_data["exe_path"] = scanned_data["exe_path"]
-                                    existing_data["icon"] = scanned_data["icon"]
-                                    existing_data["title"] = scanned_data["title"] # Por si cambió de nombre
-                                    
-                                    scanned_data = existing_data # Conservamos posibles campos extra
-                                    guardar_fichero = True
-                                    print(f"Actualizando ruta/icono de: {name}")
-                            except Exception:
-                                # Fichero corrupto: forzamos sobreescritura limpia
-                                guardar_fichero = True
+                                # Actualizamos solo los datos que controlamos por si el usuario añadió campos manuales
+                                steam_data[app_id].update(scanned_data)
+                                hubo_cambios = True
                         else:
-                            # Juego nuevo: se crea por primera vez
-                            guardar_fichero = True
-                            print(f"Nuevo juego detectado: {name}")
-
-                        # Guardamos en disco solo si es nuevo o si ha cambiado algo
-                        if guardar_fichero:
-                            with open(json_path, 'w', encoding='utf-8') as jf:
-                                json.dump(scanned_data, jf, indent=4)
+                            # Inserción de juego nuevo
+                            steam_data[app_id] = scanned_data
                             hubo_cambios = True
                             
                 except Exception as e:
-                    print(f"Error procesando el manifiesto {file_path}: {e}")
+                    print(f"Error procesando {file_path}: {e}")
                     continue
 
+        # --- ESCRITURA FINAL ---
+        if hubo_cambios:
+            try:
+                # Guardamos la estructura entera 1 sola vez
+                with open(self.steam_games_file, 'w', encoding='utf-8') as f:
+                    json.dump(steam_data, f, indent=4)
+            except Exception as e:
+                print(f"Error crítico al guardar steam_games.json: {e}")
+
+        return hubo_cambios
+
+    def get_installed_games(self):
+        """Lee la BD unificada de Steam y la fusiona con la caché de ROMs."""
+        import json, os
+        games_list = []
+        
+        # 1. Cargar juegos de Steam (1 sola lectura a disco)
+        if os.path.exists(self.steam_games_file):
+            try:
+                with open(self.steam_games_file, 'r', encoding='utf-8') as f:
+                    steam_data = json.load(f)
+                    
+                    # Extraemos los valores del diccionario
+                    for app_id, datos_juego in steam_data.items():
+                        datos_juego["profile_file"] = "steam_games.json"
+                        games_list.append(datos_juego)
+            except Exception as e:
+                print(f"Error al leer la BD de Steam: {e}")
+                        
+        # 2. Inyectar la memoria RAM de los emuladores
+        games_list.extend(self.get_dynamic_roms())
+                
+        return games_list
+    
+    def scan_folder_for_roms(self, folder_path):
+        """Escanea recursivamente una carpeta buscando ROMs y crea sus perfiles JSON."""
+        # Tupla con todas las extensiones de la tabla (en minúsculas para comparaciones seguras)
+        extensiones_validas = (
+            '.nes', '.sfc', '.smc', '.fig', '.n64', '.z64', '.v64', 
+            '.iso', '.gcm', '.ciso', '.wbfs', '.wdf', '.wud', '.wux', '.rpx', 
+            '.nsp', '.xci', '.gb', '.gbc', '.gba', '.nds', '.3ds', '.cia', '.cxi', 
+            '.bin', '.cue', '.img', '.pbp', '.cso', '.vpk', '.sms', '.md', '.smd', 
+            '.gen', '.gg', '.cdi', '.gdi', '.chd', '.xiso', '.xex', 
+            '.zip', '.7z', '.pce'
+        )
+        
+        hubo_cambios = False
+        import os
+        import json
+        
+        # Usamos os.walk para buscar tanto en la carpeta elegida como en las subcarpetas que tenga dentro
+        for root, dirs, files in os.walk(folder_path):
+            for archivo in files:
+                # Comprobamos si el archivo termina en alguna de las extensiones de nuestra mega-tupla
+                if archivo.lower().endswith(extensiones_validas):
+                    rom_path = os.path.join(root, archivo)
+                    titulo_limpio = os.path.splitext(archivo)[0]
+                    
+                    # Generamos un nombre seguro para el archivo JSON
+                    safe_filename = "".join(c for c in titulo_limpio if c.isalnum() or c in (' ', '_')).replace(' ', '_').lower()
+                    
+                    # Le ponemos el prefijo "rom_" para distinguirlos de los de Steam en la carpeta
+                    json_path = os.path.join(self.games_dir, f"rom_{safe_filename}.json")
+                    
+                    scanned_data = {
+                        "title": titulo_limpio,
+                        "exe_path": rom_path,
+                        "icon": "" # Como son locales, de momento no tienen portada
+                    }
+                    
+                    guardar_fichero = False
+                    
+                    if os.path.exists(json_path):
+                        # Actualizar si la ruta ha cambiado (ej. el usuario movió la ROM)
+                        try:
+                            with open(json_path, 'r', encoding='utf-8') as jf:
+                                existing_data = json.load(jf)
+                            
+                            if existing_data.get("exe_path") != scanned_data["exe_path"]:
+                                existing_data["exe_path"] = scanned_data["exe_path"]
+                                existing_data["title"] = scanned_data["title"]
+                                scanned_data = existing_data
+                                guardar_fichero = True
+                        except Exception:
+                            guardar_fichero = True # Sobreescribir si el JSON está corrupto
+                    else:
+                        guardar_fichero = True # Es una ROM nueva
+                        
+                    if guardar_fichero:
+                        try:
+                            with open(json_path, 'w', encoding='utf-8') as jf:
+                                json.dump(scanned_data, jf, indent=4)
+                            hubo_cambios = True
+                        except Exception as e:
+                            print(f"Error guardando JSON para {titulo_limpio}: {e}")
+                            
         return hubo_cambios
     
-    def get_installed_games(self):
-        """Lee los archivos .json de la carpeta 'games' y devuelve una lista con sus datos."""
-        games_list = []
-        if not os.path.exists(self.games_dir):
-            return games_list
+    def get_rom_folders(self):
+        """Devuelve la lista de rutas guardadas por el usuario."""
+        import json, os
+        if os.path.exists(self.rom_folders_file):
+            try:
+                with open(self.rom_folders_file, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except Exception:
+                pass
+        return []
 
-        for archivo in os.listdir(self.games_dir):
-            if archivo.endswith('.json'):
-                ruta_completa = os.path.join(self.games_dir, archivo)
-                try:
-                    with open(ruta_completa, 'r', encoding='utf-8') as f:
-                        datos_juego = json.load(f)
-                        # Guardamos el nombre del archivo para identificarlo si es necesario
-                        datos_juego["profile_file"] = archivo
-                        games_list.append(datos_juego)
-                except Exception as e:
-                    print(f"Error al leer el juego {archivo}: {e}")
-                    
-        return games_list
+    def add_rom_folder(self, folder_path):
+        """Añade una ruta a la configuración y limpia la caché para forzar un re-escaneo."""
+        import json
+        folders = self.get_rom_folders()
+        
+        # Si la ruta ya existe, la quitamos y la volvemos a poner para que pase al final de la lista
+        if folder_path in folders:
+            folders.remove(folder_path)
+        folders.append(folder_path)
+        
+        with open(self.rom_folders_file, 'w', encoding='utf-8') as f:
+            json.dump(folders, f, indent=4)
+            
+        # Al vaciar la caché, el próximo acceso a la pantalla de juegos forzará el escaneo
+        self._cached_roms = None 
+
+    def get_dynamic_roms(self):
+        """Escanea las carpetas sobre la marcha. Usa la caché si ya se escaneó antes."""
+        # Si ya lo escaneamos en esta sesión, devolvemos la memoria directamente (0% latencia)
+        if self._cached_roms is not None:
+            return self._cached_roms
+            
+        extensiones_validas = (
+            '.nes', '.sfc', '.smc', '.fig', '.n64', '.z64', '.v64', 
+            '.iso', '.gcm', '.ciso', '.wbfs', '.wdf', '.wud', '.wux', '.rpx', 
+            '.nsp', '.xci', '.gb', '.gbc', '.gba', '.nds', '.3ds', '.cia', '.cxi', 
+            '.bin', '.cue', '.img', '.pbp', '.cso', '.vpk', '.sms', '.md', '.smd', 
+            '.gen', '.gg', '.cdi', '.gdi', '.chd', '.xiso', '.xex', 
+            '.zip', '.7z', '.pce'
+        )
+        
+        roms_encontradas = []
+        import os
+        
+        for folder in self.get_rom_folders():
+            if not os.path.exists(folder):
+                continue
+                
+            for root, dirs, files in os.walk(folder):
+                for archivo in files:
+                    if archivo.lower().endswith(extensiones_validas):
+                        rom_path = os.path.join(root, archivo)
+                        titulo_limpio = os.path.splitext(archivo)[0]
+                        
+                        roms_encontradas.append({
+                            "title": titulo_limpio,
+                            "exe_path": rom_path,
+                            "icon": "", 
+                            "profile_file": "dinamico" # Etiqueta interna de control
+                        })
+                        
+        self._cached_roms = roms_encontradas # Guardamos el resultado en la RAM
+        return roms_encontradas
+
+

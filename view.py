@@ -40,6 +40,12 @@ class MainView(QMainWindow):
     scan_games_requested = Signal()
     game_launch_requested = Signal(str)  # Envía la ruta o URI del juego seleccionado
 
+    # Señales del Explorador de Archivos
+    explorer_opened = Signal()
+    explorer_folder_clicked = Signal(str)
+    explorer_up_clicked = Signal()
+    explorer_select_clicked = Signal()
+
     def __init__(self):
         super().__init__()
         self.ui = QUiLoader().load("prueba.ui", None) 
@@ -123,6 +129,12 @@ class MainView(QMainWindow):
         self.ui.gamesBackButton.clicked.connect(lambda: self.navigation_requested.emit(0))
 
         self.ui.gamesScanButton.clicked.connect(self.scan_games_requested.emit)
+
+        # Controles del explorador
+        self.ui.scanFolderButton.clicked.connect(self.explorer_opened.emit)
+        self.ui.explorerCancelButton.clicked.connect(lambda: self.navigation_requested.emit(5)) # Vuelve a la pág 5 (Juegos)
+        self.ui.explorerUpButton.clicked.connect(self.explorer_up_clicked.emit)
+        self.ui.explorerSelectButton.clicked.connect(self.explorer_select_clicked.emit)
 
     # --- PUBLIC METHODS FOR THE PRESENTER TO CONTROL THE UI ---
 
@@ -511,6 +523,51 @@ class MainView(QMainWindow):
             self.ui.layoutGames.addWidget(btn, row, col)
             
             # Control de la matriz cuadrada
+            col += 1
+            if col >= columnas_ideales:
+                col = 0
+                row += 1
+
+    def populate_explorer(self, current_path, folder_list):
+        """Genera botones interactivos para las carpetas en el explorador interno."""
+        self.ui.label_explorer_path.setText(f"Ruta actual: {current_path}")
+        
+        # Limpiar el grid
+        while self.ui.layoutExplorer.count():
+            item = self.ui.layoutExplorer.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+
+        import math
+        from PySide6.QtWidgets import QToolButton, QSizePolicy
+        from PySide6.QtGui import QIcon
+        from PySide6.QtCore import QSize, Qt
+        import textwrap
+        
+        # Opcional: Si tienes un icono de carpeta genérico, pon la ruta aquí
+        # icono_carpeta = QIcon("ruta/a/folder_icon.png")
+
+        columnas_ideales = 5 # Ajusta según el ancho de tu pantalla
+        row, col = 0, 0
+        
+        for folder_name in folder_list:
+            btn = QToolButton()
+            texto_multilinea = textwrap.fill(folder_name, width=12)
+            btn.setText(texto_multilinea)
+            
+            # btn.setIcon(icono_carpeta)
+            btn.setIconSize(QSize(60, 60))
+            btn.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+            
+            # Reutilizamos tu política de tamaño fija
+            btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+            
+            # Emitir señal con el nombre de la carpeta al hacer clic
+            btn.clicked.connect(lambda checked=False, f=folder_name: self.explorer_folder_clicked.emit(f))
+            
+            self.ui.layoutExplorer.addWidget(btn, row, col)
+            
             col += 1
             if col >= columnas_ideales:
                 col = 0

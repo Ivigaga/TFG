@@ -185,3 +185,51 @@ QPushButton[active_category="true"] {
 #scrollAreaGamesContents QToolButton::icon {
     padding-bottom: 5px;
 }
+
+/* --- ESTILO DE TARJETAS CUADRADAS Y COMPACTAS --- */
+
+/* Añadimos el contenedor del explorador a la lista */
+#scrollAreaWidgetContents QToolButton,
+#scrollAreaGamesContents QToolButton,
+#scrollAreaExplorerContents QToolButton {
+    background-color: #2b2b2b;
+    color: #ffffff;
+    border: 2px solid #555555;
+    border-radius: 15px;       
+    
+    min-width: 130px;
+    max-width: 130px;
+    min-height: 130px;
+    max-height: 130px;
+    
+    padding: 10px;
+    margin: 8px;               
+    font-weight: bold;
+    font-size: 12px;           
+}
+
+#scrollAreaWidgetContents QToolButton:hover,
+#scrollAreaGamesContents QToolButton:hover,
+#scrollAreaExplorerContents QToolButton:hover {
+    background-color: #3d3d3d;
+    border-color: #777777;
+}
+
+#scrollAreaWidgetContents QToolButton:pressed,
+#scrollAreaGamesContents QToolButton:pressed,
+#scrollAreaExplorerContents QToolButton:pressed {
+    background-color: #1e1e1e;
+    border-color: #444444;
+}
+
+/* El estado checked solo aplica a la pantalla de perfiles, así que lo dejamos igual */
+#scrollAreaWidgetContents QToolButton:checked {
+    background-color: #3d3d3d;
+    border-color: #0078D7; 
+}
+
+/* Espaciado del icono interno (Solo para las pantallas que sí tienen iconos) */
+#scrollAreaWidgetContents QToolButton::icon,
+#scrollAreaGamesContents QToolButton::icon {
+    padding-bottom: 5px;
+}

@@ -649,10 +649,67 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_games_buttons.addWidget(self.gamesScanButton)
 
+        self.scanFolderButton = QPushButton(self.gamesPage)
+        self.scanFolderButton.setObjectName(u"scanFolderButton")
+        sizePolicy3.setHeightForWidth(self.scanFolderButton.sizePolicy().hasHeightForWidth())
+        self.scanFolderButton.setSizePolicy(sizePolicy3)
+        self.scanFolderButton.setMinimumSize(QSize(0, 80))
+
+        self.horizontalLayout_games_buttons.addWidget(self.scanFolderButton)
+
 
         self.verticalLayout_games.addLayout(self.horizontalLayout_games_buttons)
 
         self.stackedWidget.addWidget(self.gamesPage)
+        self.explorerPage = QWidget()
+        self.explorerPage.setObjectName(u"explorerPage")
+        self.verticalLayout_explorer = QVBoxLayout(self.explorerPage)
+        self.verticalLayout_explorer.setObjectName(u"verticalLayout_explorer")
+        self.label_explorer_path = QLabel(self.explorerPage)
+        self.label_explorer_path.setObjectName(u"label_explorer_path")
+        font2 = QFont()
+        font2.setPointSize(14)
+        font2.setBold(True)
+        self.label_explorer_path.setFont(font2)
+        self.label_explorer_path.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.verticalLayout_explorer.addWidget(self.label_explorer_path)
+
+        self.scrollAreaExplorer = QScrollArea(self.explorerPage)
+        self.scrollAreaExplorer.setObjectName(u"scrollAreaExplorer")
+        self.scrollAreaExplorer.setWidgetResizable(True)
+        self.scrollAreaExplorerContents = QWidget()
+        self.scrollAreaExplorerContents.setObjectName(u"scrollAreaExplorerContents")
+        self.layoutExplorer = QGridLayout(self.scrollAreaExplorerContents)
+        self.layoutExplorer.setObjectName(u"layoutExplorer")
+        self.scrollAreaExplorer.setWidget(self.scrollAreaExplorerContents)
+
+        self.verticalLayout_explorer.addWidget(self.scrollAreaExplorer)
+
+        self.explorer_buttons_layout = QHBoxLayout()
+        self.explorer_buttons_layout.setObjectName(u"explorer_buttons_layout")
+        self.explorerCancelButton = QPushButton(self.explorerPage)
+        self.explorerCancelButton.setObjectName(u"explorerCancelButton")
+        self.explorerCancelButton.setMinimumSize(QSize(0, 80))
+
+        self.explorer_buttons_layout.addWidget(self.explorerCancelButton)
+
+        self.explorerUpButton = QPushButton(self.explorerPage)
+        self.explorerUpButton.setObjectName(u"explorerUpButton")
+        self.explorerUpButton.setMinimumSize(QSize(0, 80))
+
+        self.explorer_buttons_layout.addWidget(self.explorerUpButton)
+
+        self.explorerSelectButton = QPushButton(self.explorerPage)
+        self.explorerSelectButton.setObjectName(u"explorerSelectButton")
+        self.explorerSelectButton.setMinimumSize(QSize(0, 80))
+
+        self.explorer_buttons_layout.addWidget(self.explorerSelectButton)
+
+
+        self.verticalLayout_explorer.addLayout(self.explorer_buttons_layout)
+
+        self.stackedWidget.addWidget(self.explorerPage)
 
         self.verticalLayout_6.addWidget(self.stackedWidget)
 
@@ -756,8 +813,12 @@ class Ui_MainWindow(object):
         self.label_games_title.setText(QCoreApplication.translate("MainWindow", u"CAT\u00c1LOGO DE JUEGOS", None))
         self.scrollAreaGames.setStyleSheet(QCoreApplication.translate("MainWindow", u"QScrollArea { border: none; background: transparent; } QWidget#scrollAreaGamesContents { background: transparent; }", None))
         self.gamesBackButton.setText(QCoreApplication.translate("MainWindow", u"\u25c0 VOLVER AL MEN\u00da", None))
-        self.gamesBackButton.setProperty(u"type", QCoreApplication.translate("MainWindow", u"secondary", None))
         self.gamesScanButton.setText(QCoreApplication.translate("MainWindow", u"\U0001f50d ESCANEAR STEAM", None))
-        self.gamesScanButton.setProperty(u"type", QCoreApplication.translate("MainWindow", u"primary", None))
+        self.scanFolderButton.setText(QCoreApplication.translate("MainWindow", u"\U0001f4c1 ESCANEAR CARPETA", None))
+        self.label_explorer_path.setText(QCoreApplication.translate("MainWindow", u"Ruta actual: C:\\", None))
+        self.scrollAreaExplorer.setStyleSheet(QCoreApplication.translate("MainWindow", u"QScrollArea { border: none; background: transparent; } QWidget#scrollAreaExplorerContents { background: transparent; }", None))
+        self.explorerCancelButton.setText(QCoreApplication.translate("MainWindow", u"\u274c CANCELAR", None))
+        self.explorerUpButton.setText(QCoreApplication.translate("MainWindow", u"\u2b06 SUBIR NIVEL", None))
+        self.explorerSelectButton.setText(QCoreApplication.translate("MainWindow", u"\u2705 ELEGIR ESTA CARPETA", None))
     # retranslateUi
 

@@ -1,3 +1,5 @@
+import os
+
 import cv2
 import time
 import vgamepad as vg
@@ -41,6 +43,8 @@ class MainPresenter(QObject):
         # Arrancamos el hilo
         self.start_video()
 
+        self.current_explorer_path = os.path.expanduser('~') # Empieza en la carpeta del usuario (C:\Users\...)
+
     def _connect_view_signals(self):
         """Binds View signals to Presenter logic."""
         self.view.pip_toggled.connect(self.view.toggle_pip)
@@ -63,6 +67,14 @@ class MainPresenter(QObject):
         self.view.scan_games_requested.connect(self.handle_scan_games)
         # Conexión para el lanzamiento de videojuegos
         self.view.game_launch_requested.connect(self.handle_game_launch)
+
+        
+
+        # Explorador
+        self.view.explorer_opened.connect(self.handle_explorer_opened)
+        self.view.explorer_folder_clicked.connect(self.handle_explorer_folder_clicked)
+        self.view.explorer_up_clicked.connect(self.handle_explorer_up)
+        self.view.explorer_select_clicked.connect(self.handle_explorer_select)
 
     # --- PRESENTER LOGIC ---
 
@@ -370,3 +382,86 @@ class MainPresenter(QObject):
             print(f"Lanzando con éxito: {exe_path}")
         except Exception as e:
             print(f"Error crítico al intentar abrir el juego en '{exe_path}': {e}")
+
+    def handle_explorer_opened(self):
+        """Abre el explorador de carpetas recordando la última ruta configurada."""
+        rutas_guardadas = self.model.get_rom_folders()
+        
+        if rutas_guardadas:
+            # Recuperamos el último elemento de la lista [-1]
+            self.current_explorer_path = rutas_guardadas[-1]
+        else:
+            import os
+            self.current_explorer_path = os.path.expanduser('~')
+            
+        self.refresh_explorer()
+        self.view.show_page(6)
+
+    def refresh_explorer(self):
+        """Lee el disco duro o lista las unidades físicas si estamos en la vista general."""
+        import os
+        import string
+        
+        # --- NUEVO: Estado de "Este Equipo" ---
+        if self.current_explorer_path == "DRIVES":
+            # Escaneamos el abecedario buscando qué letras de disco existen realmente en tu Windows
+            drives = [f"{d}:\\" for d in string.ascii_uppercase if os.path.exists(f"{d}:\\")]
+            self.view.populate_explorer("Este Equipo (Discos Duros)", drives)
+            return
+
+        try:
+            items = os.listdir(self.current_explorer_path)
+            folders = [f for f in items if os.path.isdir(os.path.join(self.current_explorer_path, f))]
+            folders.sort(key=str.lower)
+            self.view.populate_explorer(self.current_explorer_path, folders)
+        except PermissionError:
+            print(f"Acceso denegado a la carpeta: {self.current_explorer_path}")
+            self.handle_explorer_up()
+
+    def handle_explorer_folder_clicked(self, folder_name):
+        import os
+        
+        # --- NUEVO: Si estamos eligiendo disco, saltamos directamente a él ---
+        if self.current_explorer_path == "DRIVES":
+            self.current_explorer_path = folder_name
+            self.refresh_explorer()
+            return
+
+        new_path = os.path.join(self.current_explorer_path, folder_name)
+        if os.path.isdir(new_path):
+            self.current_explorer_path = new_path
+            self.refresh_explorer()
+
+    def handle_explorer_up(self):
+        import os
+        
+        # Si ya estamos viendo los discos, no hay nada más arriba
+        if self.current_explorer_path == "DRIVES":
+            return
+
+        padre = os.path.dirname(self.current_explorer_path)
+        
+        # --- NUEVO: Si el padre es igual a la ruta actual, hemos chocado con el techo (ej. C:\) ---
+        if padre == self.current_explorer_path: 
+            self.current_explorer_path = "DRIVES" # Activamos la vista de unidades
+        else:
+            self.current_explorer_path = padre
+            
+        self.refresh_explorer()
+
+    def handle_explorer_select(self):
+        """Registra la carpeta, borra la caché y actualiza el catálogo."""
+        self.view.ui.explorerSelectButton.setText("⏳ AÑADIENDO CARPETA...")
+        self.view.ui.explorerSelectButton.setEnabled(False)
+        
+        # 1. Al añadir la ruta, el modelo vacía la variable self._cached_roms por dentro
+        self.model.add_rom_folder(self.current_explorer_path)
+        
+        # 2. Al pedir los juegos ahora, el modelo detecta que no hay caché y hace el barrido real
+        lista_actualizada = self.model.get_installed_games()
+        self.view.populate_games_catalog(lista_actualizada)
+        
+        self.view.ui.explorerSelectButton.setText("✅ ELEGIR ESTA CARPETA")
+        self.view.ui.explorerSelectButton.setEnabled(True)
+        
+        self.view.show_page(5)

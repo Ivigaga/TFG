@@ -1050,22 +1050,23 @@
                <layout class="QHBoxLayout" name="horizontalLayout_games_buttons">
                 <item>
                  <widget class="QPushButton" name="gamesBackButton">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Expanding" vsizetype="Minimum"><horstretch>0</horstretch><verstretch>0</verstretch></sizepolicy>
-                  </property>
+                  <property name="sizePolicy"><sizepolicy hsizetype="Expanding" vsizetype="Minimum"><horstretch>0</horstretch><verstretch>0</verstretch></sizepolicy></property>
                   <property name="minimumSize"><size><width>0</width><height>80</height></size></property>
                   <property name="text"><string>◀ VOLVER AL MENÚ</string></property>
-                  <property name="type" stdset="0"><string>secondary</string></property>
                  </widget>
                 </item>
                 <item>
                  <widget class="QPushButton" name="gamesScanButton">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Expanding" vsizetype="Minimum"><horstretch>0</horstretch><verstretch>0</verstretch></sizepolicy>
-                  </property>
+                  <property name="sizePolicy"><sizepolicy hsizetype="Expanding" vsizetype="Minimum"><horstretch>0</horstretch><verstretch>0</verstretch></sizepolicy></property>
                   <property name="minimumSize"><size><width>0</width><height>80</height></size></property>
                   <property name="text"><string>🔍 ESCANEAR STEAM</string></property>
-                  <property name="type" stdset="0"><string>primary</string></property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="scanFolderButton">
+                  <property name="sizePolicy"><sizepolicy hsizetype="Expanding" vsizetype="Minimum"><horstretch>0</horstretch><verstretch>0</verstretch></sizepolicy></property>
+                  <property name="minimumSize"><size><width>0</width><height>80</height></size></property>
+                  <property name="text"><string>📁 ESCANEAR CARPETA</string></property>
                  </widget>
                 </item>
                </layout>
@@ -1073,7 +1074,50 @@
               
              </layout>
             </widget>
-           </widget>
+          <widget class="QWidget" name="explorerPage">
+             <layout class="QVBoxLayout" name="verticalLayout_explorer">
+              <item>
+               <widget class="QLabel" name="label_explorer_path">
+                <property name="font"><font><pointsize>14</pointsize><bold>true</bold></font></property>
+                <property name="text"><string>Ruta actual: C:\</string></property>
+                <property name="alignment"><set>Qt::AlignmentFlag::AlignCenter</set></property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QScrollArea" name="scrollAreaExplorer">
+                <property name="widgetResizable"><bool>true</bool></property>
+                <property name="styleSheet"><string>QScrollArea { border: none; background: transparent; } QWidget#scrollAreaExplorerContents { background: transparent; }</string></property>
+                <widget class="QWidget" name="scrollAreaExplorerContents">
+                 <layout class="QGridLayout" name="layoutExplorer">
+                  </layout>
+                </widget>
+               </widget>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="explorer_buttons_layout">
+                <item>
+                 <widget class="QPushButton" name="explorerCancelButton">
+                  <property name="minimumSize"><size><width>0</width><height>80</height></size></property>
+                  <property name="text"><string>❌ CANCELAR</string></property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="explorerUpButton">
+                  <property name="minimumSize"><size><width>0</width><height>80</height></size></property>
+                  <property name="text"><string>⬆ SUBIR NIVEL</string></property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="explorerSelectButton">
+                  <property name="minimumSize"><size><width>0</width><height>80</height></size></property>
+                  <property name="text"><string>✅ ELEGIR ESTA CARPETA</string></property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget> 
+          </widget>
           </item>
          </layout>
         </item>
