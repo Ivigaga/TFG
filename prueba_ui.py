@@ -91,6 +91,7 @@ class Ui_MainWindow(object):
 
         self.pushButton_3 = QPushButton(self.centralwidget)
         self.pushButton_3.setObjectName(u"pushButton_3")
+        self.pushButton_3.setEnabled(False)
 
         self.horizontalLayout_3.addWidget(self.pushButton_3)
 
@@ -113,6 +114,7 @@ class Ui_MainWindow(object):
         self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.pushButton_4 = QPushButton(self.mainPage)
         self.pushButton_4.setObjectName(u"pushButton_4")
+        self.pushButton_4.setEnabled(False)
         sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(0)
@@ -137,6 +139,7 @@ class Ui_MainWindow(object):
 
         self.pushButton_5 = QPushButton(self.mainPage)
         self.pushButton_5.setObjectName(u"pushButton_5")
+        self.pushButton_5.setEnabled(False)
         sizePolicy2.setHeightForWidth(self.pushButton_5.sizePolicy().hasHeightForWidth())
         self.pushButton_5.setSizePolicy(sizePolicy2)
 
@@ -625,6 +628,7 @@ class Ui_MainWindow(object):
         self.scrollAreaGames.setWidgetResizable(True)
         self.scrollAreaGamesContents = QWidget()
         self.scrollAreaGamesContents.setObjectName(u"scrollAreaGamesContents")
+        self.scrollAreaGamesContents.setGeometry(QRect(0, 0, 100, 30))
         self.layoutGames = QGridLayout(self.scrollAreaGamesContents)
         self.layoutGames.setObjectName(u"layoutGames")
         self.scrollAreaGames.setWidget(self.scrollAreaGamesContents)
@@ -680,6 +684,7 @@ class Ui_MainWindow(object):
         self.scrollAreaExplorer.setWidgetResizable(True)
         self.scrollAreaExplorerContents = QWidget()
         self.scrollAreaExplorerContents.setObjectName(u"scrollAreaExplorerContents")
+        self.scrollAreaExplorerContents.setGeometry(QRect(0, 0, 100, 30))
         self.layoutExplorer = QGridLayout(self.scrollAreaExplorerContents)
         self.layoutExplorer.setObjectName(u"layoutExplorer")
         self.scrollAreaExplorer.setWidget(self.scrollAreaExplorerContents)
@@ -737,7 +742,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.stackedWidget.setCurrentIndex(1)
+        self.stackedWidget.setCurrentIndex(0)
         self.stackedWidgetAcciones.setCurrentIndex(0)
 
 

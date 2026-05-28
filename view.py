@@ -3,6 +3,9 @@ from PySide6.QtGui import QIcon, QAction
 from PySide6.QtCore import Signal, Qt, QSize
 from PySide6.QtUiTools import QUiLoader
 
+from model import get_asset_path
+from prueba_ui import Ui_MainWindow
+
 class PipWindow(QWidget):
     def __init__(self):
         super().__init__()
@@ -48,8 +51,8 @@ class MainView(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.ui = QUiLoader().load("prueba.ui", None) 
-        self.setCentralWidget(self.ui)
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
         self.setWindowTitle("Gesture Control - MVP Architecture")
         self.resize(1020, 751)
 
@@ -298,8 +301,8 @@ class MainView(QMainWindow):
         row, col = 0, 0
         
         # Obtenemos la ruta absoluta al icono que el usuario puso en la raíz
-        from model import resolve_path
-        icon_path = resolve_path('file_icon.png') # <-- Asegúrate de que existe este archivo
+        from model import get_asset_path
+        icon_path = get_asset_path('file_icon.png') # <-- Asegúrate de que existe este archivo
         file_icon = QIcon(icon_path)
 
         for profile in profiles_list:
@@ -490,9 +493,9 @@ class MainView(QMainWindow):
         from PySide6.QtGui import QIcon
         from PySide6.QtCore import QSize, Qt
         from PySide6.QtWidgets import QToolButton, QSizePolicy
-        from model import resolve_path
         
-        icono_defecto = QIcon(resolve_path('game_default.png')) # Asegúrate de tener una imagen base
+        
+        icono_defecto = QIcon(get_asset_path('game_default.png')) # Asegúrate de tener una imagen base
 
         row, col = 0, 0
         import textwrap # Añade esto justo antes del bucle si no lo tienes arriba
@@ -509,7 +512,7 @@ class MainView(QMainWindow):
             btn.setText(titulo_multilinea)
             
             ruta_icono = juego.get("icon")
-            btn.setIcon(QIcon(resolve_path(ruta_icono)) if ruta_icono else icono_defecto)
+            btn.setIcon(QIcon(get_asset_path(ruta_icono)) if ruta_icono else icono_defecto)
             btn.setIconSize(QSize(100,80))
             btn.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
             

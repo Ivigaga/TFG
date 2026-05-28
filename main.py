@@ -1,6 +1,6 @@
 import sys
 from PySide6.QtWidgets import QApplication
-from model import AppModel, resolve_path
+from model import AppModel, get_asset_path
 from view import MainView
 from vision import VisionEngine
 from presenter import MainPresenter
@@ -10,7 +10,7 @@ def main():
     app = QApplication(sys.argv)
     
     # 1. Cargar y aplicar la hoja de estilos externa
-    ruta_estilos = resolve_path("style.qss") # Cambia a .css si prefieres esa extensión
+    ruta_estilos = get_asset_path("style.qss") # Cambia a .css si prefieres esa extensión
     try:
         with open(ruta_estilos, "r", encoding="utf-8") as archivo_estilo:
             app.setStyleSheet(archivo_estilo.read())

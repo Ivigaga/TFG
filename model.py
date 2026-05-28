@@ -4,12 +4,23 @@ import sys
 import winreg
 import glob
 
-def resolve_path(relative_path):
-    """Gets the absolute path to the resource, for PyInstaller compatibility."""
+def get_asset_path(relative_path):
+    """Usar SOLO para archivos de lectura que vienen empaquetados (IA, estilos, iconos fijos)."""
     if getattr(sys, 'frozen', False):
-        base_path = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
-        return os.path.join(base_path, relative_path)
-    return os.path.join(os.path.abspath("."), relative_path)
+        # sys._MEIPASS apunta directamente a la carpeta _internal de PyInstaller
+        base_path = sys._MEIPASS
+    else:
+        base_path = os.path.abspath(os.path.dirname(__file__))
+    return os.path.join(base_path, relative_path)
+
+def get_save_path(relative_path):
+    """Usar SOLO para archivos de escritura/usuario (JSONs, portadas descargadas)."""
+    if getattr(sys, 'frozen', False):
+        # sys.executable apunta a la raíz donde está el .exe, ideal para guardar datos
+        base_path = os.path.dirname(sys.executable)
+    else:
+        base_path = os.path.abspath(os.path.dirname(__file__))
+    return os.path.join(base_path, relative_path)
 
 class AppModel:
     def __init__(self, json_path="default_inputs.json"):
@@ -17,15 +28,15 @@ class AppModel:
         self.input_structure = {}
         self.is_continuous_mode = True
         self.target_fps = 60
-        self.model_path = resolve_path('face_landmarker.task')
-        self.controls_dir = resolve_path('controls')
+        self.model_path = get_asset_path('face_landmarker.task')
+        self.controls_dir = get_save_path('controls')
         os.makedirs(self.controls_dir, exist_ok=True)
-        self.games_dir = resolve_path('games')
+        self.games_dir = get_save_path('games')
         os.makedirs(self.games_dir, exist_ok=True)
         
         # NUEVO: Configuración de rutas y Caché en RAM
-        self.rom_folders_file = resolve_path('games/rom_folders.json') 
-        self.steam_games_file = resolve_path('games/steam_games.json')
+        self.rom_folders_file = get_save_path('games/rom_folders.json') 
+        self.steam_games_file = get_save_path('games/steam_games.json')
         self._cached_roms = None 
         
         os.makedirs(self.games_dir, exist_ok=True)
