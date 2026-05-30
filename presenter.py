@@ -505,63 +505,90 @@ class MainPresenter(QObject):
                     QCoreApplication.postEvent(current_widget, release_event)
             return
 
-        widget_actual = QApplication.focusWidget()
-        if not widget_actual:
+        current_widget = QApplication.focusWidget()
+        if not current_widget:
             return
 
         # 2. Obtenemos las coordenadas absolutas del botón actual en la pantalla
-        centro_actual = widget_actual.mapToGlobal(widget_actual.rect().center())
+        centro_actual = current_widget.mapToGlobal(current_widget.rect().center())
         x1, y1 = centro_actual.x(), centro_actual.y()
 
-        ventana = widget_actual.window()
-        mejor_candidato = None
-        distancia_minima = float('inf')
+        window = current_widget.window()
+        best_candidate = None
+        min_distance = float('inf')
 
-        # 3. Escaneamos TODOS los componentes de la interfaz actual
-        for candidato in ventana.findChildren(QWidget):
-            # Ignoramos elementos invisibles, deshabilitados o el propio botón actual
-            if not candidato.isVisible() or not candidato.isEnabled() or candidato == widget_actual:
+        # 3. Scan ALL components in the current interface
+        for candidate in window.findChildren(QWidget):
+            if not candidate.isVisible() or not candidate.isEnabled() or candidate == current_widget:
                 continue
             
-            # Solo nos interesan los elementos que pueden ser seleccionados
-            if not (candidato.focusPolicy() & Qt.StrongFocus or candidato.focusPolicy() & Qt.TabFocus):
+            if candidate.focusPolicy() == Qt.NoFocus:
                 continue
 
-            # Coordenadas del candidato a evaluar
-            centro_cand = candidato.mapToGlobal(candidato.rect().center())
-            x2, y2 = centro_cand.x(), centro_cand.y()
+            # Candidate bounds (Bounding Box instead of just center)
+            candidate_rect = candidate.rect()
+            top_left = candidate.mapToGlobal(candidate_rect.topLeft())
+            bottom_right = candidate.mapToGlobal(candidate_rect.bottomRight())
             
-            # Distancia en ambos ejes
+            # Centers are still used to determine the general direction (Left/Right/Up/Down)
+            center_cand = candidate.mapToGlobal(candidate_rect.center())
+            x2, y2 = center_cand.x(), center_cand.y()
+            
             dx = x2 - x1
             dy = y2 - y1
 
-            es_valido = False
-            distancia = float('inf')
+            # --- FIX 1: Bounding Box Distance ---
+            # If x1 is within the candidate's width, horizontal distance is 0
+            dist_x = 0
+            if x1 < top_left.x(): 
+                dist_x = top_left.x() - x1
+            elif x1 > bottom_right.x(): 
+                dist_x = x1 - bottom_right.x()
+            
+            # If y1 is within the candidate's height, vertical distance is 0
+            dist_y = 0
+            if y1 < top_left.y(): 
+                dist_y = top_left.y() - y1
+            elif y1 > bottom_right.y(): 
+                dist_y = y1 - bottom_right.y()
 
-            # 4. El Filtro Direccional (La magia de la heurística)
-            # Multiplicamos el eje opuesto por 3 para "penalizar" los botones en diagonal
-            # y forzar a que elija el que está estrictamente en línea recta.
+            is_valid = False
+            distance = float('inf')
+
+            # 4. Directional Filter with Penalty
             if direction == "RIGHT" and dx > 0:
-                es_valido = True
-                distancia = math.hypot(dx, dy * 3) 
+                is_valid = True
+                distance = math.hypot(dist_x, dist_y * 3) 
             elif direction == "LEFT" and dx < 0:
-                es_valido = True
-                distancia = math.hypot(dx, dy * 3)
+                is_valid = True
+                distance = math.hypot(dist_x, dist_y * 3)
             elif direction == "DOWN" and dy > 0:
-                es_valido = True
-                distancia = math.hypot(dx * 3, dy) 
+                is_valid = True
+                distance = math.hypot(dist_x * 3, dist_y) 
             elif direction == "UP" and dy < 0:
-                es_valido = True
-                distancia = math.hypot(dx * 3, dy)
+                is_valid = True
+                distance = math.hypot(dist_x * 3, dist_y)
 
-            # 5. Si es el más cercano hasta ahora, lo guardamos
-            if es_valido and distancia < distancia_minima:
-                distancia_minima = distancia
-                mejor_candidato = candidato
+            # 5. Save if it's the closest candidate
+            if is_valid and distance < min_distance:
+                min_distance = distance
+                best_candidate = candidate
 
-        # 6. Ejecutamos el salto de foco real
-        if mejor_candidato:
-            mejor_candidato.setFocus()
+        # 6. Execute the focus jump
+        if best_candidate:
+            best_candidate.setFocus()
+
+            # --- FIX 2: Auto-Scroll if the button is inside a scroll area ---
+            from PySide6.QtWidgets import QScrollArea
+            parent = best_candidate.parentWidget()
+            
+            # Walk up the widget tree to see if we are inside a QScrollArea
+            while parent:
+                if isinstance(parent, QScrollArea):
+                    # Ensure the widget is fully visible, adding a 10px padding for aesthetics
+                    parent.ensureWidgetVisible(best_candidate, 10, 10)
+                    break
+                parent = parent.parentWidget()
 
     def _execute_press_action(self, input_data):
         """Acts as a router when a gesture exceeds the threshold."""

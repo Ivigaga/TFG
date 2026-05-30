@@ -5,7 +5,7 @@
         "input": "XUSB_GAMEPAD_B",
         "threshold": 1.0,
         "active": false,
-        "score": 0.002195036504417658
+        "score": 0.0022711525671184063
     },
     "eyeBrowsUp": {
         "category_type": "gamepad",
@@ -13,7 +13,7 @@
         "input": "XUSB_GAMEPAD_B",
         "threshold": 1.0,
         "active": false,
-        "score": 0.04447204992175102
+        "score": 0.07858666032552719
     },
     "mouthPucker": {
         "category_type": "system",
@@ -21,7 +21,7 @@
         "input": "SYS_NAV_ENTER",
         "threshold": 0.7,
         "active": false,
-        "score": 0.7979686856269836
+        "score": 0.896220326423645
     },
     "smile": {
         "category_type": "gamepad",
@@ -29,7 +29,7 @@
         "input": "XUSB_GAMEPAD_BACK",
         "threshold": 0.6,
         "active": false,
-        "score": 5.059826253273059e-05
+        "score": 4.856740133618587e-06
     },
     "eyeBlinkRight": {
         "category_type": "gamepad",
@@ -37,17 +37,17 @@
         "input": "XUSB_GAMEPAD_A",
         "threshold": 0.44,
         "active": false,
-        "score": 0.037010256201028824
+        "score": 0.02438897080719471
     },
     "noseLeft": {
         "threshold": 0.6,
         "score": 0.0,
-        "active": true
+        "active": false
     },
     "noseRight": {
         "threshold": 0.4,
         "score": 0.0,
-        "active": true
+        "active": false
     },
     "noseUp": {
         "threshold": 0.4,
