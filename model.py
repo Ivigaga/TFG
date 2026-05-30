@@ -23,8 +23,9 @@ def get_save_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 class AppModel:
-    def __init__(self, json_path="default_inputs.json"):
+    def __init__(self, json_path="controls/default_inputs.json"):
         self.json_path = json_path
+        self.default_json_path = "controls/default_inputs.json"
         self.input_structure = {}
         self.is_continuous_mode = True
         self.target_fps = 60
@@ -49,7 +50,19 @@ class AppModel:
     def load_inputs(self):
         """Loads the configuration from the JSON file."""
         if not os.path.exists(self.json_path):
-            self.input_structure = {}
+            self.input_structure = {
+                "jawOpen": {"action": "SYS_NONE", "threshold": 50},
+                "eyeBlinkRight": {"action": "SYS_NONE", "threshold": 50},
+                "eyeBrowsUp": {"action": "SYS_NONE", "threshold": 50},
+                "mouthPucker": {"action": "SYS_NONE", "threshold": 50},
+                "smile": {"action": "SYS_NONE", "threshold": 50},
+                "noseLeft": {"threshold": 0.6,"score": 0.0,"active": False},
+                "noseRight": {"threshold": 0.4,"score": 0.0,"active": False},
+                "noseUp": {"threshold": 0.4,"score": 0.0,"active": True},
+                "noseDown": {"threshold": 0.6,"score": 0.0,"active": True}
+                }
+            self.json_path =self.default_json_path
+            self.save_inputs()  # Guardamos el JSON por primera vez con la estructura por defecto
             return
             
         with open(self.json_path, 'r') as f:

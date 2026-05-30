@@ -18,7 +18,7 @@ def main():
         print(f"Advertencia: No se encontró el archivo de estilos en {ruta_estilos}.")
 
     # 1. Instantiate the Model (Data & Logic)
-    model = AppModel("default_inputs.json")
+    model = AppModel("controls/default_inputs.json")
     
     # 2. Instantiate the Vision Engine (Hardware/AI)
     vision_engine = VisionEngine(model.model_path, model.target_fps)
