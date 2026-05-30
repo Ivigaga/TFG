@@ -3,8 +3,9 @@ import os
 import cv2
 import time
 import vgamepad as vg
-from PySide6.QtCore import QObject
-from PySide6.QtGui import QImage, QPixmap
+from PySide6.QtCore import QObject, Qt, QCoreApplication, QEvent
+from PySide6.QtGui import QImage, QPixmap,QKeyEvent
+from PySide6.QtWidgets import QApplication
 
 class MainPresenter(QObject):
     def __init__(self, view, model, vision_engine):
@@ -16,7 +17,7 @@ class MainPresenter(QObject):
         self.gamepad = vg.VX360Gamepad()
         
         # Mapeo exacto que tenías en CameraController.py
-        self.botones_map = {
+        self.buttons_map = {
             "XUSB_GAMEPAD_B": vg.XUSB_BUTTON.XUSB_GAMEPAD_B,
             "XUSB_GAMEPAD_START": vg.XUSB_BUTTON.XUSB_GAMEPAD_START,
             "XUSB_GAMEPAD_BACK": vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK,
@@ -31,6 +32,10 @@ class MainPresenter(QObject):
         # FPS Control variables
         self.fps_counter = 0
         self.last_fps_time = time.perf_counter()
+        
+        # Navigation Cooldown variables
+        self.last_nav_time = 0.0
+        self.nav_cooldown = 0.4  # Seconds between jumps (adjust to your liking, 0.4 is a good start)
         
         # Nueva variable para sustituir al QTimer
         self.is_video_playing = False 
@@ -181,29 +186,20 @@ class MainPresenter(QObject):
             
             # Qué debe hacer este gesto (pushInputButton o changeMovementMode)
             funcion_asignada = data.get("function")
-            button_name = data.get("input")
+            action_code = data.get("input")
 
             if score > threshold:
-                if not is_currently_active:
-                    # EL USUARIO ACABA DE SUPERAR EL UMBRAL
+                    # THE USER JUST EXCEEDED THE THRESHOLD
+                    
+                    self._execute_press_action(data)
                     self.model.input_structure[gesture_name]["active"] = True
-
-                    if funcion_asignada == "pushInputButton" and button_name:
-                        # Pulsar el botón físico
-                        self.gamepad.press_button(button=self.botones_map[button_name])
-
-                    elif funcion_asignada == "changeMovementMode":
-                        # Cambiar el modo de movimiento del sistema
-                        self.model.is_continuous_mode = not self.model.is_continuous_mode
                         
             else:
                 if is_currently_active:
-                    # EL USUARIO HA BAJADO DEL UMBRAL
+                    # THE USER DROPPED BELOW THE THRESHOLD
+                    
+                    self._execute_release_action(data)
                     self.model.input_structure[gesture_name]["active"] = False
-
-                    if funcion_asignada == "pushInputButton" and button_name:
-                        # Soltar el botón físico
-                        self.gamepad.release_button(button=self.botones_map[button_name])
 
         # 2. EVALUAR JOYSTICK (Movimiento de la nariz)
         if landmarks:
@@ -238,6 +234,18 @@ class MainPresenter(QObject):
             # Control de modo continuo vs pasos (replicado de tu código original)
             if not self.model.is_continuous_mode and (inputs.get("noseUp", {}).get("active") or inputs.get("noseDown", {}).get("active")):
                 jy = 0
+            if not self.model.is_continuous_mode and (inputs.get("noseLeft", {}).get("active") or inputs.get("noseRight", {}).get("active")):
+                jx = 0
+
+            if(jx ==20000):
+                self.navigate_interface("RIGHT")  # Navegación geométrica absoluta
+            elif(jx==-20000):
+                self.navigate_interface("LEFT")  # Navegación geométrica absoluta
+            if(jy ==20000):
+                self.navigate_interface("UP")  # Navegación geométrica absoluta
+            elif(jy==-20000):
+                self.navigate_interface("DOWN")  # Navegación geométrica absoluta
+            
 
             # Guardamos el estado de activación en el modelo por si se necesita
             if "noseLeft" in inputs: inputs["noseLeft"]["active"] = movinx
@@ -465,3 +473,124 @@ class MainPresenter(QObject):
         self.view.ui.explorerSelectButton.setEnabled(True)
         
         self.view.show_page(5)
+
+
+    def navigate_interface(self, direction):
+        """Navegación geométrica absoluta calculando coordenadas en pantalla."""
+        from PySide6.QtWidgets import QApplication, QWidget
+        from PySide6.QtCore import Qt, QCoreApplication, QEvent
+        from PySide6.QtGui import QKeyEvent
+        import math
+
+        if direction in ["UP", "DOWN", "LEFT", "RIGHT"]:
+            current_time = time.time()
+            if current_time - self.last_nav_time < self.nav_cooldown:
+                return  # Skip if the cooldown hasn't finished
+            
+            # If enough time has passed, update the timer and proceed to jump
+            self.last_nav_time = current_time
+
+        # 1. El gesto de "Aceptar" sigue inyectando un Enter normal
+        if direction == "ENTER":
+            current_widget = QApplication.focusWidget()
+            if current_widget:
+                # The most bulletproof way to trigger a button in Qt
+                if hasattr(current_widget, "click"):
+                    current_widget.click()
+                else:
+                    # Fallback for non-button widgets (Qt prefers Space over Return)
+                    press_event = QKeyEvent(QEvent.KeyPress, Qt.Key_Space, Qt.NoModifier)
+                    release_event = QKeyEvent(QEvent.KeyRelease, Qt.Key_Space, Qt.NoModifier)
+                    QCoreApplication.postEvent(current_widget, press_event)
+                    QCoreApplication.postEvent(current_widget, release_event)
+            return
+
+        widget_actual = QApplication.focusWidget()
+        if not widget_actual:
+            return
+
+        # 2. Obtenemos las coordenadas absolutas del botón actual en la pantalla
+        centro_actual = widget_actual.mapToGlobal(widget_actual.rect().center())
+        x1, y1 = centro_actual.x(), centro_actual.y()
+
+        ventana = widget_actual.window()
+        mejor_candidato = None
+        distancia_minima = float('inf')
+
+        # 3. Escaneamos TODOS los componentes de la interfaz actual
+        for candidato in ventana.findChildren(QWidget):
+            # Ignoramos elementos invisibles, deshabilitados o el propio botón actual
+            if not candidato.isVisible() or not candidato.isEnabled() or candidato == widget_actual:
+                continue
+            
+            # Solo nos interesan los elementos que pueden ser seleccionados
+            if not (candidato.focusPolicy() & Qt.StrongFocus or candidato.focusPolicy() & Qt.TabFocus):
+                continue
+
+            # Coordenadas del candidato a evaluar
+            centro_cand = candidato.mapToGlobal(candidato.rect().center())
+            x2, y2 = centro_cand.x(), centro_cand.y()
+            
+            # Distancia en ambos ejes
+            dx = x2 - x1
+            dy = y2 - y1
+
+            es_valido = False
+            distancia = float('inf')
+
+            # 4. El Filtro Direccional (La magia de la heurística)
+            # Multiplicamos el eje opuesto por 3 para "penalizar" los botones en diagonal
+            # y forzar a que elija el que está estrictamente en línea recta.
+            if direction == "RIGHT" and dx > 0:
+                es_valido = True
+                distancia = math.hypot(dx, dy * 3) 
+            elif direction == "LEFT" and dx < 0:
+                es_valido = True
+                distancia = math.hypot(dx, dy * 3)
+            elif direction == "DOWN" and dy > 0:
+                es_valido = True
+                distancia = math.hypot(dx * 3, dy) 
+            elif direction == "UP" and dy < 0:
+                es_valido = True
+                distancia = math.hypot(dx * 3, dy)
+
+            # 5. Si es el más cercano hasta ahora, lo guardamos
+            if es_valido and distancia < distancia_minima:
+                distancia_minima = distancia
+                mejor_candidato = candidato
+
+        # 6. Ejecutamos el salto de foco real
+        if mejor_candidato:
+            mejor_candidato.setFocus()
+
+    def _execute_press_action(self, input_data):
+        """Acts as a router when a gesture exceeds the threshold."""
+        action_code = input_data.get("input")
+        if not action_code or action_code == "SYS_NONE":
+            return
+            
+        # 1. Virtual gamepad button
+        if action_code.startswith("XUSB_"):
+            self.gamepad.press_button(button=self.buttons_map[action_code])
+            
+        # 2. Internal system action
+        elif action_code.startswith("SYS_"):
+            if action_code == "SYS_CHANGE_MODE":
+                self.model.is_continuous_mode = not self.model.is_continuous_mode
+                                
+            elif action_code == "SYS_NAV_ENTER":
+                if not input_data.get("active", False):
+                    self.navigate_interface("ENTER")
+
+    def _execute_release_action(self, input_data):
+        """Releases the action when the user relaxes the gesture."""
+        action_code = input_data.get("input")
+        if not action_code or action_code == "SYS_NONE":
+            return
+            
+        # We only need to physically release gamepad buttons.
+        # System actions (change mode, navigate) are not "held down".
+        if action_code.startswith("XUSB_"):
+            self.gamepad.release_button(button=self.buttons_map[action_code])
+
+    

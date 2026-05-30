@@ -233,3 +233,30 @@ QPushButton[active_category="true"] {
 #scrollAreaGamesContents QToolButton::icon {
     padding-bottom: 5px;
 }
+
+/* --- INDICADOR DE NAVEGACIÓN ESPACIAL --- */
+QPushButton:focus, QToolButton:focus {
+    /* Un borde grueso y de color llamativo para saber dónde estamos */
+    border: 3px solid #00FF00; 
+    background-color: #3d3d3d;
+    
+    /* Opcional: Levantar un poco el botón */
+    margin: 5px; 
+}
+
+
+#scrollAreaWidgetContents QToolButton:focus,
+#scrollAreaGamesContents QToolButton:focus,
+#scrollAreaExplorerContents QToolButton:focus {
+    border: 3px solid #00FF00; 
+    background-color: #4a4a4a;
+    
+    /* outline: none elimina la fea línea de puntos por defecto de Windows */
+    outline: none; 
+}
+
+/* Y mantenemos el foco para los botones normales del menú */
+QPushButton:focus {
+    border: 3px solid #00FF00;
+    outline: none;
+}

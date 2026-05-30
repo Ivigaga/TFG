@@ -324,7 +324,7 @@ class MainView(QMainWindow):
             # Política de tamaño: Que ocupe todo el ancho y alto disponible en su celda del grid
             btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
             btn.setMinimumHeight(150) # Altura mínima para que quepa bien verticalmente
-            
+            btn.setFocusPolicy(Qt.StrongFocus)
             self.profile_button_group.addButton(btn)
             # Inyectamos en el layout
             self.ui.layoutProfiles.addWidget(btn, row, col)
@@ -515,7 +515,7 @@ class MainView(QMainWindow):
             btn.setIcon(QIcon(get_asset_path(ruta_icono)) if ruta_icono else icono_defecto)
             btn.setIconSize(QSize(100,80))
             btn.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
-            
+            btn.setFocusPolicy(Qt.StrongFocus)
             from PySide6.QtWidgets import QSizePolicy
             btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
             
@@ -565,7 +565,7 @@ class MainView(QMainWindow):
             
             # Reutilizamos tu política de tamaño fija
             btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-            
+            btn.setFocusPolicy(Qt.StrongFocus)
             # Emitir señal con el nombre de la carpeta al hacer clic
             btn.clicked.connect(lambda checked=False, f=folder_name: self.explorer_folder_clicked.emit(f))
             
