@@ -140,7 +140,7 @@
              </sizepolicy>
             </property>
             <property name="currentIndex">
-             <number>7</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="mainPage">
              <property name="sizePolicy">
@@ -716,6 +716,31 @@
                       </attribute>
                      </widget>
                     </item>
+                    <item row="1" column="0">
+                     <widget class="QPushButton" name="btn_sys_restore">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string>Restaurar</string>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="autoExclusive">
+                       <bool>true</bool>
+                      </property>
+                      <property name="gamepadInput" stdset="0">
+                       <string>SYS_RESTORE_APP</string>
+                      </property>
+                      <attribute name="buttonGroup">
+                       <string notr="true">controlButtons</string>
+                      </attribute>
+                     </widget>
+                    </item>
                    </layout>
                   </item>
                  </layout>
@@ -901,8 +926,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>70</width>
-                   <height>18</height>
+                   <width>100</width>
+                   <height>30</height>
                   </rect>
                  </property>
                  <layout class="QGridLayout" name="layoutProfiles"/>
@@ -1076,8 +1101,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>783</width>
-                   <height>364</height>
+                   <width>100</width>
+                   <height>30</height>
                   </rect>
                  </property>
                  <layout class="QGridLayout" name="layoutGames"/>
@@ -1181,8 +1206,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>783</width>
-                   <height>374</height>
+                   <width>100</width>
+                   <height>30</height>
                   </rect>
                  </property>
                  <layout class="QGridLayout" name="layoutExplorer"/>
@@ -1341,6 +1366,14 @@
                  <bool>true</bool>
                 </property>
                 <widget class="QWidget" name="scrollAreaEmulatorsContents">
+                 <property name="geometry">
+                  <rect>
+                   <x>0</x>
+                   <y>0</y>
+                   <width>100</width>
+                   <height>30</height>
+                  </rect>
+                 </property>
                  <layout class="QVBoxLayout" name="layoutDynamicEmulators"/>
                 </widget>
                </widget>
@@ -1361,7 +1394,7 @@
                 </property>
                </widget>
               </item>
-             </layout> 
+             </layout>
             </widget>
            </widget>
           </item>

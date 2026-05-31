@@ -408,6 +408,16 @@ class Ui_MainWindow(object):
 
         self.gridLayout_sys.addWidget(self.btn_sys_enter, 0, 1, 1, 1)
 
+        self.btn_sys_restore = QPushButton(self.page_sys)
+        self.controlButtons.addButton(self.btn_sys_restore)
+        self.btn_sys_restore.setObjectName(u"btn_sys_restore")
+        sizePolicy2.setHeightForWidth(self.btn_sys_restore.sizePolicy().hasHeightForWidth())
+        self.btn_sys_restore.setSizePolicy(sizePolicy2)
+        self.btn_sys_restore.setCheckable(True)
+        self.btn_sys_restore.setAutoExclusive(True)
+
+        self.gridLayout_sys.addWidget(self.btn_sys_restore, 1, 0, 1, 1)
+
 
         self.verticalLayout_sys.addLayout(self.gridLayout_sys)
 
@@ -525,7 +535,7 @@ class Ui_MainWindow(object):
         self.scrollAreaProfiles.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 70, 18))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 100, 30))
         self.layoutProfiles = QGridLayout(self.scrollAreaWidgetContents)
         self.layoutProfiles.setObjectName(u"layoutProfiles")
         self.scrollAreaProfiles.setWidget(self.scrollAreaWidgetContents)
@@ -624,7 +634,7 @@ class Ui_MainWindow(object):
         self.scrollAreaGames.setWidgetResizable(True)
         self.scrollAreaGamesContents = QWidget()
         self.scrollAreaGamesContents.setObjectName(u"scrollAreaGamesContents")
-        self.scrollAreaGamesContents.setGeometry(QRect(0, 0, 783, 364))
+        self.scrollAreaGamesContents.setGeometry(QRect(0, 0, 100, 30))
         self.layoutGames = QGridLayout(self.scrollAreaGamesContents)
         self.layoutGames.setObjectName(u"layoutGames")
         self.scrollAreaGames.setWidget(self.scrollAreaGamesContents)
@@ -681,7 +691,7 @@ class Ui_MainWindow(object):
         self.scrollAreaExplorer.setWidgetResizable(True)
         self.scrollAreaExplorerContents = QWidget()
         self.scrollAreaExplorerContents.setObjectName(u"scrollAreaExplorerContents")
-        self.scrollAreaExplorerContents.setGeometry(QRect(0, 0, 783, 374))
+        self.scrollAreaExplorerContents.setGeometry(QRect(0, 0, 100, 30))
         self.layoutExplorer = QGridLayout(self.scrollAreaExplorerContents)
         self.layoutExplorer.setObjectName(u"layoutExplorer")
         self.scrollAreaExplorer.setWidget(self.scrollAreaExplorerContents)
@@ -773,6 +783,7 @@ class Ui_MainWindow(object):
         self.scrollAreaEmulators.setWidgetResizable(True)
         self.scrollAreaEmulatorsContents = QWidget()
         self.scrollAreaEmulatorsContents.setObjectName(u"scrollAreaEmulatorsContents")
+        self.scrollAreaEmulatorsContents.setGeometry(QRect(0, 0, 100, 30))
         self.layoutDynamicEmulators = QVBoxLayout(self.scrollAreaEmulatorsContents)
         self.layoutDynamicEmulators.setObjectName(u"layoutDynamicEmulators")
         self.scrollAreaEmulators.setWidget(self.scrollAreaEmulatorsContents)
@@ -813,7 +824,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.stackedWidget.setCurrentIndex(7)
+        self.stackedWidget.setCurrentIndex(0)
         self.stackedWidgetAcciones.setCurrentIndex(0)
 
 
@@ -868,6 +879,8 @@ class Ui_MainWindow(object):
         self.btn_sys_modo.setProperty(u"gamepadInput", QCoreApplication.translate("MainWindow", u"SYS_CHANGE_MODE", None))
         self.btn_sys_enter.setText(QCoreApplication.translate("MainWindow", u"Click", None))
         self.btn_sys_enter.setProperty(u"gamepadInput", QCoreApplication.translate("MainWindow", u"SYS_NAV_ENTER", None))
+        self.btn_sys_restore.setText(QCoreApplication.translate("MainWindow", u"Restaurar", None))
+        self.btn_sys_restore.setProperty(u"gamepadInput", QCoreApplication.translate("MainWindow", u"SYS_RESTORE_APP", None))
         self.label_calibracion.setText(QCoreApplication.translate("MainWindow", u"Calibra la sensibilidad:", None))
         self.btn_minus.setText(QCoreApplication.translate("MainWindow", u"\u2796", None))
         self.info_calib.setText(QCoreApplication.translate("MainWindow", u"Umbral actual: 50%", None))

@@ -395,6 +395,8 @@ class MainPresenter(QObject):
             try:
                 os.startfile(exe_path)
                 print(f"Successfully launched: {exe_path}")
+                # --- NEW: Minimize window after successful launch ---
+                self.view.showMinimized()
             except Exception as e:
                 print(f"Critical error trying to open the game at '{exe_path}': {e}")
             return
@@ -412,11 +414,14 @@ class MainPresenter(QObject):
             if emulator_path == "Default" or not os.path.exists(emulator_path):
                 os.startfile(exe_path)
                 print(f"Launching ROM with Windows Default: {exe_path}")
+                # --- NEW: Minimize window after successful launch ---
+                self.view.showMinimized()
             else:
                 # Launch the custom emulator, passing the ROM path as the main argument
-                # subprocess.Popen is completely non-blocking, so the camera UI won't freeze
                 subprocess.Popen([emulator_path, exe_path])
                 print(f"Launching ROM with custom emulator ({console_name}): {emulator_path} -> {exe_path}")
+                # --- NEW: Minimize window after successful launch ---
+                self.view.showMinimized()
                 
         except Exception as e:
             print(f"Critical error launching the ROM: {e}")
@@ -527,6 +532,10 @@ class MainPresenter(QObject):
 
     def navigate_interface(self, direction):
         """Navegación geométrica absoluta calculando coordenadas en pantalla."""
+
+        if self.view.isMinimized():
+            return
+        
         from PySide6.QtWidgets import QApplication, QWidget
         from PySide6.QtCore import Qt, QCoreApplication, QEvent
         from PySide6.QtGui import QKeyEvent
@@ -658,6 +667,11 @@ class MainPresenter(QObject):
             elif action_code == "SYS_NAV_ENTER":
                 if not input_data.get("active", False):
                     self.navigate_interface("ENTER")
+            
+            elif action_code == "SYS_RESTORE_APP":
+                if not input_data.get("active", False):
+                    self.view.showNormal()
+                    self.view.activateWindow()
 
     def _execute_release_action(self, input_data):
         """Releases the action when the user relaxes the gesture."""
