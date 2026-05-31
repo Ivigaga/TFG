@@ -73,10 +73,8 @@ class AppModel:
             
         # Ensure 'score' and 'active' keys exist for runtime
         for gesture, data in self.input_structure.items():
-            if "score" not in data:
-                data["score"] = 0.0
-            if "active" not in data:
-                data["active"] = False
+            data["score"] = 0.0
+            data["active"] = False
 
     def save_inputs(self):
         """Saves current input configuration to JSON."""
