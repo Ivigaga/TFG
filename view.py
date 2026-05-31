@@ -49,6 +49,12 @@ class MainView(QMainWindow):
     explorer_up_clicked = Signal()
     explorer_select_clicked = Signal()
 
+    # New Signals for Emulator Settings
+    emulator_settings_opened = Signal()
+    emulator_setup_requested = Signal(str) # Sends the console name
+    emulator_exe_chosen = Signal(str)      # Sends the chosen .exe filename
+    explorer_cancel_clicked = Signal()     # Replaces the hardcoded cancel
+
     def __init__(self):
         super().__init__()
         self.ui = Ui_MainWindow()
@@ -133,11 +139,18 @@ class MainView(QMainWindow):
 
         self.ui.gamesScanButton.clicked.connect(self.scan_games_requested.emit)
 
+        # Controles de las páginas de ajustes
+        self.ui.settingsBackButton.clicked.connect(lambda: self.navigation_requested.emit(0))
+        self.ui.emulatorSettingsBackButton.clicked.connect(lambda: self.navigation_requested.emit(7))
         # Controles del explorador
         self.ui.scanFolderButton.clicked.connect(self.explorer_opened.emit)
-        self.ui.explorerCancelButton.clicked.connect(lambda: self.navigation_requested.emit(5)) # Vuelve a la pág 5 (Juegos)
         self.ui.explorerUpButton.clicked.connect(self.explorer_up_clicked.emit)
         self.ui.explorerSelectButton.clicked.connect(self.explorer_select_clicked.emit)
+
+
+        self.ui.settingsButton.clicked.connect(lambda: self.navigation_requested.emit(7))
+        self.ui.pushButton.clicked.connect(self.emulator_settings_opened.emit)
+        self.ui.explorerCancelButton.clicked.connect(self.explorer_cancel_clicked.emit) # <-- AÑADIR ESTA
 
     # --- PUBLIC METHODS FOR THE PRESENTER TO CONTROL THE UI ---
 
@@ -531,47 +544,116 @@ class MainView(QMainWindow):
                 col = 0
                 row += 1
 
-    def populate_explorer(self, current_path, folder_list):
-        """Genera botones interactivos para las carpetas en el explorador interno."""
+    def populate_explorer(self, current_path, items_list, mode="FOLDER"):
+        """Generates interactive buttons for folders and optionally .exe files."""
         self.ui.label_explorer_path.setText(f"Ruta actual: {current_path}")
         
-        # Limpiar el grid
         while self.ui.layoutExplorer.count():
             item = self.ui.layoutExplorer.takeAt(0)
             widget = item.widget()
             if widget:
                 widget.deleteLater()
 
-        import math
-        from PySide6.QtWidgets import QToolButton, QSizePolicy
-        from PySide6.QtGui import QIcon
-        from PySide6.QtCore import QSize, Qt
-        import textwrap
-        
-        # Opcional: Si tienes un icono de carpeta genérico, pon la ruta aquí
-        # icono_carpeta = QIcon("ruta/a/folder_icon.png")
+        # Adapt UI based on the active mode
+        if mode == "FOLDER":
+            self.ui.explorerSelectButton.setText("✅ ELEGIR ESTA CARPETA")
+        elif mode == "EMULATOR":
+            self.ui.explorerSelectButton.setText("🖥️ PREDETERMINADO WINDOWS")
 
-        columnas_ideales = 5 # Ajusta según el ancho de tu pantalla
+        import math
+        import textwrap
+        from PySide6.QtWidgets import QToolButton, QSizePolicy
+        from PySide6.QtCore import QSize, Qt
+
+        ideal_columns = 5 
         row, col = 0, 0
         
-        for folder_name in folder_list:
+        # items_list now receives tuples: (filename, type)
+        for item_name, item_type in items_list:
             btn = QToolButton()
-            texto_multilinea = textwrap.fill(folder_name, width=12)
-            btn.setText(texto_multilinea)
+            multiline_text = textwrap.fill(item_name, width=12)
+            btn.setText(multiline_text)
             
-            # btn.setIcon(icono_carpeta)
             btn.setIconSize(QSize(60, 60))
             btn.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
-            
-            # Reutilizamos tu política de tamaño fija
             btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
             btn.setFocusPolicy(Qt.StrongFocus)
-            # Emitir señal con el nombre de la carpeta al hacer clic
-            btn.clicked.connect(lambda checked=False, f=folder_name: self.explorer_folder_clicked.emit(f))
+            
+            # Emit different signals based on the file type
+            if item_type == "folder":
+                btn.clicked.connect(lambda checked=False, f=item_name: self.explorer_folder_clicked.emit(f))
+            elif item_type == "exe":
+                btn.clicked.connect(lambda checked=False, f=item_name: self.emulator_exe_chosen.emit(f))
             
             self.ui.layoutExplorer.addWidget(btn, row, col)
             
             col += 1
-            if col >= columnas_ideales:
+            if col >= ideal_columns:
                 col = 0
                 row += 1
+
+
+    def populate_emulator_settings(self, emulators_dict):
+        """Dynamically generates the emulator configuration rows."""
+        layout = self.ui.layoutDynamicEmulators
+        
+        # --- NUEVA LIMPIEZA PROFUNDA (Deep Clear) ---
+        while layout.count():
+            item = layout.takeAt(0)
+            widget = item.widget()
+            if widget: 
+                widget.deleteLater()
+            elif item.layout():
+                # Si es una fila (QHBoxLayout), entramos a borrar sus botones y textos
+                sub_layout = item.layout()
+                while sub_layout.count():
+                    sub_item = sub_layout.takeAt(0)
+                    sub_widget = sub_item.widget()
+                    if sub_widget:
+                        sub_widget.deleteLater()
+                sub_layout.deleteLater() # Borramos la fila vacía
+            elif item.spacerItem(): 
+                layout.removeItem(item)
+
+        from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton
+        from PySide6.QtCore import Qt
+        from PySide6.QtGui import QFont
+        import os
+
+        # Title
+        title_lbl = QLabel("CONFIGURACIÓN DE EMULADORES")
+        title_font = QFont()
+        title_font.setPointSize(20)
+        title_font.setBold(True)
+        title_lbl.setFont(title_font)
+        title_lbl.setAlignment(Qt.AlignCenter)
+        layout.addWidget(title_lbl)
+
+        # Dynamic rows
+        for console, current_emu in emulators_dict.items():
+            row_layout = QHBoxLayout()
+            
+            console_lbl = QLabel(console)
+            console_lbl.setMinimumWidth(150)
+            font_lbl = QFont()
+            font_lbl.setPointSize(12)
+            console_lbl.setFont(font_lbl)
+            
+            btn = QPushButton()
+            btn.setMinimumHeight(50)
+            
+            # Show only the executable name if a full path is set
+            if current_emu != "Default" and os.path.exists(current_emu):
+                display_text = os.path.basename(current_emu)
+            else:
+                display_text = current_emu
+                
+            btn.setText(display_text)
+            btn.clicked.connect(lambda checked=False, c=console: self.emulator_setup_requested.emit(c))
+            
+            row_layout.addWidget(console_lbl)
+            row_layout.addWidget(btn)
+            layout.addLayout(row_layout)
+            
+        
+        layout.addStretch()

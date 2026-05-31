@@ -112,16 +112,23 @@ class Ui_MainWindow(object):
         self.verticalLayout_5.setObjectName(u"verticalLayout_5")
         self.gridLayout_2 = QGridLayout()
         self.gridLayout_2.setObjectName(u"gridLayout_2")
-        self.pushButton_4 = QPushButton(self.mainPage)
-        self.pushButton_4.setObjectName(u"pushButton_4")
-        self.pushButton_4.setEnabled(False)
+        self.gamesButton = QPushButton(self.mainPage)
+        self.gamesButton.setObjectName(u"gamesButton")
         sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(0)
-        sizePolicy2.setHeightForWidth(self.pushButton_4.sizePolicy().hasHeightForWidth())
-        self.pushButton_4.setSizePolicy(sizePolicy2)
+        sizePolicy2.setHeightForWidth(self.gamesButton.sizePolicy().hasHeightForWidth())
+        self.gamesButton.setSizePolicy(sizePolicy2)
 
-        self.gridLayout_2.addWidget(self.pushButton_4, 0, 2, 1, 1)
+        self.gridLayout_2.addWidget(self.gamesButton, 0, 1, 1, 1)
+
+        self.settingsButton = QPushButton(self.mainPage)
+        self.settingsButton.setObjectName(u"settingsButton")
+        self.settingsButton.setEnabled(True)
+        sizePolicy2.setHeightForWidth(self.settingsButton.sizePolicy().hasHeightForWidth())
+        self.settingsButton.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_2.addWidget(self.settingsButton, 0, 2, 1, 1)
 
         self.changeControlsButton = QPushButton(self.mainPage)
         self.changeControlsButton.setObjectName(u"changeControlsButton")
@@ -129,21 +136,6 @@ class Ui_MainWindow(object):
         self.changeControlsButton.setSizePolicy(sizePolicy2)
 
         self.gridLayout_2.addWidget(self.changeControlsButton, 0, 0, 1, 1)
-
-        self.gamesButton = QPushButton(self.mainPage)
-        self.gamesButton.setObjectName(u"gamesButton")
-        sizePolicy2.setHeightForWidth(self.gamesButton.sizePolicy().hasHeightForWidth())
-        self.gamesButton.setSizePolicy(sizePolicy2)
-
-        self.gridLayout_2.addWidget(self.gamesButton, 0, 1, 1, 1)
-
-        self.pushButton_5 = QPushButton(self.mainPage)
-        self.pushButton_5.setObjectName(u"pushButton_5")
-        self.pushButton_5.setEnabled(False)
-        sizePolicy2.setHeightForWidth(self.pushButton_5.sizePolicy().hasHeightForWidth())
-        self.pushButton_5.setSizePolicy(sizePolicy2)
-
-        self.gridLayout_2.addWidget(self.pushButton_5, 1, 0, 1, 1)
 
 
         self.verticalLayout_5.addLayout(self.gridLayout_2)
@@ -533,7 +525,7 @@ class Ui_MainWindow(object):
         self.scrollAreaProfiles.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 783, 364))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 70, 18))
         self.layoutProfiles = QGridLayout(self.scrollAreaWidgetContents)
         self.layoutProfiles.setObjectName(u"layoutProfiles")
         self.scrollAreaProfiles.setWidget(self.scrollAreaWidgetContents)
@@ -720,6 +712,80 @@ class Ui_MainWindow(object):
         self.verticalLayout_explorer.addLayout(self.explorer_buttons_layout)
 
         self.stackedWidget.addWidget(self.explorerPage)
+        self.settingsPage = QWidget()
+        self.settingsPage.setObjectName(u"settingsPage")
+        sizePolicy.setHeightForWidth(self.settingsPage.sizePolicy().hasHeightForWidth())
+        self.settingsPage.setSizePolicy(sizePolicy)
+        self.verticalLayout_10 = QVBoxLayout(self.settingsPage)
+        self.verticalLayout_10.setObjectName(u"verticalLayout_10")
+        self.horizontalLayout_4 = QHBoxLayout()
+        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.label = QLabel(self.settingsPage)
+        self.label.setObjectName(u"label")
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.horizontalLayout_4.addWidget(self.label)
+
+        self.pushButton = QPushButton(self.settingsPage)
+        self.pushButton.setObjectName(u"pushButton")
+        sizePolicy2.setHeightForWidth(self.pushButton.sizePolicy().hasHeightForWidth())
+        self.pushButton.setSizePolicy(sizePolicy2)
+
+        self.horizontalLayout_4.addWidget(self.pushButton)
+
+
+        self.verticalLayout_10.addLayout(self.horizontalLayout_4)
+
+        self.horizontalLayout_6 = QHBoxLayout()
+        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
+        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.horizontalLayout_6.addItem(self.verticalSpacer_2)
+
+
+        self.verticalLayout_10.addLayout(self.horizontalLayout_6)
+
+        self.horizontalLayout_7 = QHBoxLayout()
+        self.horizontalLayout_7.setObjectName(u"horizontalLayout_7")
+        self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.horizontalLayout_7.addItem(self.verticalSpacer_3)
+
+
+        self.verticalLayout_10.addLayout(self.horizontalLayout_7)
+
+        self.settingsBackButton = QPushButton(self.settingsPage)
+        self.settingsBackButton.setObjectName(u"settingsBackButton")
+        self.settingsBackButton.setMinimumSize(QSize(0, 80))
+
+        self.verticalLayout_10.addWidget(self.settingsBackButton)
+
+        self.stackedWidget.addWidget(self.settingsPage)
+        self.emulatorSettingsPage = QWidget()
+        self.emulatorSettingsPage.setObjectName(u"emulatorSettingsPage")
+        sizePolicy.setHeightForWidth(self.emulatorSettingsPage.sizePolicy().hasHeightForWidth())
+        self.emulatorSettingsPage.setSizePolicy(sizePolicy)
+        self.verticalLayout_11 = QVBoxLayout(self.emulatorSettingsPage)
+        self.verticalLayout_11.setObjectName(u"verticalLayout_11")
+        self.scrollAreaEmulators = QScrollArea(self.emulatorSettingsPage)
+        self.scrollAreaEmulators.setObjectName(u"scrollAreaEmulators")
+        self.scrollAreaEmulators.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.scrollAreaEmulators.setWidgetResizable(True)
+        self.scrollAreaEmulatorsContents = QWidget()
+        self.scrollAreaEmulatorsContents.setObjectName(u"scrollAreaEmulatorsContents")
+        self.layoutDynamicEmulators = QVBoxLayout(self.scrollAreaEmulatorsContents)
+        self.layoutDynamicEmulators.setObjectName(u"layoutDynamicEmulators")
+        self.scrollAreaEmulators.setWidget(self.scrollAreaEmulatorsContents)
+
+        self.verticalLayout_11.addWidget(self.scrollAreaEmulators)
+
+        self.emulatorSettingsBackButton = QPushButton(self.emulatorSettingsPage)
+        self.emulatorSettingsBackButton.setObjectName(u"emulatorSettingsBackButton")
+        self.emulatorSettingsBackButton.setMinimumSize(QSize(0, 80))
+
+        self.verticalLayout_11.addWidget(self.emulatorSettingsBackButton)
+
+        self.stackedWidget.addWidget(self.emulatorSettingsPage)
 
         self.verticalLayout_6.addWidget(self.stackedWidget)
 
@@ -747,7 +813,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.stackedWidget.setCurrentIndex(0)
+        self.stackedWidget.setCurrentIndex(7)
         self.stackedWidgetAcciones.setCurrentIndex(0)
 
 
@@ -760,10 +826,9 @@ class Ui_MainWindow(object):
         self.pipButton.setText(QCoreApplication.translate("MainWindow", u"PushButton", None))
         self.stopButton.setText(QCoreApplication.translate("MainWindow", u"PushButton", None))
         self.pushButton_3.setText(QCoreApplication.translate("MainWindow", u"PushButton", None))
-        self.pushButton_4.setText(QCoreApplication.translate("MainWindow", u"PushButton", None))
-        self.changeControlsButton.setText(QCoreApplication.translate("MainWindow", u"Cambiar controles", None))
         self.gamesButton.setText(QCoreApplication.translate("MainWindow", u"\U0001f3ae MIS JUEGOS", None))
-        self.pushButton_5.setText(QCoreApplication.translate("MainWindow", u"PushButton", None))
+        self.settingsButton.setText(QCoreApplication.translate("MainWindow", u"Ajustes", None))
+        self.changeControlsButton.setText(QCoreApplication.translate("MainWindow", u"Cambiar controles", None))
         self.gesturesBackButton.setText(QCoreApplication.translate("MainWindow", u"\u25c0 Volver  sin guardar", None))
         self.gesturesBackButton.setProperty(u"type", "")
         self.gesturesSaveLocalButton.setText(QCoreApplication.translate("MainWindow", u"Guardar y volver", None))
@@ -830,5 +895,12 @@ class Ui_MainWindow(object):
         self.explorerCancelButton.setText(QCoreApplication.translate("MainWindow", u"\u274c CANCELAR", None))
         self.explorerUpButton.setText(QCoreApplication.translate("MainWindow", u"\u2b06 SUBIR NIVEL", None))
         self.explorerSelectButton.setText(QCoreApplication.translate("MainWindow", u"\u2705 ELEGIR ESTA CARPETA", None))
+        self.label.setText(QCoreApplication.translate("MainWindow", u"ROMS:", None))
+        self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Cambiar emulador", None))
+        self.settingsBackButton.setText(QCoreApplication.translate("MainWindow", u"\u25c0 VOLVER AL MEN\u00da", None))
+        self.settingsBackButton.setProperty(u"type", QCoreApplication.translate("MainWindow", u"secondary", None))
+        self.scrollAreaEmulators.setStyleSheet(QCoreApplication.translate("MainWindow", u"QScrollArea { border: none; background: transparent; } QWidget#scrollAreaEmulatorsContents { background: transparent; }", None))
+        self.emulatorSettingsBackButton.setText(QCoreApplication.translate("MainWindow", u"\u25c0 VOLVER A AJUSTES", None))
+        self.emulatorSettingsBackButton.setProperty(u"type", QCoreApplication.translate("MainWindow", u"secondary", None))
     # retranslateUi
 

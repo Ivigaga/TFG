@@ -35,10 +35,13 @@ class AppModel:
         self.games_dir = get_save_path('games')
         os.makedirs(self.games_dir, exist_ok=True)
         
-        # NUEVO: Configuración de rutas y Caché en RAM
         self.rom_folders_file = get_save_path('games/rom_folders.json') 
         self.steam_games_file = get_save_path('games/steam_games.json')
-        self._cached_roms = None 
+        
+        self.emulators_file = get_save_path('games/emulators.json')
+        self.emulators_config = self._load_emulators_config()
+        
+        self._cached_roms = None
         
         os.makedirs(self.games_dir, exist_ok=True)
 
@@ -443,5 +446,82 @@ class AppModel:
                         
         self._cached_roms = roms_encontradas # Guardamos el resultado en la RAM
         return roms_encontradas
+    
+    def _load_emulators_config(self):
+        """Loads emulator configuration or creates a default one."""
+        import os, json
+        
+        # Comprehensive list of consoles mapped to supported ROM extensions
+        default_config = {
+            "NES": "Default",
+            "SNES": "Default",
+            "Nintendo 64": "Default",
+            "GameCube": "Default",
+            "Wii": "Default",
+            "Wii U": "Default",
+            "Nintendo Switch": "Default",
+            "Game Boy": "Default",
+            "Game Boy Color": "Default",
+            "Game Boy Advance": "Default",
+            "Nintendo DS": "Default",
+            "Nintendo 3DS": "Default",
+            "PlayStation 1": "Default",
+            "PlayStation 2": "Default",
+            "PlayStation Portable (PSP)": "Default",
+            "PlayStation Vita": "Default",
+            "Sega Master System": "Default",
+            "Sega Genesis": "Default",
+            "Sega Game Gear": "Default",
+            "Sega Dreamcast": "Default",
+            "Xbox": "Default",
+            "PC Engine": "Default",
+            "Arcade / RetroArch": "Default"
+        }
+        
+        if os.path.exists(self.emulators_file):
+            try:
+                with open(self.emulators_file, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except Exception:
+                pass
+                
+        return default_config
+
+    def save_emulators_config(self):
+        """Saves current emulator configuration to disk."""
+        import json
+        with open(self.emulators_file, 'w', encoding='utf-8') as f:
+            json.dump(self.emulators_config, f, indent=4)
+
+
+    def get_console_from_extension(self, extension):
+        """Maps a file extension (like '.nes') to the corresponding console name."""
+        ext = extension.lower()
+        
+        # Mapping based on your supported extensions
+        mapping = {
+            '.nes': 'NES',
+            '.sfc': 'SNES', '.smc': 'SNES', '.fig': 'SNES',
+            '.n64': 'Nintendo 64', '.z64': 'Nintendo 64', '.v64': 'Nintendo 64',
+            '.gcm': 'GameCube',
+            '.wbfs': 'Wii', '.ciso': 'Wii',
+            '.wud': 'Wii U', '.wux': 'Wii U', '.rpx': 'Wii U',
+            '.nsp': 'Nintendo Switch', '.xci': 'Nintendo Switch',
+            '.gb': 'Game Boy', '.gbc': 'Game Boy Color', '.gba': 'Game Boy Advance',
+            '.nds': 'Nintendo DS', '.3ds': 'Nintendo 3DS', '.cia': 'Nintendo 3DS', '.cxi': 'Nintendo 3DS',
+            '.bin': 'PlayStation 1', '.cue': 'PlayStation 1', '.img': 'PlayStation 1',
+            '.iso': 'PlayStation 2', 
+            '.pbp': 'PlayStation Portable (PSP)', '.cso': 'PlayStation Portable (PSP)',
+            '.vpk': 'PlayStation Vita',
+            '.sms': 'Sega Master System',
+            '.md': 'Sega Genesis', '.smd': 'Sega Genesis', '.gen': 'Sega Genesis',
+            '.gg': 'Sega Game Gear',
+            '.cdi': 'Sega Dreamcast', '.gdi': 'Sega Dreamcast',
+            '.chd': 'Arcade / RetroArch',
+            '.xiso': 'Xbox', '.xex': 'Xbox',
+            '.pce': 'PC Engine',
+            '.zip': 'Arcade / RetroArch', '.7z': 'Arcade / RetroArch'
+        }
+        return mapping.get(ext, None)
 
 

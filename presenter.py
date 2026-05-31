@@ -49,6 +49,8 @@ class MainPresenter(QObject):
         self.start_video()
 
         self.current_explorer_path = os.path.expanduser('~') # Empieza en la carpeta del usuario (C:\Users\...)
+        self.explorer_mode = "FOLDER" 
+        self.current_setup_console = None
 
     def _connect_view_signals(self):
         """Binds View signals to Presenter logic."""
@@ -72,7 +74,6 @@ class MainPresenter(QObject):
         self.view.scan_games_requested.connect(self.handle_scan_games)
         # Conexión para el lanzamiento de videojuegos
         self.view.game_launch_requested.connect(self.handle_game_launch)
-
         
 
         # Explorador
@@ -80,6 +81,11 @@ class MainPresenter(QObject):
         self.view.explorer_folder_clicked.connect(self.handle_explorer_folder_clicked)
         self.view.explorer_up_clicked.connect(self.handle_explorer_up)
         self.view.explorer_select_clicked.connect(self.handle_explorer_select)
+
+        self.view.emulator_settings_opened.connect(self.handle_emulator_settings_opened)
+        self.view.emulator_setup_requested.connect(self.handle_emulator_setup_requested)
+        self.view.emulator_exe_chosen.connect(self.handle_emulator_exe_chosen)
+        self.view.explorer_cancel_clicked.connect(self.handle_explorer_cancel)
 
     # --- PRESENTER LOGIC ---
 
@@ -376,27 +382,50 @@ class MainPresenter(QObject):
             self.view.populate_games_catalog(lista_actualizada)
 
     def handle_game_launch(self, exe_path):
-        """Lanza de forma asíncrona el ejecutable del juego o la URI de Steam."""
+        """Asynchronously launches the game executable, Steam URI, or ROM with its assigned emulator."""
         if not exe_path:
-            print("Advertencia: Este juego no tiene una ruta de ejecución válida configurada.")
+            print("Warning: This game does not have a valid execution path configured.")
             return
 
         import os
+        import subprocess
+
+        # 1. Native executables or Steam shortcuts
+        if exe_path.startswith("steam://") or exe_path.lower().endswith(".exe"):
+            try:
+                os.startfile(exe_path)
+                print(f"Successfully launched: {exe_path}")
+            except Exception as e:
+                print(f"Critical error trying to open the game at '{exe_path}': {e}")
+            return
+
+        # 2. It's a ROM. Find its console and emulator.
+        _, extension = os.path.splitext(exe_path)
+        console_name = self.model.get_console_from_extension(extension)
+
+        emulator_path = "Default"
+        if console_name:
+            emulator_path = self.model.emulators_config.get(console_name, "Default")
+
         try:
-            # Justificación para el TFG: os.startfile delega la ejecución al núcleo de Windows.
-            # Al ser no bloqueante (no espera a que el programa termine), la interfaz de Python
-            # sigue respondiendo y procesando la cámara en segundo plano sin sufrir microtirones.
-            os.startfile(exe_path)
-            print(f"Lanzando con éxito: {exe_path}")
+            # If set to Default, or the manually chosen .exe was deleted from the hard drive
+            if emulator_path == "Default" or not os.path.exists(emulator_path):
+                os.startfile(exe_path)
+                print(f"Launching ROM with Windows Default: {exe_path}")
+            else:
+                # Launch the custom emulator, passing the ROM path as the main argument
+                # subprocess.Popen is completely non-blocking, so the camera UI won't freeze
+                subprocess.Popen([emulator_path, exe_path])
+                print(f"Launching ROM with custom emulator ({console_name}): {emulator_path} -> {exe_path}")
+                
         except Exception as e:
-            print(f"Error crítico al intentar abrir el juego en '{exe_path}': {e}")
+            print(f"Critical error launching the ROM: {e}")
 
     def handle_explorer_opened(self):
-        """Abre el explorador de carpetas recordando la última ruta configurada."""
+        self.explorer_mode = "FOLDER"
         rutas_guardadas = self.model.get_rom_folders()
         
         if rutas_guardadas:
-            # Recuperamos el último elemento de la lista [-1]
             self.current_explorer_path = rutas_guardadas[-1]
         else:
             import os
@@ -406,25 +435,63 @@ class MainPresenter(QObject):
         self.view.show_page(6)
 
     def refresh_explorer(self):
-        """Lee el disco duro o lista las unidades físicas si estamos en la vista general."""
         import os
         import string
         
-        # --- NUEVO: Estado de "Este Equipo" ---
         if self.current_explorer_path == "DRIVES":
-            # Escaneamos el abecedario buscando qué letras de disco existen realmente en tu Windows
-            drives = [f"{d}:\\" for d in string.ascii_uppercase if os.path.exists(f"{d}:\\")]
-            self.view.populate_explorer("Este Equipo (Discos Duros)", drives)
+            drives = [(f"{d}:\\", "folder") for d in string.ascii_uppercase if os.path.exists(f"{d}:\\")]
+            self.view.populate_explorer("Este Equipo (Discos Duros)", drives, mode=self.explorer_mode)
             return
 
         try:
             items = os.listdir(self.current_explorer_path)
+            
+            # Always get folders
             folders = [f for f in items if os.path.isdir(os.path.join(self.current_explorer_path, f))]
             folders.sort(key=str.lower)
-            self.view.populate_explorer(self.current_explorer_path, folders)
+            content_list = [(f, "folder") for f in folders]
+            
+            # Inject .exe files ONLY if we are looking for an emulator
+            if self.explorer_mode == "EMULATOR":
+                exes = [f for f in items if f.lower().endswith('.exe')]
+                exes.sort(key=str.lower)
+                content_list.extend([(f, "exe") for f in exes])
+
+            self.view.populate_explorer(self.current_explorer_path, content_list, mode=self.explorer_mode)
         except PermissionError:
             print(f"Acceso denegado a la carpeta: {self.current_explorer_path}")
             self.handle_explorer_up()
+
+    def handle_explorer_select(self):
+        """Action depends on the current explorer mode."""
+        if self.explorer_mode == "FOLDER":
+            self.view.ui.explorerSelectButton.setText("⏳ AÑADIENDO CARPETA...")
+            self.view.ui.explorerSelectButton.setEnabled(False)
+            
+            self.model.add_rom_folder(self.current_explorer_path)
+            
+            lista_actualizada = self.model.get_installed_games()
+            self.view.populate_games_catalog(lista_actualizada)
+            
+            self.view.ui.explorerSelectButton.setText("✅ ELEGIR ESTA CARPETA")
+            self.view.ui.explorerSelectButton.setEnabled(True)
+            self.view.show_page(5)
+            
+        elif self.explorer_mode == "EMULATOR":
+            # User clicked "PREDETERMINADO DE WINDOWS"
+            if self.current_setup_console:
+                self.model.emulators_config[self.current_setup_console] = "Default"
+                self.model.save_emulators_config()
+                
+                self.view.populate_emulator_settings(self.model.emulators_config)
+                self.view.show_page(8)
+
+    def handle_explorer_cancel(self):
+        """Returns to the correct page depending on where the explorer was launched from."""
+        if self.explorer_mode == "FOLDER":
+            self.view.show_page(5) 
+        elif self.explorer_mode == "EMULATOR":
+            self.view.show_page(8)
 
     def handle_explorer_folder_clicked(self, folder_name):
         import os
@@ -456,23 +523,6 @@ class MainPresenter(QObject):
             self.current_explorer_path = padre
             
         self.refresh_explorer()
-
-    def handle_explorer_select(self):
-        """Registra la carpeta, borra la caché y actualiza el catálogo."""
-        self.view.ui.explorerSelectButton.setText("⏳ AÑADIENDO CARPETA...")
-        self.view.ui.explorerSelectButton.setEnabled(False)
-        
-        # 1. Al añadir la ruta, el modelo vacía la variable self._cached_roms por dentro
-        self.model.add_rom_folder(self.current_explorer_path)
-        
-        # 2. Al pedir los juegos ahora, el modelo detecta que no hay caché y hace el barrido real
-        lista_actualizada = self.model.get_installed_games()
-        self.view.populate_games_catalog(lista_actualizada)
-        
-        self.view.ui.explorerSelectButton.setText("✅ ELEGIR ESTA CARPETA")
-        self.view.ui.explorerSelectButton.setEnabled(True)
-        
-        self.view.show_page(5)
 
 
     def navigate_interface(self, direction):
@@ -619,5 +669,33 @@ class MainPresenter(QObject):
         # System actions (change mode, navigate) are not "held down".
         if action_code.startswith("XUSB_"):
             self.gamepad.release_button(button=self.buttons_map[action_code])
+
+
+    def handle_emulator_settings_opened(self):
+        self.view.populate_emulator_settings(self.model.emulators_config)
+        self.view.show_page(8)
+
+    def handle_emulator_setup_requested(self, console_name):
+        """Prepares the explorer to pick an executable for a specific console."""
+        self.current_setup_console = console_name
+        self.explorer_mode = "EMULATOR"
+        
+        import os
+        self.current_explorer_path = os.path.expanduser('~')
+        self.refresh_explorer()
+        self.view.show_page(6)
+
+    def handle_emulator_exe_chosen(self, filename):
+        """Fired when an .exe is clicked in the explorer."""
+        import os
+        exe_path = os.path.join(self.current_explorer_path, filename)
+        
+        if self.current_setup_console:
+            self.model.emulators_config[self.current_setup_console] = exe_path
+            self.model.save_emulators_config()
+            
+            # Refresh the settings page and go back
+            self.view.populate_emulator_settings(self.model.emulators_config)
+            self.view.show_page(8)
 
     
