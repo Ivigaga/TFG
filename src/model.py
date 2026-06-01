@@ -10,7 +10,8 @@ def get_asset_path(relative_path):
         # sys._MEIPASS apunta directamente a la carpeta _internal de PyInstaller
         base_path = sys._MEIPASS
     else:
-        base_path = os.path.abspath(os.path.dirname(__file__))
+        # En desarrollo, subimos un nivel desde /src y entramos en /conf
+        base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'conf'))
     return os.path.join(base_path, relative_path)
 
 def get_save_path(relative_path):
@@ -19,13 +20,14 @@ def get_save_path(relative_path):
         # sys.executable apunta a la raíz donde está el .exe, ideal para guardar datos
         base_path = os.path.dirname(sys.executable)
     else:
-        base_path = os.path.abspath(os.path.dirname(__file__))
+        # En desarrollo, subimos un nivel desde /src y entramos en /conf
+        base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'conf'))
     return os.path.join(base_path, relative_path)
 
 class AppModel:
     def __init__(self, json_path="controls/default_inputs.json"):
-        self.json_path = json_path
-        self.default_json_path = "controls/default_inputs.json"
+        self.json_path = get_asset_path(json_path)
+        self.default_json_path = get_asset_path("controls/default_inputs.json")
         self.input_structure = {}
         self.is_continuous_mode = True
         self.target_fps = 60
