@@ -56,11 +56,11 @@ class AppModel:
         """Loads the configuration from the JSON file."""
         if not os.path.exists(self.json_path):
             self.input_structure = {
-                "jawOpen": {"action": "SYS_NONE", "threshold": 50},
-                "eyeBlinkRight": {"action": "SYS_NONE", "threshold": 50},
-                "eyeBrowsUp": {"action": "SYS_NONE", "threshold": 50},
-                "mouthPucker": {"action": "SYS_NONE", "threshold": 50},
-                "smile": {"action": "SYS_NONE", "threshold": 50},
+                "jawOpen": {"category_type": "none","function": "none", "input": None, "threshold": 0.5},
+                "eyeBlinkRight": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
+                "eyeBrowsUp": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
+                "mouthPucker": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
+                "smile": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
                 "noseLeft": {"threshold": 0.6,"score": 0.0,"active": False},
                 "noseRight": {"threshold": 0.4,"score": 0.0,"active": False},
                 "noseUp": {"threshold": 0.4,"score": 0.0,"active": True},
@@ -68,6 +68,9 @@ class AppModel:
                 }
             self.json_path =self.default_json_path
             self.save_inputs()  # Guardamos el JSON por primera vez con la estructura por defecto
+            for gesture, data in self.input_structure.items():
+                data["score"] = 0.0
+                data["active"] = False
             return
             
         with open(self.json_path, 'r') as f:
@@ -103,13 +106,6 @@ class AppModel:
 
     def get_score(self, gesture):
         return self.input_structure.get(gesture, {}).get("score", 0.0)
-
-    def get_gesture_by_input(self, gamepad_input):
-        """Returns the gesture associated with a gamepad button string."""
-        for gesture, data in self.input_structure.items():
-            if data.get("input") == gamepad_input:
-                return gesture
-        return None
     
     def get_input_from_gesture(self, gesture):
         """Returns the gamepad input associated with a gesture."""
@@ -145,6 +141,10 @@ class AppModel:
             self.input_structure[gesture_code]["input"] = input_code
             if input_code == "SYS_CHANGE_MODE":
                 self.input_structure[gesture_code]["function"] = "changeMovementMode"
+            elif input_code == "SYS_RESTORE_APP":
+                self.input_structure[gesture_code]["function"] = "restoreApp"
+            elif input_code == "SYS_NAV_ENTER":
+                self.input_structure[gesture_code]["function"] = "click"
                 
     def get_available_profiles(self):
         """Devuelve una lista con los nombres de los archivos .json en la carpeta controls."""
@@ -317,71 +317,7 @@ class AppModel:
         games_list.extend(self.get_dynamic_roms())
                 
         return games_list
-    
-    def scan_folder_for_roms(self, folder_path):
-        """Escanea recursivamente una carpeta buscando ROMs y crea sus perfiles JSON."""
-        # Tupla con todas las extensiones de la tabla (en minúsculas para comparaciones seguras)
-        extensiones_validas = (
-            '.nes', '.sfc', '.smc', '.fig', '.n64', '.z64', '.v64', 
-            '.iso', '.gcm', '.ciso', '.wbfs', '.wdf', '.wud', '.wux', '.rpx', 
-            '.nsp', '.xci', '.gb', '.gbc', '.gba', '.nds', '.3ds', '.cia', '.cxi', 
-            '.bin', '.cue', '.img', '.pbp', '.cso', '.vpk', '.sms', '.md', '.smd', 
-            '.gen', '.gg', '.cdi', '.gdi', '.chd', '.xiso', '.xex', 
-            '.zip', '.7z', '.pce'
-        )
         
-        hubo_cambios = False
-        import os
-        import json
-        
-        # Usamos os.walk para buscar tanto en la carpeta elegida como en las subcarpetas que tenga dentro
-        for root, dirs, files in os.walk(folder_path):
-            for archivo in files:
-                # Comprobamos si el archivo termina en alguna de las extensiones de nuestra mega-tupla
-                if archivo.lower().endswith(extensiones_validas):
-                    rom_path = os.path.join(root, archivo)
-                    titulo_limpio = os.path.splitext(archivo)[0]
-                    
-                    # Generamos un nombre seguro para el archivo JSON
-                    safe_filename = "".join(c for c in titulo_limpio if c.isalnum() or c in (' ', '_')).replace(' ', '_').lower()
-                    
-                    # Le ponemos el prefijo "rom_" para distinguirlos de los de Steam en la carpeta
-                    json_path = os.path.join(self.games_dir, f"rom_{safe_filename}.json")
-                    
-                    scanned_data = {
-                        "title": titulo_limpio,
-                        "exe_path": rom_path,
-                        "icon": "" # Como son locales, de momento no tienen portada
-                    }
-                    
-                    guardar_fichero = False
-                    
-                    if os.path.exists(json_path):
-                        # Actualizar si la ruta ha cambiado (ej. el usuario movió la ROM)
-                        try:
-                            with open(json_path, 'r', encoding='utf-8') as jf:
-                                existing_data = json.load(jf)
-                            
-                            if existing_data.get("exe_path") != scanned_data["exe_path"]:
-                                existing_data["exe_path"] = scanned_data["exe_path"]
-                                existing_data["title"] = scanned_data["title"]
-                                scanned_data = existing_data
-                                guardar_fichero = True
-                        except Exception:
-                            guardar_fichero = True # Sobreescribir si el JSON está corrupto
-                    else:
-                        guardar_fichero = True # Es una ROM nueva
-                        
-                    if guardar_fichero:
-                        try:
-                            with open(json_path, 'w', encoding='utf-8') as jf:
-                                json.dump(scanned_data, jf, indent=4)
-                            hubo_cambios = True
-                        except Exception as e:
-                            print(f"Error guardando JSON para {titulo_limpio}: {e}")
-                            
-        return hubo_cambios
-    
     def get_rom_folders(self):
         """Devuelve la lista de rutas guardadas por el usuario."""
         import json, os
