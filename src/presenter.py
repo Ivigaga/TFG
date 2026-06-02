@@ -1,11 +1,13 @@
 import os
-
+import subprocess
+import string
 import cv2
 import time
 import vgamepad as vg
 from PySide6.QtCore import QObject, Qt, QCoreApplication, QEvent
 from PySide6.QtGui import QImage, QPixmap,QKeyEvent
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QWidget, QScrollArea
+import math
 
 class MainPresenter(QObject):
     def __init__(self, view, model, vision_engine):
@@ -387,8 +389,7 @@ class MainPresenter(QObject):
             print("Warning: This game does not have a valid execution path configured.")
             return
 
-        import os
-        import subprocess
+        
 
         # 1. Native executables or Steam shortcuts
         if exe_path.startswith("steam://") or exe_path.lower().endswith(".exe"):
@@ -433,15 +434,14 @@ class MainPresenter(QObject):
         if rutas_guardadas:
             self.current_explorer_path = rutas_guardadas[-1]
         else:
-            import os
+
             self.current_explorer_path = os.path.expanduser('~')
             
         self.refresh_explorer()
         self.view.show_page(6)
 
     def refresh_explorer(self):
-        import os
-        import string
+
         
         if self.current_explorer_path == "DRIVES":
             drives = [(f"{d}:\\", "folder") for d in string.ascii_uppercase if os.path.exists(f"{d}:\\")]
@@ -499,9 +499,7 @@ class MainPresenter(QObject):
             self.view.show_page(8)
 
     def handle_explorer_folder_clicked(self, folder_name):
-        import os
-        
-        # --- NUEVO: Si estamos eligiendo disco, saltamos directamente a él ---
+ 
         if self.current_explorer_path == "DRIVES":
             self.current_explorer_path = folder_name
             self.refresh_explorer()
@@ -513,7 +511,6 @@ class MainPresenter(QObject):
             self.refresh_explorer()
 
     def handle_explorer_up(self):
-        import os
         
         # Si ya estamos viendo los discos, no hay nada más arriba
         if self.current_explorer_path == "DRIVES":
@@ -536,10 +533,7 @@ class MainPresenter(QObject):
         if self.view.isMinimized():
             return
         
-        from PySide6.QtWidgets import QApplication, QWidget
-        from PySide6.QtCore import Qt, QCoreApplication, QEvent
-        from PySide6.QtGui import QKeyEvent
-        import math
+        
 
         if direction in ["UP", "DOWN", "LEFT", "RIGHT"]:
             current_time = time.time()
@@ -638,7 +632,7 @@ class MainPresenter(QObject):
             best_candidate.setFocus()
 
             # --- FIX 2: Auto-Scroll if the button is inside a scroll area ---
-            from PySide6.QtWidgets import QScrollArea
+            
             parent = best_candidate.parentWidget()
             
             # Walk up the widget tree to see if we are inside a QScrollArea
@@ -693,15 +687,14 @@ class MainPresenter(QObject):
         """Prepares the explorer to pick an executable for a specific console."""
         self.current_setup_console = console_name
         self.explorer_mode = "EMULATOR"
-        
-        import os
+
         self.current_explorer_path = os.path.expanduser('~')
         self.refresh_explorer()
         self.view.show_page(6)
 
     def handle_emulator_exe_chosen(self, filename):
         """Fired when an .exe is clicked in the explorer."""
-        import os
+
         exe_path = os.path.join(self.current_explorer_path, filename)
         
         if self.current_setup_console:
