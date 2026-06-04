@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QGridLayout, QLabel, QPushButton, QButtonGroup, QToolButton, QSizePolicy
-from PySide6.QtGui import QIcon, QAction
+from PySide6.QtGui import QIcon, QAction, QPixmap
 from PySide6.QtCore import Signal, Qt, QSize
 from PySide6.QtUiTools import QUiLoader
 
@@ -23,10 +23,6 @@ class PipWindow(QWidget):
         self.video_label.setStyleSheet("background-color: black;")
         layout.addWidget(self.video_label)
 
-    def update_image(self, pixmap):
-        self.video_label.setPixmap(pixmap.scaled(
-            self.video_label.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
-        ))
 
 class MainView(QMainWindow):
     # Custom Signals to notify the Presenter
@@ -59,6 +55,9 @@ class MainView(QMainWindow):
 
     platform_selected = Signal(str)
     remove_platform = Signal()  # Nueva señal para eliminar la plataforma filtrada y volver a mostrar todo
+
+    controls_opened = Signal()
+    controls_closed = Signal()
     
 
     def __init__(self):
@@ -67,6 +66,22 @@ class MainView(QMainWindow):
         self.ui.setupUi(self)
         self.setWindowTitle("Gesture Control - MVP Architecture")
         self.resize(1020, 751)
+
+        # --- EL TRUCO DEL FANTASMA PARA NO ROMPER EL LAYOUT ---
+        # 1. Capturamos las reglas de tamaño que tiene la imagen del mando
+        policy = self.ui.controllerImage.sizePolicy()
+        
+        # 2. Le ordenamos a Qt que MANTENGA el hueco físico aunque se oculte el componente
+        policy.setRetainSizeWhenHidden(True)
+        self.ui.controllerImage.setSizePolicy(policy)
+        
+        # 3. Ahora sí podemos ocultarlo de forma 100% segura. El vídeo no se inmutará.
+        self.ui.controllerImage.hide()
+        self.current_controller_path = "" 
+        
+        # 4. (Opcional pero recomendado) Apagamos el tirano del vídeo por si acaso
+        self.ui.videoLabel.setScaledContents(False)
+        # -------------------------------------------------------
 
         self.pip_window = None
         self._connect_signals()
@@ -83,8 +98,6 @@ class MainView(QMainWindow):
         self.ui.controlsCancelButton.clicked.connect(lambda: self.navigation_requested.emit(1))
         self.ui.controlsCancelButton.clicked.connect(lambda: self.ui.stackedWidgetAcciones.setCurrentIndex(0))
         self.ui.controlsCancelButton.clicked.connect(self.stop_reading_score.emit)
-        self.ui.gesturesBackButton.clicked.connect(lambda: self.navigation_requested.emit(0))
-        
         
 
         # --- NAVEGACIÓN ANIDADA DE ACCIONES ---
@@ -136,16 +149,12 @@ class MainView(QMainWindow):
         # Construimos el teclado al iniciar
         self.build_virtual_keyboard()
 
-    
-
-        
-
         self.ui.gamesBackButton.clicked.connect(self.remove_platform.emit)
         self.ui.gamesScanButton.clicked.connect(self.scan_games_requested.emit)
 
         # Controles de las páginas de ajustes
         self.ui.settingsBackButton.clicked.connect(lambda: self.navigation_requested.emit(0))
-        self.ui.emulatorSettingsBackButton.clicked.connect(lambda: self.navigation_requested.emit(7))
+        self.ui.emulatorSettingsBackButton.clicked.connect(lambda: self.navigation_requested.emit(0))
         # Controles del explorador
         self.ui.scanFolderButton.clicked.connect(self.explorer_opened.emit)
         self.ui.gamesScanFolderButton.clicked.connect(self.explorer_opened.emit)
@@ -155,7 +164,15 @@ class MainView(QMainWindow):
 
         #self.ui.settingsButton.clicked.connect(lambda: self.navigation_requested.emit(7))
         self.ui.pushButton.clicked.connect(self.emulator_settings_opened.emit)
-        self.ui.explorerCancelButton.clicked.connect(self.explorer_cancel_clicked.emit) # <-- AÑADIR ESTA
+        self.ui.explorerCancelButton.clicked.connect(self.explorer_cancel_clicked.emit) 
+
+
+        self.ui.emulatorsButton.clicked.connect(self.emulator_settings_opened.emit)
+
+        # Sustituye las líneas antiguas de estos botones por estas:
+        self.ui.controlsButton.clicked.connect(self.controls_opened.emit)
+        self.ui.gamesControlsButton.clicked.connect(self.controls_opened.emit)
+        self.ui.gesturesBackButton.clicked.connect(self.controls_closed.emit)
 
     # --- PUBLIC METHODS FOR THE PRESENTER TO CONTROL THE UI ---
 
@@ -689,3 +706,51 @@ class MainView(QMainWindow):
             if col >= columnas_ideales:
                 col = 0
                 row += 1
+
+    def show_controller_image(self, image_path):
+        """Carga la imagen, la muestra, y espera a que el layout se calcule."""
+        from PySide6.QtGui import QPixmap
+        from PySide6.QtCore import QTimer
+        from model import get_asset_path
+        
+        self.current_controller_path = image_path
+        ruta_absoluta = get_asset_path(image_path)
+        
+        # 1. Guardamos la foto original en la RAM para no castigar al disco duro al redimensionar
+        self._pixmap_original = QPixmap(ruta_absoluta)
+        
+        if not self._pixmap_original.isNull():
+            # 2. Apagamos el tirano y mostramos el widget para que el Layout actúe
+            self.ui.controllerImage.setScaledContents(False)
+            self.ui.controllerImage.show()
+            
+            # 3. LA MAGIA: Ponemos el escalado a la cola. Se ejecutará en cuanto 
+            # el Layout termine de calcular el ancho real de la columna.
+            QTimer.singleShot(0, self._apply_controller_scaling)
+
+    def _apply_controller_scaling(self):
+        """Aplica la matemática del escalado usando el ancho 100% real."""
+        from PySide6.QtCore import Qt
+        
+        # Nos aseguramos de que la imagen original se cargó bien
+        if hasattr(self, '_pixmap_original') and not self._pixmap_original.isNull():
+            # Ahora sí, este width() es matemáticamente perfecto
+            ancho_real = self.ui.controllerImage.width()
+            
+            pixmap_escalado = self._pixmap_original.scaledToWidth(ancho_real, Qt.SmoothTransformation)
+            
+            self.ui.controllerImage.setAlignment(Qt.AlignTop | Qt.AlignHCenter)
+            self.ui.controllerImage.setPixmap(pixmap_escalado)
+
+    def hide_controller_image(self):
+        """Oculta la imagen de la interfaz."""
+        self.ui.controllerImage.hide()
+
+    def resizeEvent(self, event):
+        """Recalcula el tamaño de la imagen si el usuario estira la ventana."""
+        super().resizeEvent(event) 
+        
+        # Si la imagen está visible, llamamos a la función matemática directamente,
+        # aprovechando que la imagen original ya está guardada en self._pixmap_original
+        if hasattr(self, 'ui') and self.ui.controllerImage.isVisible() and self.current_controller_path:
+            self._apply_controller_scaling()

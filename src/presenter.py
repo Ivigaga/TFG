@@ -55,6 +55,8 @@ class MainPresenter(QObject):
         self.current_setup_console = None
         
         self.handle_platforms_screen_requested() # Prepara la pantalla de plataformas desde el inicio para evitar retrasos al abrirla por primera vez
+
+        self.current_platform = None # Variable para almacenar la plataforma seleccionada en el catálogo de juegos
         
 
 
@@ -97,6 +99,9 @@ class MainPresenter(QObject):
         self.view.platform_selected.connect(self.handle_platform_selected)
 
         self.view.remove_platform.connect(self.handle_remove_platform)
+
+        self.view.controls_opened.connect(self.handle_controls_opened)
+        self.view.controls_closed.connect(self.handle_controls_closed)
 
     # --- PRESENTER LOGIC ---
 
@@ -777,3 +782,32 @@ class MainPresenter(QObject):
         self.view.show_page(0)
 
     
+    def handle_controls_opened(self):
+        """Se ejecuta al pulsar 'Controles'. Elige la imagen y muestra la página."""
+        
+        # 1. El if-else para elegir la imagen según la plataforma actual
+        if self.current_platform != None:
+            if self.current_platform == "Game Boy":
+                ruta_imagen = "images/controlGB.png"
+            elif self.current_platform == "SNES":
+                ruta_imagen = "images/controlSNES.png"
+            elif self.current_platform == "NES":
+                ruta_imagen = "images/controlNES.png"
+            else:
+                # Placeholder genérico para Steam, Nintendo DS, etc.
+                ruta_imagen = "images/controlGenerico.png"
+            
+            # 2. Ordenamos a la vista que ponga la imagen
+            self.view.show_controller_image(ruta_imagen)
+        
+        # 3. Viajamos a la página de Gestos (Página 1)
+        self.view.show_page(1)
+
+    def handle_controls_closed(self):
+        """Se ejecuta al pulsar 'Volver' en la pantalla de Gestos."""
+        
+        # 1. Ocultamos la imagen para que no moleste en el resto de la app
+        self.view.hide_controller_image()
+        
+        # 2. Volvemos al menú principal / catálogo (Sustituye el 0 por el índice que necesites)
+        self.view.show_page(0)

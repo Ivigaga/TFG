@@ -128,6 +128,12 @@
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
            <widget class="QPushButton" name="pipButton">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="text">
              <string>PushButton</string>
             </property>
@@ -135,6 +141,12 @@
           </item>
           <item>
            <widget class="QPushButton" name="stopButton">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="text">
              <string>PushButton</string>
             </property>
@@ -1159,28 +1171,58 @@
              <property name="locale">
               <locale language="English" country="UnitedStates"/>
              </property>
-             <layout class="QVBoxLayout" name="verticalLayout_steamGames">
+             <layout class="QVBoxLayout" name="verticalLayout_steamGames" stretch="1,5,1">
               <item>
-               <widget class="QLabel" name="platformLabel">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>20</pointsize>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="text">
-                 <string>CATÁLOGO DE JUEGOS</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignmentFlag::AlignCenter</set>
-                </property>
-               </widget>
+               <layout class="QHBoxLayout" name="horizontalLayout_9" stretch="2,1,1">
+                <item>
+                 <widget class="QLabel" name="platformLabel">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>20</pointsize>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="text">
+                   <string>CATÁLOGO DE JUEGOS</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignmentFlag::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="gamesEmulatorsButton">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Emuladores</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="gamesControlsButton">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Controles</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
               <item>
                <widget class="QScrollArea" name="scrollAreaGame">
@@ -1199,7 +1241,7 @@
                    <x>0</x>
                    <y>0</y>
                    <width>783</width>
-                   <height>413</height>
+                   <height>374</height>
                   </rect>
                  </property>
                  <layout class="QGridLayout" name="layoutGames"/>
@@ -1518,7 +1560,7 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="gestureButtons"/>
   <buttongroup name="controlButtons"/>
+  <buttongroup name="gestureButtons"/>
  </buttongroups>
 </ui>
