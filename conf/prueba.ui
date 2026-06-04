@@ -47,7 +47,7 @@
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_2" stretch="3">
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,3">
+         <layout class="QVBoxLayout" name="verticalLayout_3" stretch="2,1,5">
           <property name="sizeConstraint">
            <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
           </property>
@@ -89,12 +89,41 @@
             </property>
            </spacer>
           </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_4">
+            <item>
+             <widget class="QLabel" name="controllerImage">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="pixmap">
+               <pixmap>images/controlGB.png</pixmap>
+              </property>
+              <property name="scaledContents">
+               <bool>true</bool>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignTop</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
          </layout>
         </item>
        </layout>
       </item>
       <item>
-       <layout class="QVBoxLayout" name="verticalLayout" stretch="1,4">
+       <layout class="QVBoxLayout" name="verticalLayout" stretch="1,7">
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
@@ -117,16 +146,6 @@
             </property>
            </widget>
           </item>
-          <item>
-           <widget class="QPushButton" name="pushButton_3">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="text">
-             <string>PushButton</string>
-            </property>
-           </widget>
-          </item>
          </layout>
         </item>
         <item>
@@ -142,55 +161,130 @@
             <property name="currentIndex">
              <number>0</number>
             </property>
-            <widget class="QWidget" name="mainPage">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
+            <widget class="QWidget" name="platformsPage">
+             <property name="sizeIncrement">
+              <size>
+               <width>5</width>
+               <height>0</height>
+              </size>
              </property>
-             <layout class="QVBoxLayout" name="verticalLayout_5">
+             <layout class="QVBoxLayout" name="verticalLayout_games" stretch="1,5,1">
               <item>
-               <layout class="QGridLayout" name="gridLayout_2">
-                <item row="0" column="1">
-                 <widget class="QPushButton" name="gamesButton">
+               <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="2,1,1">
+                <item>
+                 <widget class="QLabel" name="label_platforms_title">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>20</pointsize>
+                    <bold>true</bold>
+                   </font>
+                  </property>
                   <property name="text">
-                   <string>🎮 MIS JUEGOS</string>
+                   <string>CATÁLOGO DE JUEGOS</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignmentFlag::AlignCenter</set>
                   </property>
                  </widget>
                 </item>
-                <item row="0" column="2">
-                 <widget class="QPushButton" name="settingsButton">
-                  <property name="enabled">
-                   <bool>true</bool>
-                  </property>
+                <item>
+                 <widget class="QPushButton" name="emulatorsButton">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>Ajustes</string>
+                   <string>Emuladores</string>
                   </property>
                  </widget>
                 </item>
-                <item row="0" column="0">
-                 <widget class="QPushButton" name="changeControlsButton">
+                <item>
+                 <widget class="QPushButton" name="controlsButton">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>Cambiar controles</string>
+                   <string>Controles</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <widget class="QScrollArea" name="scrollAreaPlaforms">
+                <property name="focusPolicy">
+                 <enum>Qt::FocusPolicy::NoFocus</enum>
+                </property>
+                <property name="styleSheet">
+                 <string>QScrollArea { border: none; background: transparent; } QWidget#scrollAreaGamesContents { background: transparent; }</string>
+                </property>
+                <property name="locale">
+                 <locale language="English" country="Vanuatu"/>
+                </property>
+                <property name="widgetResizable">
+                 <bool>true</bool>
+                </property>
+                <widget class="QWidget" name="scrollAreaPlatformsContents">
+                 <property name="geometry">
+                  <rect>
+                   <x>0</x>
+                   <y>0</y>
+                   <width>783</width>
+                   <height>374</height>
+                  </rect>
+                 </property>
+                 <layout class="QGridLayout" name="layoutPlatforms"/>
+                </widget>
+               </widget>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_games_buttons">
+                <item>
+                 <widget class="QPushButton" name="gamesScanButton">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>80</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>🔍 ESCANEAR STEAM</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="scanFolderButton">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>80</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>📁 AÑADIR CARPETA</string>
                   </property>
                  </widget>
                 </item>
@@ -926,8 +1020,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>100</width>
-                   <height>30</height>
+                   <width>783</width>
+                   <height>413</height>
                   </rect>
                  </property>
                  <layout class="QGridLayout" name="layoutProfiles"/>
@@ -1062,9 +1156,12 @@
              </layout>
             </widget>
             <widget class="QWidget" name="gamesPage">
-             <layout class="QVBoxLayout" name="verticalLayout_games">
+             <property name="locale">
+              <locale language="English" country="UnitedStates"/>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_steamGames">
               <item>
-               <widget class="QLabel" name="label_games_title">
+               <widget class="QLabel" name="platformLabel">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
                   <horstretch>0</horstretch>
@@ -1086,12 +1183,12 @@
                </widget>
               </item>
               <item>
-               <widget class="QScrollArea" name="scrollAreaGames">
+               <widget class="QScrollArea" name="scrollAreaGame">
                 <property name="focusPolicy">
                  <enum>Qt::FocusPolicy::NoFocus</enum>
                 </property>
                 <property name="styleSheet">
-                 <string>QScrollArea { border: none; background: transparent; } QWidget#scrollAreaGamesContents { background: transparent; }</string>
+                 <string>QScrollArea { border: none; background: transparent; } QWidget#scrollAreaSteamGamesContents { background: transparent; }</string>
                 </property>
                 <property name="widgetResizable">
                  <bool>true</bool>
@@ -1101,8 +1198,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>100</width>
-                   <height>30</height>
+                   <width>783</width>
+                   <height>413</height>
                   </rect>
                  </property>
                  <layout class="QGridLayout" name="layoutGames"/>
@@ -1110,7 +1207,7 @@
                </widget>
               </item>
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_games_buttons">
+               <layout class="QHBoxLayout" name="horizontalLayout_steamGames_buttons">
                 <item>
                  <widget class="QPushButton" name="gamesBackButton">
                   <property name="sizePolicy">
@@ -1131,7 +1228,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="gamesScanButton">
+                 <widget class="QPushButton" name="steamGamesScanButton">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
                     <horstretch>0</horstretch>
@@ -1150,7 +1247,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="scanFolderButton">
+                 <widget class="QPushButton" name="gamesScanFolderButton">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
                     <horstretch>0</horstretch>
@@ -1206,8 +1303,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>100</width>
-                   <height>30</height>
+                   <width>783</width>
+                   <height>423</height>
                   </rect>
                  </property>
                  <layout class="QGridLayout" name="layoutExplorer"/>
@@ -1370,8 +1467,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>100</width>
-                   <height>30</height>
+                   <width>783</width>
+                   <height>457</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="layoutDynamicEmulators"/>

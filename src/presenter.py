@@ -53,6 +53,10 @@ class MainPresenter(QObject):
         self.current_explorer_path = os.path.expanduser('~') # Empieza en la carpeta del usuario (C:\Users\...)
         self.explorer_mode = "FOLDER" 
         self.current_setup_console = None
+        
+        self.handle_platforms_screen_requested() # Prepara la pantalla de plataformas desde el inicio para evitar retrasos al abrirla por primera vez
+        
+
 
     def _connect_view_signals(self):
         """Binds View signals to Presenter logic."""
@@ -88,6 +92,11 @@ class MainPresenter(QObject):
         self.view.emulator_setup_requested.connect(self.handle_emulator_setup_requested)
         self.view.emulator_exe_chosen.connect(self.handle_emulator_exe_chosen)
         self.view.explorer_cancel_clicked.connect(self.handle_explorer_cancel)
+
+        # Conexión para cuando el usuario hace clic en "Steam" o "NES"
+        self.view.platform_selected.connect(self.handle_platform_selected)
+
+        self.view.remove_platform.connect(self.handle_remove_platform)
 
     # --- PRESENTER LOGIC ---
 
@@ -361,8 +370,8 @@ class MainPresenter(QObject):
 
     def handle_games_catalog_requested(self):
         """Solicita los juegos al modelo, ordena pintarlos y cambia a la pantalla de catálogo."""
-        lista_juegos = self.model.get_installed_games()
-        self.view.populate_games_catalog(lista_juegos)
+        lista_juegos = self.obtain_current_platfor_games(self.current_platform)
+        self.view.populate_games_catalog(lista_juegos, self.current_platform)
         self.view.show_page(5) # Muestra la nueva gamesPage
 
     def handle_scan_games(self):
@@ -380,16 +389,14 @@ class MainPresenter(QObject):
         
         # 4. Si ha encontrado juegos, repintamos la cuadrícula
         if nuevos_encontrados:
-            lista_actualizada = self.model.get_installed_games()
-            self.view.populate_games_catalog(lista_actualizada)
+            lista_actualizada = self.obtain_current_platfor_games(self.current_platform)
+            self.view.populate_games_catalog(lista_actualizada, self.current_platform)
 
     def handle_game_launch(self, exe_path):
         """Asynchronously launches the game executable, Steam URI, or ROM with its assigned emulator."""
         if not exe_path:
             print("Warning: This game does not have a valid execution path configured.")
             return
-
-        
 
         # 1. Native executables or Steam shortcuts
         if exe_path.startswith("steam://") or exe_path.lower().endswith(".exe"):
@@ -475,12 +482,15 @@ class MainPresenter(QObject):
             
             self.model.add_rom_folder(self.current_explorer_path)
             
-            lista_actualizada = self.model.get_installed_games()
-            self.view.populate_games_catalog(lista_actualizada)
+            lista_actualizada = self.obtain_current_platfor_games(self.current_platform)
+            self.view.populate_games_catalog(lista_actualizada, self.current_platform)
             
             self.view.ui.explorerSelectButton.setText("✅ ELEGIR ESTA CARPETA")
             self.view.ui.explorerSelectButton.setEnabled(True)
-            self.view.show_page(5)
+            if(self.current_platform!=None):
+                self.view.show_page(5)
+            else:
+                self.view.show_page(0)
             
         elif self.explorer_mode == "EMULATOR":
             # User clicked "PREDETERMINADO DE WINDOWS"
@@ -533,8 +543,6 @@ class MainPresenter(QObject):
         if self.view.isMinimized():
             return
         
-        
-
         if direction in ["UP", "DOWN", "LEFT", "RIGHT"]:
             current_time = time.time()
             if current_time - self.last_nav_time < self.nav_cooldown:
@@ -704,5 +712,68 @@ class MainPresenter(QObject):
             # Refresh the settings page and go back
             self.view.populate_emulator_settings(self.model.emulators_config)
             self.view.show_page(8)
+
+
+    def handle_platforms_screen_requested(self):
+        """Prepara la lista de plataformas y ordena a la vista que las dibuje."""
+        
+        # 1. Sacamos los nombres de todas las consolas que tu modelo soporta
+        # (NES, SNES, PlayStation 2, etc.)
+        consolas = list(self.model.emulators_config.keys())
+        
+        # 2. Forzamos a que "Steam" sea el primer elemento de la lista
+        lista_plataformas = ["Steam"] + consolas
+        
+        # 3. Mandamos los datos a la vista para que pinte los botones
+        self.view.populate_platforms_catalog(lista_plataformas)
+        
+        # 4. Cambiamos a la nueva pantalla (sustituye el 9 por el índice de tu nueva página)
+        self.view.show_page(9)
+
+    def handle_platform_selected(self, platform_name):
+        """Filtra la base de datos por consola y ordena mostrar el catálogo."""
+        self.current_platform = platform_name
+        # 1. Obtenemos absolutamente todos los juegos
+        juegos_filtrados = self.obtain_current_platfor_games(platform_name)
+        
+
+        # 3. Ordenamos a la vista que dibuje SÓLO esta lista recortada
+        self.view.populate_games_catalog(juegos_filtrados, platform_name)
+        
+        # 4. Viajamos a la página 5 del catálogo de juegos
+        self.view.show_page(5)
+
+
+    def obtain_current_platfor_games(self, platform_name):
+        lista_completa = self.model.get_installed_games()
+        juegos_filtrados = []
+
+        if(platform_name == None):
+            return juegos_filtrados
+ 
+        if platform_name == "Steam":
+            # Los juegos de Steam se identifican porque su ruta empieza por steam://
+            juegos_filtrados = [j for j in lista_completa if j.get("exe_path", "").startswith("steam://")]
+        else:
+            # Para el resto, miramos la extensión del archivo
+            for juego in lista_completa:
+                ruta = juego.get("exe_path", "")
+                
+                # Ignoramos los de Steam en esta pasada
+                if not ruta.startswith("steam://"):
+                    _, extension = os.path.splitext(ruta)
+                    
+                    # Le preguntamos al modelo a qué consola pertenece este archivo (.nes -> NES)
+                    consola_del_juego = self.model.get_console_from_extension(extension)
+                    
+                    if consola_del_juego == platform_name:
+                        juegos_filtrados.append(juego)
+        return juegos_filtrados
+    
+
+    def handle_remove_platform(self):
+        """Cuando el usuario pulsa el botón de volver desde el catálogo, eliminamos el filtro de plataforma para mostrar todo."""
+        self.current_platform = None
+        self.view.show_page(0)
 
     

@@ -351,13 +351,9 @@ class AppModel:
         if self._cached_roms is not None:
             return self._cached_roms
             
-        extensiones_validas = (
-            '.nes', '.sfc', '.smc', '.fig', '.n64', '.z64', '.v64', 
-            '.iso', '.gcm', '.ciso', '.wbfs', '.wdf', '.wud', '.wux', '.rpx', 
-            '.nsp', '.xci', '.gb', '.gbc', '.gba', '.nds', '.3ds', '.cia', '.cxi', 
-            '.bin', '.cue', '.img', '.pbp', '.cso', '.vpk', '.sms', '.md', '.smd', 
-            '.gen', '.gg', '.cdi', '.gdi', '.chd', '.xiso', '.xex', 
-            '.zip', '.7z', '.pce'
+        supported_extensions = (
+            '.nes', '.sfc', '.smc', '.fig', 
+            '.gb', '.gbc', '.gba', '.nds'
         )
         
         roms_encontradas = []
@@ -369,7 +365,7 @@ class AppModel:
                 
             for root, dirs, files in os.walk(folder):
                 for archivo in files:
-                    if archivo.lower().endswith(extensiones_validas):
+                    if archivo.lower().endswith(supported_extensions):
                         rom_path = os.path.join(root, archivo)
                         titulo_limpio = os.path.splitext(archivo)[0]
                         
@@ -385,33 +381,15 @@ class AppModel:
     
     def _load_emulators_config(self):
         """Loads emulator configuration or creates a default one."""
-        import os, json
         
         # Comprehensive list of consoles mapped to supported ROM extensions
         default_config = {
             "NES": "Default",
             "SNES": "Default",
-            "Nintendo 64": "Default",
-            "GameCube": "Default",
-            "Wii": "Default",
-            "Wii U": "Default",
-            "Nintendo Switch": "Default",
             "Game Boy": "Default",
             "Game Boy Color": "Default",
             "Game Boy Advance": "Default",
-            "Nintendo DS": "Default",
-            "Nintendo 3DS": "Default",
-            "PlayStation 1": "Default",
-            "PlayStation 2": "Default",
-            "PlayStation Portable (PSP)": "Default",
-            "PlayStation Vita": "Default",
-            "Sega Master System": "Default",
-            "Sega Genesis": "Default",
-            "Sega Game Gear": "Default",
-            "Sega Dreamcast": "Default",
-            "Xbox": "Default",
-            "PC Engine": "Default",
-            "Arcade / RetroArch": "Default"
+            "Nintendo DS": "Default"
         }
         
         if os.path.exists(self.emulators_file):
@@ -438,25 +416,8 @@ class AppModel:
         mapping = {
             '.nes': 'NES',
             '.sfc': 'SNES', '.smc': 'SNES', '.fig': 'SNES',
-            '.n64': 'Nintendo 64', '.z64': 'Nintendo 64', '.v64': 'Nintendo 64',
-            '.gcm': 'GameCube',
-            '.wbfs': 'Wii', '.ciso': 'Wii',
-            '.wud': 'Wii U', '.wux': 'Wii U', '.rpx': 'Wii U',
-            '.nsp': 'Nintendo Switch', '.xci': 'Nintendo Switch',
             '.gb': 'Game Boy', '.gbc': 'Game Boy Color', '.gba': 'Game Boy Advance',
-            '.nds': 'Nintendo DS', '.3ds': 'Nintendo 3DS', '.cia': 'Nintendo 3DS', '.cxi': 'Nintendo 3DS',
-            '.bin': 'PlayStation 1', '.cue': 'PlayStation 1', '.img': 'PlayStation 1',
-            '.iso': 'PlayStation 2', 
-            '.pbp': 'PlayStation Portable (PSP)', '.cso': 'PlayStation Portable (PSP)',
-            '.vpk': 'PlayStation Vita',
-            '.sms': 'Sega Master System',
-            '.md': 'Sega Genesis', '.smd': 'Sega Genesis', '.gen': 'Sega Genesis',
-            '.gg': 'Sega Game Gear',
-            '.cdi': 'Sega Dreamcast', '.gdi': 'Sega Dreamcast',
-            '.chd': 'Arcade / RetroArch',
-            '.xiso': 'Xbox', '.xex': 'Xbox',
-            '.pce': 'PC Engine',
-            '.zip': 'Arcade / RetroArch', '.7z': 'Arcade / RetroArch'
+            '.nds': 'Nintendo DS'
         }
         return mapping.get(ext, None)
 

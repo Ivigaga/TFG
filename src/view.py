@@ -5,6 +5,8 @@ from PySide6.QtUiTools import QUiLoader
 
 from model import get_asset_path
 from prueba_ui import Ui_MainWindow
+import math
+import textwrap
 
 class PipWindow(QWidget):
     def __init__(self):
@@ -55,6 +57,10 @@ class MainView(QMainWindow):
     emulator_exe_chosen = Signal(str)      # Sends the chosen .exe filename
     explorer_cancel_clicked = Signal()     # Replaces the hardcoded cancel
 
+    platform_selected = Signal(str)
+    remove_platform = Signal()  # Nueva señal para eliminar la plataforma filtrada y volver a mostrar todo
+    
+
     def __init__(self):
         super().__init__()
         self.ui = Ui_MainWindow()
@@ -73,7 +79,7 @@ class MainView(QMainWindow):
         self.ui.stopButton.clicked.connect(self.video_control_toggled.emit)
         
         # Navigation
-        self.ui.changeControlsButton.clicked.connect(lambda: self.navigation_requested.emit(1))
+        #self.ui.changeControlsButton.clicked.connect(lambda: self.navigation_requested.emit(1))
         self.ui.controlsCancelButton.clicked.connect(lambda: self.navigation_requested.emit(1))
         self.ui.controlsCancelButton.clicked.connect(lambda: self.ui.stackedWidgetAcciones.setCurrentIndex(0))
         self.ui.controlsCancelButton.clicked.connect(self.stop_reading_score.emit)
@@ -131,12 +137,10 @@ class MainView(QMainWindow):
         self.build_virtual_keyboard()
 
     
-        # Abrir catálogo desde la pantalla principal
-        self.ui.gamesButton.clicked.connect(self.games_catalog_requested.emit)
-        
-        # Volver al menú principal (Página 0) desde el catálogo de juegos
-        self.ui.gamesBackButton.clicked.connect(lambda: self.navigation_requested.emit(0))
 
+        
+
+        self.ui.gamesBackButton.clicked.connect(self.remove_platform.emit)
         self.ui.gamesScanButton.clicked.connect(self.scan_games_requested.emit)
 
         # Controles de las páginas de ajustes
@@ -144,11 +148,12 @@ class MainView(QMainWindow):
         self.ui.emulatorSettingsBackButton.clicked.connect(lambda: self.navigation_requested.emit(7))
         # Controles del explorador
         self.ui.scanFolderButton.clicked.connect(self.explorer_opened.emit)
+        self.ui.gamesScanFolderButton.clicked.connect(self.explorer_opened.emit)
         self.ui.explorerUpButton.clicked.connect(self.explorer_up_clicked.emit)
         self.ui.explorerSelectButton.clicked.connect(self.explorer_select_clicked.emit)
 
 
-        self.ui.settingsButton.clicked.connect(lambda: self.navigation_requested.emit(7))
+        #self.ui.settingsButton.clicked.connect(lambda: self.navigation_requested.emit(7))
         self.ui.pushButton.clicked.connect(self.emulator_settings_opened.emit)
         self.ui.explorerCancelButton.clicked.connect(self.explorer_cancel_clicked.emit) # <-- AÑADIR ESTA
 
@@ -486,64 +491,6 @@ class MainView(QMainWindow):
             self.save_as_requested.emit(filename)
 
 
-    def populate_games_catalog(self, games_list):
-        """Genera QToolButtons dinámicos en distribución cuadrada para los juegos."""
-        # 1. Limpiar el grid por completo para actualizaciones limpias
-        while self.ui.layoutGames.count():
-            item = self.ui.layoutGames.takeAt(0)
-            widget = item.widget()
-            if widget:
-                widget.deleteLater()
-
-        if not games_list:
-            return
-
-        # 2. Calcular la distribución de columnas ideal para formar un cuadrado
-        import math
-        columnas_ideales = math.ceil(math.sqrt(len(games_list)))
-
-        # 3. Preparar icono genérico por si el juego no especifica uno personalizado
-        from PySide6.QtGui import QIcon
-        from PySide6.QtCore import QSize, Qt
-        from PySide6.QtWidgets import QToolButton, QSizePolicy
-        
-        
-        icono_defecto = QIcon(get_asset_path('game_default.png')) # Asegúrate de tener una imagen base
-
-        row, col = 0, 0
-        import textwrap # Añade esto justo antes del bucle si no lo tienes arriba
-
-        for juego in games_list:
-            titulo_crudo = juego.get("title", "JUEGO DESCONOCIDO").upper()
-            exe_path = juego.get("exe_path", "") 
-            
-            # Formateamos el texto para que salte de línea cada 12 caracteres (aprox)
-            # sin romper las palabras por la mitad gracias a textwrap
-            titulo_multilinea = textwrap.fill(titulo_crudo, width=12)
-            
-            btn = QToolButton()
-            btn.setText(titulo_multilinea)
-            
-            ruta_icono = juego.get("icon")
-            btn.setIcon(QIcon(get_asset_path(ruta_icono)) if ruta_icono else icono_defecto)
-            btn.setIconSize(QSize(100,80))
-            btn.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
-            btn.setFocusPolicy(Qt.StrongFocus)
-            from PySide6.QtWidgets import QSizePolicy
-            btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-            
-            # NUEVO: Al hacer clic, emitimos la señal con la ruta/URI específica de este juego
-            btn.clicked.connect(lambda checked=False, path=exe_path: self.game_launch_requested.emit(path))
-            
-            # Inyectamos en el grid layout
-            self.ui.layoutGames.addWidget(btn, row, col)
-            
-            # Control de la matriz cuadrada
-            col += 1
-            if col >= columnas_ideales:
-                col = 0
-                row += 1
-
     def populate_explorer(self, current_path, items_list, mode="FOLDER"):
         """Generates interactive buttons for folders and optionally .exe files."""
         self.ui.label_explorer_path.setText(f"Ruta actual: {current_path}")
@@ -657,3 +604,88 @@ class MainView(QMainWindow):
             
         
         layout.addStretch()
+
+
+    def populate_platforms_catalog(self, platforms_list):
+        """Dibuja un QToolButton por cada plataforma en el layout de la nueva pantalla."""
+        
+        # 1. Limpiar el contenedor por si había botones viejos
+        while self.ui.layoutPlatforms.count():
+            item = self.ui.layoutPlatforms.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+
+        # --- NUEVA LÓGICA DE CUADRÍCULA ---
+        max_columnas = 4 # Cámbialo al número de tarjetas que quieras por fila
+        fila = 0
+        columna = 0
+
+        # 2. Crear los botones
+        for platform_name in platforms_list:
+            btn = QToolButton()
+            btn.setText(platform_name)
+            btn.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+            
+            # Opcional: Asignar icono
+            # if platform_name == "Steam": btn.setIcon(QIcon("rutas/steam.png"))
+            
+            # Conexión del botón
+            btn.clicked.connect(lambda checked=False, p=platform_name: self.platform_selected.emit(p))
+            
+            # 3. Añadir el botón indicando sus coordenadas exactas (Fila, Columna)
+            self.ui.layoutPlatforms.addWidget(btn, fila, columna)
+            
+            # 4. Calcular el hueco para el siguiente botón
+            columna += 1
+            if columna >= max_columnas:
+                columna = 0  # Volvemos a la izquierda del todo
+                fila += 1    # Bajamos un piso
+
+
+    def populate_games_catalog(self, games_list, platform_name):
+        """Genera botones solo para los juegos recibidos y actualiza el título."""
+        
+        # --- NUEVO: Actualizar el label superior ---
+        # (Asegúrate de que el label se llama 'platformLabel' en tu Qt Designer)
+        self.ui.platformLabel.setText(f"Plataforma: {platform_name}")
+
+        while self.ui.layoutGames.count():
+            item = self.ui.layoutGames.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+
+        if not games_list:
+            return
+
+
+        columnas_ideales = math.ceil(math.sqrt(len(games_list)))
+        icono_defecto = QIcon(get_asset_path('game_default.png')) 
+
+        row, col = 0, 0
+
+        for juego in games_list:
+            titulo_crudo = juego.get("title", "JUEGO DESCONOCIDO").upper()
+            exe_path = juego.get("exe_path", "") 
+            
+            titulo_multilinea = textwrap.fill(titulo_crudo, width=12)
+            
+            btn = QToolButton()
+            btn.setText(titulo_multilinea)
+            
+            ruta_icono = juego.get("icon")
+            btn.setIcon(QIcon(get_asset_path(ruta_icono)) if ruta_icono else icono_defecto)
+            btn.setIconSize(QSize(100,80))
+            btn.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+            btn.setFocusPolicy(Qt.StrongFocus)
+            btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+            
+            btn.clicked.connect(lambda checked=False, path=exe_path: self.game_launch_requested.emit(path))
+            
+            self.ui.layoutGames.addWidget(btn, row, col)
+            
+            col += 1
+            if col >= columnas_ideales:
+                col = 0
+                row += 1
