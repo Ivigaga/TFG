@@ -56,7 +56,7 @@ class MainPresenter(QObject):
         
         self.handle_platforms_screen_requested() # Prepara la pantalla de plataformas desde el inicio para evitar retrasos al abrirla por primera vez
 
-        self.current_platform = None # Variable para almacenar la plataforma seleccionada en el catálogo de juegos
+        self.current_platform = "SNES" # Variable para almacenar la plataforma seleccionada en el catálogo de juegos
         
 
 
@@ -149,12 +149,12 @@ class MainPresenter(QObject):
     # --- MAIN LOOP ---
 
     def _on_frame_processed(self, frame, blendshapes, landmarks, is_new_processing):
-        # Si hemos pausado el vídeo desde la interfaz, ignoramos el paquete
+        # If the video is paused from the UI, ignore the frame
         if not self.is_video_playing:
             return
 
         # ==========================================
-        # BLOQUE 1: LÓGICA CORE (Limitada por TARGET_FPS)
+        # BLOCK 1: CORE LOGIC (Limited by TARGET_FPS)
         # ==========================================
         if is_new_processing:
             self.model.update_gesture_scores(blendshapes)
@@ -164,33 +164,59 @@ class MainPresenter(QObject):
             current_time = time.perf_counter()
             
             if (current_time - self.last_fps_time) >= 1.0:
-                fps_reales = int(self.fps_counter / (current_time - self.last_fps_time))
-                self.view.update_fps(fps_reales)
+                real_fps = int(self.fps_counter / (current_time - self.last_fps_time))
+                self.view.update_fps(real_fps)
                 self.fps_counter = 0
                 self.last_fps_time = current_time
 
         # ==========================================
-        # BLOQUE 2: LÓGICA DE INTERFAZ (Máxima velocidad)
+        # BLOCK 2: UI LOGIC (Maximum speed)
         # ==========================================
-        tiempo_actual = time.perf_counter()
+        current_time = time.perf_counter()
         if self.is_reading_score and self.current_mapped_gesture:
-            if (tiempo_actual - self.last_ui_update_time) >= 0.1:
+            if (current_time - self.last_ui_update_time) >= 0.1:
                 score = self.model.get_score(self.current_mapped_gesture)
                 score_int = int(score * 100)
                 threshold = self.view.get_slider_threshold()
                 
                 self.view.update_score_bar(score_int, score_int >= threshold)
-                self.last_ui_update_time = tiempo_actual
+                self.last_ui_update_time = current_time
 
+        # Convert frame to QPixmap
         color_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         h, w, ch = color_frame.shape
         qt_img = QImage(color_frame.data, w, h, ch * w, QImage.Format_RGB888)
         pixmap = QPixmap.fromImage(qt_img)
 
-        if self.view.pip_window and self.view.pip_window.isVisible():
-            self.view.pip_window.update_image(pixmap)
-        else:
-            self.view.update_main_video(pixmap)
+        # ==========================================
+        # BLOCK 3: HUD DATA PREPARATION (Active inputs & Movement)
+        # ==========================================
+        target_buttons = []
+        if self.current_platform == "Game Boy":
+            target_buttons = ["XUSB_GAMEPAD_A", "XUSB_GAMEPAD_B", "XUSB_GAMEPAD_BACK", "XUSB_GAMEPAD_START"]
+        elif self.current_platform == "SNES":
+            target_buttons = ["XUSB_GAMEPAD_A", "XUSB_GAMEPAD_B", "XUSB_GAMEPAD_X", "XUSB_GAMEPAD_Y", "XUSB_GAMEPAD_BACK", "XUSB_GAMEPAD_START"]
+        # Add more platforms as needed...
+
+        # 1. Initialize all platform buttons as inactive (False) by default
+        input_states = {btn: False for btn in target_buttons}
+
+        # 2. Iterate through gestures to see if any mapped button is currently active
+        for gesture_name, gesture_data in self.model.input_structure.items():
+            btn_code = gesture_data.get("input")
+            # If the mapped button belongs to the current platform
+            if btn_code in input_states:
+                # We use 'or' so if multiple gestures map to the same button, 
+                # it stays True if at least one is active.
+                input_states[btn_code] = input_states[btn_code] or gesture_data.get("active", False)
+
+        # Get movement direction
+        movement_direction = self._calculate_movement_direction()
+
+        # ==========================================
+        # BLOCK 4: UPDATE VIEW
+        # ==========================================
+        self.view.update_main_video(pixmap, input_states, movement_direction, self.current_platform)
 
     def _process_gamepad_logic(self, landmarks):
         """Evaluates thresholds, triggers vgamepad events, and moves joysticks."""
@@ -229,7 +255,9 @@ class MainPresenter(QObject):
             nose = landmarks[1]
 
             jx, jy = 0, 0
-            movinx, moviny = False, False
+            
+            # --- CORRECCIÓN: Separamos las direcciones ---
+            is_left, is_right, is_up, is_down = False, False, False, False
 
             # Obtenemos los umbrales configurados
             th_left = inputs.get("noseLeft", {}).get("threshold", 0.6)
@@ -240,40 +268,39 @@ class MainPresenter(QObject):
             # Eje X
             if nose.x > th_left:
                 jx = -20000
-                movinx = True
+                is_left = True
             elif nose.x < th_right:
                 jx = 20000
-                movinx = True
+                is_right = True
 
             # Eje Y
             if nose.y > th_down:
                 jy = -20000
-                moviny = True
+                is_down = True
             elif nose.y < th_up:
                 jy = 20000
-                moviny = True
+                is_up = True
 
-            # Control de modo continuo vs pasos (replicado de tu código original)
+            # Control de modo continuo vs pasos 
             if not self.model.is_continuous_mode and (inputs.get("noseUp", {}).get("active") or inputs.get("noseDown", {}).get("active")):
                 jy = 0
             if not self.model.is_continuous_mode and (inputs.get("noseLeft", {}).get("active") or inputs.get("noseRight", {}).get("active")):
                 jx = 0
 
-            if(jx ==20000):
-                self.navigate_interface("RIGHT")  # Navegación geométrica absoluta
-            elif(jx==-20000):
-                self.navigate_interface("LEFT")  # Navegación geométrica absoluta
-            if(jy ==20000):
-                self.navigate_interface("UP")  # Navegación geométrica absoluta
-            elif(jy==-20000):
-                self.navigate_interface("DOWN")  # Navegación geométrica absoluta
-            
+            if jx == 20000:
+                self.navigate_interface("RIGHT")  
+            elif jx == -20000:
+                self.navigate_interface("LEFT")  
+            if jy == 20000:
+                self.navigate_interface("UP")  
+            elif jy == -20000:
+                self.navigate_interface("DOWN")  
 
-            # Guardamos el estado de activación en el modelo por si se necesita
-            if "noseLeft" in inputs: inputs["noseLeft"]["active"] = movinx
-            if "noseRight" in inputs: inputs["noseRight"]["active"] = movinx
-            if "noseUp" in inputs: inputs["noseUp"]["active"] = moviny
-            if "noseDown" in inputs: inputs["noseDown"]["active"] = moviny
+            # --- CORRECCIÓN: Asignamos el estado exacto de cada dirección al modelo ---
+            if "noseLeft" in inputs: inputs["noseLeft"]["active"] = is_left
+            if "noseRight" in inputs: inputs["noseRight"]["active"] = is_right
+            if "noseUp" in inputs: inputs["noseUp"]["active"] = is_up
+            if "noseDown" in inputs: inputs["noseDown"]["active"] = is_down
 
             # Mover el joystick izquierdo del mando de Xbox
             self.gamepad.left_joystick(x_value=jx, y_value=jy)
@@ -811,3 +838,26 @@ class MainPresenter(QObject):
         
         # 2. Volvemos al menú principal / catálogo (Sustituye el 0 por el índice que necesites)
         self.view.show_page(0)
+
+    def _calculate_movement_direction(self):
+        """Returns the current active direction based on nose tracking."""
+        inputs = self.model.input_structure
+        
+        up = inputs.get("noseUp", {}).get("active", False)
+        down = inputs.get("noseDown", {}).get("active", False)
+        left = inputs.get("noseLeft", {}).get("active", False)
+        right = inputs.get("noseRight", {}).get("active", False)
+        
+        # Diagonal movements
+        if up and right: return "NE"
+        if up and left: return "NW"
+        if down and right: return "SE"
+        if down and left: return "SW"
+        
+        # Cardinal movements
+        if up: return "N"
+        if down: return "S"
+        if left: return "W"
+        if right: return "E"
+        
+        return "IDLE"

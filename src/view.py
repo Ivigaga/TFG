@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QGridLayout, QLabel, QPushButton, QButtonGroup, QToolButton, QSizePolicy
-from PySide6.QtGui import QIcon, QAction, QPixmap
-from PySide6.QtCore import Signal, Qt, QSize
+from PySide6.QtGui import QColor, QIcon, QAction, QImage, QPainter, QPixmap
+from PySide6.QtCore import QPoint, Signal, Qt, QSize
 from PySide6.QtUiTools import QUiLoader
 
 from model import get_asset_path
@@ -22,6 +22,11 @@ class PipWindow(QWidget):
         self.video_label.setAlignment(Qt.AlignCenter)
         self.video_label.setStyleSheet("background-color: black;")
         layout.addWidget(self.video_label)
+
+    def update_image(self, pixmap):
+        self.video_label.setPixmap(pixmap.scaled(
+            self.video_label.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
+        ))
 
 
 class MainView(QMainWindow):
@@ -70,7 +75,7 @@ class MainView(QMainWindow):
         # --- EL TRUCO DEL FANTASMA PARA NO ROMPER EL LAYOUT ---
         # 1. Capturamos las reglas de tamaño que tiene la imagen del mando
         policy = self.ui.controllerImage.sizePolicy()
-        
+        self.hud_image_cache = {}
         # 2. Le ordenamos a Qt que MANTENGA el hueco físico aunque se oculte el componente
         policy.setRetainSizeWhenHidden(True)
         self.ui.controllerImage.setSizePolicy(policy)
@@ -203,10 +208,59 @@ class MainView(QMainWindow):
             checked_btn.setChecked(False)
             self.ui.buttonGroup.setExclusive(True)
 
-    def update_main_video(self, pixmap):
-        self.ui.videoLabel.setPixmap(pixmap.scaled(
-            self.ui.videoLabel.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
-        ))
+    def update_main_video(self, pixmap, active_inputs, movement_direction, platform_name):
+        """Overlays real-time HUD inputs on top of the camera frame using RAM cache."""
+        from PySide6.QtGui import QPainter, QColor
+        from PySide6.QtCore import QPoint, Qt
+        
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.Antialiasing)
+        
+        # Semi-transparent dark overlay for better HUD visibility
+        painter.fillRect(0, 0, pixmap.width(), 70, QColor(0, 0, 0, 140))
+        
+        x_offset = 20
+        y_pos = 15
+        
+        # 1. Draw Joystick/Movement status
+        if movement_direction == "IDLE":
+            joy_path = "images/hud/joy_inactive.png"
+        else:
+            joy_path = f"images/hud/joy_{movement_direction.lower()}.png"
+            
+        img_joy = self._get_cached_hud_image(joy_path)
+        if not img_joy.isNull():
+            painter.drawImage(QPoint(x_offset, y_pos), img_joy)
+            x_offset += 60
+            
+        # 2. Draw active/inactive buttons dynamically
+        for btn_code, is_active in active_inputs.items():
+            clean_name = btn_code.replace("XUSB_GAMEPAD_", "").lower()
+            suffix = "active" if is_active else "inactive"
+            
+            # Handle platform-specific naming for back and start buttons
+            if clean_name in ["back", "start"] and platform_name:
+                platform_slug = platform_name.lower().replace(" ", "_")
+                icon_path = f"images/hud/btn_{clean_name}_{platform_slug}_{suffix}.png"
+            else:
+                icon_path = f"images/hud/btn_{clean_name}_{suffix}.png"
+            
+            img_btn = self._get_cached_hud_image(icon_path)
+            if not img_btn.isNull():
+                painter.drawImage(QPoint(x_offset, y_pos), img_btn)
+                x_offset += 50
+                
+        painter.end()
+        
+        # --- NEW: Route the painted frame to PiP or Main Label ---
+        if self.pip_window and self.pip_window.isVisible():
+            # Send the painted frame to the floating window
+            self.pip_window.update_image(pixmap)
+        else:
+            # Send the painted frame to the main UI
+            self.ui.videoLabel.setPixmap(pixmap.scaled(
+                self.ui.videoLabel.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
+            ))
 
     def update_score_bar(self, score_value, is_above_threshold):
         """Updates the progress bar value and changes color efficiently."""
@@ -754,3 +808,20 @@ class MainView(QMainWindow):
         # aprovechando que la imagen original ya está guardada en self._pixmap_original
         if hasattr(self, 'ui') and self.ui.controllerImage.isVisible() and self.current_controller_path:
             self._apply_controller_scaling()
+
+    def _get_cached_hud_image(self, relative_path):
+        """Retrieves an image from RAM or loads and pre-scales it if not cached."""
+        if relative_path not in self.hud_image_cache:
+            full_path = get_asset_path(relative_path)
+            img = QImage(full_path)
+            
+            if not img.isNull():
+                # Cache the image ALREADY SCALED to save CPU cycles during the video loop
+                self.hud_image_cache[relative_path] = img.scaled(
+                    40, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                )
+            else:
+                # Cache an empty image to prevent spamming disk reads if a file is missing
+                self.hud_image_cache[relative_path] = QImage()
+                
+        return self.hud_image_cache[relative_path]
