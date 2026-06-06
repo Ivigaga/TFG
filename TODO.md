@@ -1,8 +1,6 @@
 Cambiar navegación: 
  Seguir indicaciones del tutor y diagramas.
 
- Cambiar cámara: 
-    Añadir una capa superior transparente       con los botones posibles y los que          están recibiendo un input.
+Configurar los botones para cada consola.
 
-
- Hacer que la cámara se separe al abrir un juego.
+Hacer que la cámara se separe al abrir un juego.

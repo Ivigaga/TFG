@@ -944,6 +944,7 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.btn_nav_joystick.sizePolicy().hasHeightForWidth())
         self.btn_nav_joystick.setSizePolicy(sizePolicy)
         self.btn_nav_joystick.setCheckable(True)
+        self.btn_nav_joystick.setProperty(u"d-pad", False)
 
         self.horizontalLayout_2.addWidget(self.btn_nav_joystick)
 
@@ -953,6 +954,7 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.btn_nav_dpad.sizePolicy().hasHeightForWidth())
         self.btn_nav_dpad.setSizePolicy(sizePolicy)
         self.btn_nav_dpad.setCheckable(True)
+        self.btn_nav_dpad.setProperty(u"d-pad", True)
 
         self.horizontalLayout_2.addWidget(self.btn_nav_dpad)
 

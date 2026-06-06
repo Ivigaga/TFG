@@ -61,10 +61,10 @@ class AppModel:
                 "eyeBrowsUp": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
                 "mouthPucker": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
                 "smile": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
-                "noseLeft": {"threshold": 0.6,"score": 0.0,"active": False},
-                "noseRight": {"threshold": 0.4,"score": 0.0,"active": False},
-                "noseUp": {"threshold": 0.4,"score": 0.0,"active": True},
-                "noseDown": {"threshold": 0.6,"score": 0.0,"active": True}
+                "noseLeft": {"threshold": 0.6,"d-pad": False,"score": 0.0,"active": False},
+                "noseRight": {"threshold": 0.4,"d-pad": False,"score": 0.0,"active": False},
+                "noseUp": {"threshold": 0.4,"d-pad": False,"score": 0.0,"active": False},
+                "noseDown": {"threshold": 0.6,"d-pad": False,"score": 0.0,"active": False}
                 }
             self.json_path =self.default_json_path
             self.save_inputs()  # Guardamos el JSON por primera vez con la estructura por defecto

@@ -63,7 +63,11 @@ class MainView(QMainWindow):
 
     controls_opened = Signal()
     controls_closed = Signal()
+
+    navigation_settings_opened = Signal()
+    save_navigation_requested = Signal(int, int, int, int) # low_x, high_x, low_y, high_y
     
+    selectedNavigationMode = Signal(bool) # False para Joystick, True para D-Pad
 
     def __init__(self):
         super().__init__()
@@ -72,6 +76,7 @@ class MainView(QMainWindow):
         self.setWindowTitle("Gesture Control - MVP Architecture")
         self.resize(1020, 751)
 
+        self.ui.stackedWidget.setCurrentIndex(0)
         # --- EL TRUCO DEL FANTASMA PARA NO ROMPER EL LAYOUT ---
         # 1. Capturamos las reglas de tamaño que tiene la imagen del mando
         policy = self.ui.controllerImage.sizePolicy()
@@ -179,6 +184,38 @@ class MainView(QMainWindow):
         self.ui.gamesControlsButton.clicked.connect(self.controls_opened.emit)
         self.ui.gesturesBackButton.clicked.connect(self.controls_closed.emit)
 
+        self.ui.noseButton.clicked.connect(lambda: self.navigation_requested.emit(9))
+
+        if hasattr(self.ui, 'btn_nav_back'):
+            self.ui.btn_nav_back.clicked.connect(lambda: self.navigation_requested.emit(
+                self.ui.stackedWidget.indexOf(self.ui.gesturesPage)
+            ))
+
+        # --- Controles del Slider del Eje X ---
+        if hasattr(self.ui, 'btn_x_low_minus'):
+            self.ui.btn_x_low_minus.clicked.connect(lambda: self.ui.slider_x.adjust_low_thumb(-2))
+            self.ui.btn_x_low_plus.clicked.connect(lambda: self.ui.slider_x.adjust_low_thumb(2))
+            self.ui.btn_x_high_minus.clicked.connect(lambda: self.ui.slider_x.adjust_high_thumb(-2))
+            self.ui.btn_x_high_plus.clicked.connect(lambda: self.ui.slider_x.adjust_high_thumb(2))
+
+        # --- Controles del Slider del Eje Y ---
+        if hasattr(self.ui, 'btn_y_low_minus'):
+            self.ui.btn_y_low_minus.clicked.connect(lambda: self.ui.slider_y.adjust_low_thumb(-2))
+            self.ui.btn_y_low_plus.clicked.connect(lambda: self.ui.slider_y.adjust_low_thumb(2))
+            self.ui.btn_y_high_minus.clicked.connect(lambda: self.ui.slider_y.adjust_high_thumb(-2))
+            self.ui.btn_y_high_plus.clicked.connect(lambda: self.ui.slider_y.adjust_high_thumb(2))
+
+        self.ui.noseButton.clicked.connect(self.navigation_settings_opened.emit)
+
+        if hasattr(self.ui, 'btn_nav_save'):
+            self.ui.btn_nav_save.clicked.connect(lambda: self.save_navigation_requested.emit(
+                self.ui.slider_x.low_thumb,
+                self.ui.slider_x.high_thumb,
+                self.ui.slider_y.low_thumb,
+                self.ui.slider_y.high_thumb
+            ))
+        self.ui.btn_nav_joystick.clicked.connect(lambda: self.selectedNavigationMode.emit(False))
+        self.ui.btn_nav_dpad.clicked.connect(lambda: self.selectedNavigationMode.emit(True))
     # --- PUBLIC METHODS FOR THE PRESENTER TO CONTROL THE UI ---
 
     def show_page(self, index):
@@ -208,7 +245,7 @@ class MainView(QMainWindow):
             checked_btn.setChecked(False)
             self.ui.buttonGroup.setExclusive(True)
 
-    def update_main_video(self, pixmap, active_inputs, movement_direction, platform_name):
+    def update_main_video(self, pixmap, active_inputs, movement_direction, platform_name, dpad_mode):
         """Overlays real-time HUD inputs on top of the camera frame using RAM cache."""
         from PySide6.QtGui import QPainter, QColor
         from PySide6.QtCore import QPoint, Qt
@@ -221,12 +258,12 @@ class MainView(QMainWindow):
         
         x_offset = 20
         y_pos = 15
-        
+        direction_text="dpad" if dpad_mode else "joy"
         # 1. Draw Joystick/Movement status
         if movement_direction == "IDLE":
-            joy_path = "images/hud/joy_inactive.png"
+            joy_path = f"images/hud/{direction_text}_inactive.png"
         else:
-            joy_path = f"images/hud/joy_{movement_direction.lower()}.png"
+            joy_path = f"images/hud/{direction_text}_{movement_direction.lower()}.png"
             
         img_joy = self._get_cached_hud_image(joy_path)
         if not img_joy.isNull():
@@ -825,3 +862,21 @@ class MainView(QMainWindow):
                 self.hud_image_cache[relative_path] = QImage()
                 
         return self.hud_image_cache[relative_path]
+    
+    def update_navigation_sliders(self, val_x, val_y):
+        """Actualiza la barra azul de los sliders de calibración en tiempo real."""
+        if hasattr(self.ui, 'slider_x') and hasattr(self.ui, 'slider_y'):
+            self.ui.slider_x.set_current_value(val_x)
+            self.ui.slider_y.set_current_value(val_y)
+
+
+    def set_navigation_thumbs(self, low_x, high_x, low_y, high_y):
+        """Posiciona los thumbs iniciales al abrir la pantalla."""
+        if hasattr(self.ui, 'slider_x') and hasattr(self.ui, 'slider_y'):
+            self.ui.slider_x.low_thumb = low_x
+            self.ui.slider_x.high_thumb = high_x
+            self.ui.slider_x.update()
+            
+            self.ui.slider_y.low_thumb = low_y
+            self.ui.slider_y.high_thumb = high_y
+            self.ui.slider_y.update()

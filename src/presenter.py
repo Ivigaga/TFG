@@ -56,8 +56,8 @@ class MainPresenter(QObject):
         
         self.handle_platforms_screen_requested() # Prepara la pantalla de plataformas desde el inicio para evitar retrasos al abrirla por primera vez
 
-        self.current_platform = "SNES" # Variable para almacenar la plataforma seleccionada en el catálogo de juegos
-        
+        self.current_platform = None # Variable para almacenar la plataforma seleccionada en el catálogo de juegos
+        self.handle_selected_navigation_mode(self.model.input_structure.get("noseLeft", {}).get("d-pad", False)) # Variable para controlar el modo de navegación (Joystick vs D-Pad)
 
 
     def _connect_view_signals(self):
@@ -103,6 +103,10 @@ class MainPresenter(QObject):
         self.view.controls_opened.connect(self.handle_controls_opened)
         self.view.controls_closed.connect(self.handle_controls_closed)
 
+        self.view.navigation_settings_opened.connect(self.handle_navigation_settings_opened)
+        self.view.save_navigation_requested.connect(self.handle_save_navigation)
+
+        self.view.selectedNavigationMode.connect(self.handle_selected_navigation_mode)
     # --- PRESENTER LOGIC ---
 
     def start_video(self):
@@ -173,7 +177,21 @@ class MainPresenter(QObject):
         # BLOCK 2: UI LOGIC (Maximum speed)
         # ==========================================
         current_time = time.perf_counter()
-        if self.is_reading_score and self.current_mapped_gesture:
+
+        # --- NUEVO: Actualización de los sliders de navegación ---
+        if self.view.ui.stackedWidget.currentWidget().objectName() == "navigationPage":
+            if (current_time - self.last_ui_update_time) >= 0.05: 
+                if landmarks:
+                    nose = landmarks[1]
+                    # Al hacer (1.0 - valor), invertimos la dirección de la barra azul.
+                    # Ahora, al mover la cabeza arriba o a la izquierda, la barra irá a la derecha.
+                    ui_x = int((1.0 - nose.x) * 100)
+                    ui_y = int((1.0 - nose.y) * 100)
+                    self.view.update_navigation_sliders(ui_x, ui_y)
+                self.last_ui_update_time = current_time
+
+        # --- Actualización de la barra del catálogo de gestos ---
+        elif self.is_reading_score and self.current_mapped_gesture:
             if (current_time - self.last_ui_update_time) >= 0.1:
                 score = self.model.get_score(self.current_mapped_gesture)
                 score_int = int(score * 100)
@@ -216,7 +234,7 @@ class MainPresenter(QObject):
         # ==========================================
         # BLOCK 4: UPDATE VIEW
         # ==========================================
-        self.view.update_main_video(pixmap, input_states, movement_direction, self.current_platform)
+        self.view.update_main_video(pixmap, input_states, movement_direction, self.current_platform, self.using_dPad)
 
     def _process_gamepad_logic(self, landmarks):
         """Evaluates thresholds, triggers vgamepad events, and moves joysticks."""
@@ -288,19 +306,36 @@ class MainPresenter(QObject):
                 jx = 0
 
             if jx == 20000:
-                self.navigate_interface("RIGHT")  
+                self.navigate_interface("RIGHT") 
+                if(self.using_dPad):
+                    self.gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_RIGHT)
+            
             elif jx == -20000:
                 self.navigate_interface("LEFT")  
+                if(self.using_dPad):
+                    self.gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_LEFT)
+            else:
+                self.gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_RIGHT)
+                self.gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_LEFT)
             if jy == 20000:
-                self.navigate_interface("UP")  
+                self.navigate_interface("UP")
+                if(self.using_dPad):
+                    self.gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_UP)
             elif jy == -20000:
                 self.navigate_interface("DOWN")  
+                if(self.using_dPad):
+                    self.gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_DOWN)
+            else:
+                self.gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_UP)  
+                self.gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_DOWN)
 
             # --- CORRECCIÓN: Asignamos el estado exacto de cada dirección al modelo ---
             if "noseLeft" in inputs: inputs["noseLeft"]["active"] = is_left
             if "noseRight" in inputs: inputs["noseRight"]["active"] = is_right
             if "noseUp" in inputs: inputs["noseUp"]["active"] = is_up
             if "noseDown" in inputs: inputs["noseDown"]["active"] = is_down
+
+            
 
             # Mover el joystick izquierdo del mando de Xbox
             self.gamepad.left_joystick(x_value=jx, y_value=jy)
@@ -389,7 +424,21 @@ class MainPresenter(QObject):
         # 1. Cambiar el archivo en el modelo y recargar la RAM
         self.model.load_profile(filename)
         
-        # 2. Volver al catálogo de gestos (Página 1)
+        # 2. EXTRAER EL VALOR DEL D-PAD:
+        # Asumimos que todos los gestos de nariz tienen el mismo ajuste de D-Pad.
+        # Leemos el primer gesto de nariz que encontremos.
+        new_dpad_mode = False # Valor por defecto
+
+        new_dpad_mode = self.model.input_structure["noseLeft"].get("d-pad", False)
+
+        # 3. Actualizar el estado interno y avisar a la lógica
+        self.handle_selected_navigation_mode(new_dpad_mode)
+        
+        # 4. OPCIONAL: Actualizar los botones de la UI para que reflejen el modo cargado
+        # Esto es vital para que el usuario sepa visualmente qué modo se ha cargado
+        
+        
+        # 5. Volver al catálogo de gestos (Página 1)
         self.view.show_page(1)
 
     def handle_save_as_requested(self, filename):
@@ -760,7 +809,7 @@ class MainPresenter(QObject):
         self.view.populate_platforms_catalog(lista_plataformas)
         
         # 4. Cambiamos a la nueva pantalla (sustituye el 9 por el índice de tu nueva página)
-        self.view.show_page(9)
+        self.view.show_page(0)
 
     def handle_platform_selected(self, platform_name):
         """Filtra la base de datos por consola y ordena mostrar el catálogo."""
@@ -861,3 +910,54 @@ class MainPresenter(QObject):
         if right: return "E"
         
         return "IDLE"
+    
+
+    def handle_navigation_settings_opened(self):
+        """Lee los datos del modelo, los invierte visualmente y abre la pantalla."""
+        inputs = self.model.input_structure
+        
+        # 1. Leemos los valores crudos del modelo (0.0 a 1.0)
+        th_left = inputs.get("noseLeft", {}).get("threshold", 0.6)
+        th_right = inputs.get("noseRight", {}).get("threshold", 0.4)
+        th_up = inputs.get("noseUp", {}).get("threshold", 0.4)
+        th_down = inputs.get("noseDown", {}).get("threshold", 0.6)
+
+        # 2. Invertimos la matemática: (100 - (valor * 100)) para que encaje con la interfaz
+        # (El threshold 'left' alimenta el low_thumb del slider x, etc.)
+        low_x = int(100 - (th_left * 100))
+        high_x = int(100 - (th_right * 100))
+        
+        low_y = int(100 - (th_down * 100))
+        high_y = int(100 - (th_up * 100))
+        
+        # 3. Mandamos los datos a la vista y cambiamos de pantalla
+        self.view.set_navigation_thumbs(low_x, high_x, low_y, high_y)
+        self.view.show_page(self.view.ui.stackedWidget.indexOf(self.view.ui.navigationPage))
+
+    def handle_save_navigation(self, low_x, high_x, low_y, high_y):
+        """Guarda los valores de los sliders únicamente en la memoria RAM."""
+        inputs = self.model.input_structure
+        
+        # Des-invertimos para volver al estándar de MediaPipe: (100 - valor_ui) / 100.0
+        inputs["noseLeft"]["threshold"] = (100 - low_x) / 100.0
+        inputs["noseLeft"]["d-pad"] = self.using_dPad
+        inputs["noseRight"]["threshold"] = (100 - high_x) / 100.0
+        inputs["noseRight"]["d-pad"] = self.using_dPad
+        
+        inputs["noseDown"]["threshold"] = (100 - low_y) / 100.0
+        inputs["noseDown"]["d-pad"] = self.using_dPad
+        inputs["noseUp"]["threshold"] = (100 - high_y) / 100.0
+        inputs["noseUp"]["d-pad"] = self.using_dPad
+
+        # NOTA: Eliminamos la escritura a disco aquí. Los valores se mantienen 
+        # modificados en memoria listos para cuando se pulse guardar en la pantalla de gestos.
+        
+        # Volvemos a la página de Gestos
+        self.view.show_page(self.view.ui.stackedWidget.indexOf(self.view.ui.gesturesPage))
+
+    def handle_selected_navigation_mode(self, mode):
+        self.using_dPad = mode
+
+        if hasattr(self.view.ui, 'btn_nav_joystick') and hasattr(self.view.ui, 'btn_nav_dpad'):
+            self.view.ui.btn_nav_dpad.setChecked(mode)
+            self.view.ui.btn_nav_joystick.setChecked(not mode)
