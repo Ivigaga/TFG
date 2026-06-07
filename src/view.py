@@ -1,3 +1,5 @@
+import os
+
 from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QGridLayout, QLabel, QPushButton, QButtonGroup, QToolButton, QSizePolicy
 from PySide6.QtGui import QColor, QIcon, QAction, QImage, QPainter, QPixmap
 from PySide6.QtCore import QPoint, Signal, Qt, QSize
@@ -54,8 +56,8 @@ class MainView(QMainWindow):
 
     # New Signals for Emulator Settings
     emulator_settings_opened = Signal()
-    emulator_setup_requested = Signal(str) # Sends the console name
-    emulator_exe_chosen = Signal(str)      # Sends the chosen .exe filename
+    emulator_setup_requested = Signal(str,int) # Sends the console name
+    emulator_exe_chosen = Signal(str,int)      # Sends the chosen .exe filename
     explorer_cancel_clicked = Signal()     # Replaces the hardcoded cancel
 
     platform_selected = Signal(str)
@@ -178,7 +180,7 @@ class MainView(QMainWindow):
 
 
         self.ui.emulatorsButton.clicked.connect(self.emulator_settings_opened.emit)
-
+        
         # Sustituye las líneas antiguas de estos botones por estas:
         self.ui.controlsButton.clicked.connect(self.controls_opened.emit)
         self.ui.gamesControlsButton.clicked.connect(self.controls_opened.emit)
@@ -599,7 +601,7 @@ class MainView(QMainWindow):
             self.save_as_requested.emit(filename)
 
 
-    def populate_explorer(self, current_path, items_list, mode="FOLDER"):
+    def populate_explorer(self, current_path, items_list, mode="FOLDER",page_index_return=None):
         """Generates interactive buttons for folders and optionally .exe files."""
         self.ui.label_explorer_path.setText(f"Ruta actual: {current_path}")
         
@@ -614,11 +616,6 @@ class MainView(QMainWindow):
             self.ui.explorerSelectButton.setText("✅ ELEGIR ESTA CARPETA")
         elif mode == "EMULATOR":
             self.ui.explorerSelectButton.setText("🖥️ PREDETERMINADO WINDOWS")
-
-        import math
-        import textwrap
-        from PySide6.QtWidgets import QToolButton, QSizePolicy
-        from PySide6.QtCore import QSize, Qt
 
         ideal_columns = 5 
         row, col = 0, 0
@@ -638,7 +635,7 @@ class MainView(QMainWindow):
             if item_type == "folder":
                 btn.clicked.connect(lambda checked=False, f=item_name: self.explorer_folder_clicked.emit(f))
             elif item_type == "exe":
-                btn.clicked.connect(lambda checked=False, f=item_name: self.emulator_exe_chosen.emit(f))
+                btn.clicked.connect(lambda checked=False, f=item_name: self.emulator_exe_chosen.emit(f, page_index_return))
             
             self.ui.layoutExplorer.addWidget(btn, row, col)
             
@@ -704,7 +701,7 @@ class MainView(QMainWindow):
                 display_text = current_emu
                 
             btn.setText(display_text)
-            btn.clicked.connect(lambda checked=False, c=console: self.emulator_setup_requested.emit(c))
+            btn.clicked.connect(lambda checked=False, c=console: self.emulator_setup_requested.emit(c,6))
             
             row_layout.addWidget(console_lbl)
             row_layout.addWidget(btn)
@@ -751,12 +748,30 @@ class MainView(QMainWindow):
                 fila += 1    # Bajamos un piso
 
 
-    def populate_games_catalog(self, games_list, platform_name):
+    def populate_games_catalog(self, games_list, platform_name, emulator_name=None):
         """Genera botones solo para los juegos recibidos y actualiza el título."""
         
         # --- NUEVO: Actualizar el label superior ---
         # (Asegúrate de que el label se llama 'platformLabel' en tu Qt Designer)
         self.ui.platformLabel.setText(f"Plataforma: {platform_name}")
+        
+        if(platform_name=="Steam"):
+            self.ui.gamesEmulatorsButton.hide()  # Oculta el botón de emuladores para Steam
+        else:
+            if(emulator_name!=None):
+                self.ui.gamesEmulatorsButton.show()  # Asegura que el botón esté visible para otras plataformas
+                self.ui.gamesEmulatorsButton.setText(f"Emulador:\n{os.path.splitext(os.path.basename(emulator_name))[0].upper()}")
+                try:
+                    # Limpiamos cualquier conexión previa (evita que se acumulen plataformas antiguas)
+                    self.ui.gamesEmulatorsButton.clicked.disconnect()
+                except (RuntimeError, TypeError):
+                    # Si el botón no tenía conexiones previas, ignoramos el aviso de Qt de forma segura
+                    pass
+                
+                # Conectamos la señal absorbiendo el booleano 'checked' de Qt y congelando 'platform_name'
+                self.ui.gamesEmulatorsButton.clicked.connect(
+                    lambda checked=False: self.emulator_setup_requested.emit(platform_name,5)
+                )
 
         while self.ui.layoutGames.count():
             item = self.ui.layoutGames.takeAt(0)

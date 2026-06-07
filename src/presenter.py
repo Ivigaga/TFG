@@ -53,7 +53,7 @@ class MainPresenter(QObject):
         self.current_explorer_path = os.path.expanduser('~') # Empieza en la carpeta del usuario (C:\Users\...)
         self.explorer_mode = "FOLDER" 
         self.current_setup_console = None
-        
+        self.explorer_page_return_index = 8
         self.handle_platforms_screen_requested() # Prepara la pantalla de plataformas desde el inicio para evitar retrasos al abrirla por primera vez
 
         self.current_platform = None # Variable para almacenar la plataforma seleccionada en el catálogo de juegos
@@ -452,7 +452,7 @@ class MainPresenter(QObject):
     def handle_games_catalog_requested(self):
         """Solicita los juegos al modelo, ordena pintarlos y cambia a la pantalla de catálogo."""
         lista_juegos = self.obtain_current_platfor_games(self.current_platform)
-        self.view.populate_games_catalog(lista_juegos, self.current_platform)
+        self.view.populate_games_catalog(lista_juegos, self.current_platform,self.model.emulators_config.get(self.current_platform))
         self.view.show_page(5) # Muestra la nueva gamesPage
 
     def handle_scan_games(self):
@@ -471,7 +471,7 @@ class MainPresenter(QObject):
         # 4. Si ha encontrado juegos, repintamos la cuadrícula
         if nuevos_encontrados:
             lista_actualizada = self.obtain_current_platfor_games(self.current_platform)
-            self.view.populate_games_catalog(lista_actualizada, self.current_platform)
+            self.view.populate_games_catalog(lista_actualizada, self.current_platform,self.model.emulators_config.get(self.current_platform))
 
     def handle_game_launch(self, exe_path):
         """Asynchronously launches the game executable, Steam URI, or ROM with its assigned emulator."""
@@ -528,8 +528,7 @@ class MainPresenter(QObject):
         self.refresh_explorer()
         self.view.show_page(6)
 
-    def refresh_explorer(self):
-
+    def refresh_explorer(self): # Hemos quitado el parámetro de aquí
         
         if self.current_explorer_path == "DRIVES":
             drives = [(f"{d}:\\", "folder") for d in string.ascii_uppercase if os.path.exists(f"{d}:\\")]
@@ -550,7 +549,8 @@ class MainPresenter(QObject):
                 exes.sort(key=str.lower)
                 content_list.extend([(f, "exe") for f in exes])
 
-            self.view.populate_explorer(self.current_explorer_path, content_list, mode=self.explorer_mode)
+            # USAMOS LA MEMORIA DE LA CLASE: self.explorer_page_return_index
+            self.view.populate_explorer(self.current_explorer_path, content_list, mode=self.explorer_mode, page_index_return=self.explorer_page_return_index)
         except PermissionError:
             print(f"Acceso denegado a la carpeta: {self.current_explorer_path}")
             self.handle_explorer_up()
@@ -564,11 +564,11 @@ class MainPresenter(QObject):
             self.model.add_rom_folder(self.current_explorer_path)
             
             lista_actualizada = self.obtain_current_platfor_games(self.current_platform)
-            self.view.populate_games_catalog(lista_actualizada, self.current_platform)
+            self.view.populate_games_catalog(lista_actualizada, self.current_platform, self.model.emulators_config.get(self.current_platform))
             
             self.view.ui.explorerSelectButton.setText("✅ ELEGIR ESTA CARPETA")
             self.view.ui.explorerSelectButton.setEnabled(True)
-            if(self.current_platform!=None):
+            if(self.current_platform != None):
                 self.view.show_page(5)
             else:
                 self.view.show_page(0)
@@ -579,15 +579,39 @@ class MainPresenter(QObject):
                 self.model.emulators_config[self.current_setup_console] = "Default"
                 self.model.save_emulators_config()
                 
+                # Refrescamos la pantalla de ajustes
                 self.view.populate_emulator_settings(self.model.emulators_config)
-                self.view.show_page(8)
+                
+                # --- FIX: Refrescar el botón del emulador si volvemos al catálogo ---
+                if hasattr(self, 'explorer_page_return_index') and self.explorer_page_return_index == 5:
+                    lista_juegos = self.obtain_current_platfor_games(self.current_platform)
+                    self.view.populate_games_catalog(
+                        lista_juegos, 
+                        self.current_platform, 
+                        self.model.emulators_config.get(self.current_platform)
+                    )
+
+                # Volvemos a la página que originó la petición usando la memoria
+                if hasattr(self, 'explorer_page_return_index') and self.explorer_page_return_index is not None:
+                    self.view.show_page(self.explorer_page_return_index)
+                else:
+                    self.view.show_page(8)
 
     def handle_explorer_cancel(self):
         """Returns to the correct page depending on where the explorer was launched from."""
         if self.explorer_mode == "FOLDER":
-            self.view.show_page(5) 
+            # Si estábamos eligiendo carpeta de juegos, volvemos según la plataforma
+            if self.current_platform != None:
+                self.view.show_page(5)
+            else:
+                self.view.show_page(0)
+                
         elif self.explorer_mode == "EMULATOR":
-            self.view.show_page(8)
+            # Usar la memoria de clase en lugar de forzar la página 8
+            if hasattr(self, 'explorer_page_return_index') and self.explorer_page_return_index is not None:
+                self.view.show_page(self.explorer_page_return_index)
+            else:
+                self.view.show_page(8)
 
     def handle_explorer_folder_clicked(self, folder_name):
  
@@ -772,27 +796,45 @@ class MainPresenter(QObject):
         self.view.populate_emulator_settings(self.model.emulators_config)
         self.view.show_page(8)
 
-    def handle_emulator_setup_requested(self, console_name):
+    def handle_emulator_setup_requested(self, console_name, page_index_return):
         """Prepares the explorer to pick an executable for a specific console."""
         self.current_setup_console = console_name
         self.explorer_mode = "EMULATOR"
+        
+        # GUARDAMOS EL ÍNDICE EN LA MEMORIA DEL PRESENTER
+        self.explorer_page_return_index = page_index_return
 
         self.current_explorer_path = os.path.expanduser('~')
-        self.refresh_explorer()
+        self.refresh_explorer() # Ya no pasamos el parámetro por aquí
         self.view.show_page(6)
 
-    def handle_emulator_exe_chosen(self, filename):
+    def handle_emulator_exe_chosen(self, filename, page_index_return=None):
         """Fired when an .exe is clicked in the explorer."""
-
         exe_path = os.path.join(self.current_explorer_path, filename)
         
         if self.current_setup_console:
+            # 1. Guardamos la nueva ruta del emulador en el modelo y disco
             self.model.emulators_config[self.current_setup_console] = exe_path
             self.model.save_emulators_config()
             
-            # Refresh the settings page and go back
+            # 2. Refrescamos la pantalla de ajustes de emuladores (Página 8)
             self.view.populate_emulator_settings(self.model.emulators_config)
-            self.view.show_page(8)
+            
+            # 3. FIX: Si volvemos a la pantalla del catálogo de juegos (Página 5),
+            # recalculamos la lista y forzamos el repintado para actualizar el botón del emulador.
+            if page_index_return == 5:
+                lista_juegos = self.obtain_current_platfor_games(self.current_platform)
+                self.view.populate_games_catalog(
+                    lista_juegos, 
+                    self.current_platform, 
+                    self.model.emulators_config.get(self.current_platform)
+                )
+            
+            # 4. Cambiamos a la pantalla que originó la petición
+            if page_index_return is not None:
+                self.view.show_page(page_index_return)
+            else:
+                self.view.show_page(8)
 
 
     def handle_platforms_screen_requested(self):
@@ -819,7 +861,7 @@ class MainPresenter(QObject):
         
 
         # 3. Ordenamos a la vista que dibuje SÓLO esta lista recortada
-        self.view.populate_games_catalog(juegos_filtrados, platform_name)
+        self.view.populate_games_catalog(juegos_filtrados, platform_name,self.model.emulators_config.get(self.current_platform))
         
         # 4. Viajamos a la página 5 del catálogo de juegos
         self.view.show_page(5)
