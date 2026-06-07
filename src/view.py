@@ -104,6 +104,7 @@ class MainView(QMainWindow):
         # -------------------------------------------------------
 
         self.pip_window = None
+        
         self._connect_signals()
         
 
@@ -933,3 +934,30 @@ class MainView(QMainWindow):
                     
         # Siempre debemos llamar al método original al final para no romper Qt
         super().changeEvent(event)
+
+    # En view.py
+    def populate_gesture_catalog(self, gestures_dict):
+        """Genera dinámicamente los botones basándose exclusivamente en los datos recibidos."""
+        # Vaciamos el layout viejo
+        while self.ui.gridLayout_2.count():
+            item = self.ui.gridLayout_2.takeAt(0)
+            widget = item.widget()
+            if widget:
+                self.ui.gestureButtons.removeButton(widget)
+                widget.deleteLater()
+
+        row, col = 0, 0
+        for code, name in gestures_dict.items():
+            btn = QPushButton(name)
+            btn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
+            btn.setProperty("gesture", code)
+            
+            btn.clicked.connect(lambda checked=False, b=btn: self.gesture_selected.emit(b))
+            
+            self.ui.gestureButtons.addButton(btn)
+            self.ui.gridLayout_2.addWidget(btn, row, col)
+            
+            col += 1
+            if col > 2:
+                col = 0
+                row += 1

@@ -927,8 +927,13 @@ class MainPresenter(QObject):
     
     def handle_controls_opened(self):
         """Se ejecuta al pulsar 'Controles'. Elige la imagen y muestra la página."""
+        # 1. El presentador recupera los datos del modelo
+        gestos_maestros = self.model.get_available_gestures_metadata()
         
-        # 1. El if-else para elegir la imagen según la plataforma actual
+        # 2. Se los inyecta a la vista directamente antes de mostrar la página
+        self.view.populate_gesture_catalog(gestos_maestros)
+
+        # 3. El if-else para elegir la imagen según la plataforma actual
         if self.current_platform != None:
             if self.current_platform == "Game Boy":
                 ruta_imagen = "images/controlGB.png"
@@ -940,10 +945,10 @@ class MainPresenter(QObject):
                 # Placeholder genérico para Steam, Nintendo DS, etc.
                 ruta_imagen = "images/controlGenerico.png"
             
-            # 2. Ordenamos a la vista que ponga la imagen
+            # 4. Ordenamos a la vista que ponga la imagen
             self.view.show_controller_image(ruta_imagen)
         
-        # 3. Viajamos a la página de Gestos (Página 1)
+        # 5. Viajamos a la página de Gestos (Página 1)
         self.view.show_page(1)
 
     def handle_controls_closed(self):

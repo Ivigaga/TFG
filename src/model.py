@@ -56,16 +56,27 @@ class AppModel:
         """Loads the configuration from the JSON file."""
         if not os.path.exists(self.json_path):
             self.input_structure = {
-                "jawOpen": {"category_type": "none","function": "none", "input": None, "threshold": 0.5},
-                "eyeBlinkRight": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
-                "eyeBrowsUp": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
-                "mouthPucker": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
                 "smile": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
-                "noseLeft": {"threshold": 0.6,"d-pad": False,"score": 0.0,"active": False},
-                "noseRight": {"threshold": 0.4,"d-pad": False,"score": 0.0,"active": False},
-                "noseUp": {"threshold": 0.4,"d-pad": False,"score": 0.0,"active": False},
-                "noseDown": {"threshold": 0.6,"d-pad": False,"score": 0.0,"active": False}
-                }
+                "mouthPucker": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
+                "mouthFunnel": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
+                "eyeBlinkRight": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
+                "eyeBlinkLeft": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
+                "eyesWide": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
+                "jawOpen": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
+                "jawLeft": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
+                "jawRight": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
+                "cheekPuff": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
+                "mouthRoll": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
+                "jawForward": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
+                "noseSneer": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
+                "mouthPress": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
+                "mouthFrown": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
+                
+                "noseLeft": {"threshold": 0.6, "d-pad": False, "score": 0.0, "active": False},
+                "noseRight": {"threshold": 0.4, "d-pad": False, "score": 0.0, "active": False},
+                "noseUp": {"threshold": 0.4, "d-pad": False, "score": 0.0, "active": False},
+                "noseDown": {"threshold": 0.6, "d-pad": False, "score": 0.0, "active": False}
+            }
             self.json_path =self.default_json_path
             self.save_inputs()  # Guardamos el JSON por primera vez con la estructura por defecto
             for gesture, data in self.input_structure.items():
@@ -92,13 +103,63 @@ class AppModel:
             return
 
         # Map raw blendshapes to our abstract gestures
-        self.set_score("eyeBrowsUp", max(mediapipe_gestures_dict.get("browOuterUpLeft", 0), 
-                                         mediapipe_gestures_dict.get("browOuterUpRight", 0)))
-        self.set_score("smile", (mediapipe_gestures_dict.get("mouthSmileLeft", 0) + 
-                                 mediapipe_gestures_dict.get("mouthSmileRight", 0)) / 2)
-        self.set_score("mouthPucker", mediapipe_gestures_dict.get("mouthPucker", 0))
-        self.set_score("eyeBlinkRight", mediapipe_gestures_dict.get("eyeBlinkRight", 0))
-        self.set_score("jawOpen", mediapipe_gestures_dict.get("jawOpen", 0))
+        #self.set_score("eyeBrowsUp", max(mediapipe_gestures_dict.get("browOuterUpLeft", 0), mediapipe_gestures_dict.get("browOuterUpRight", 0)))
+        # 1. Extraemos los valores conflictivos a variables limpias
+        # 1. Extraemos los valores conflictivos a variables limpias
+        # 1. VALORES BASE (Raw MediaPipe Data)
+        base_smile = (mediapipe_gestures_dict.get("mouthSmileLeft", 0) + mediapipe_gestures_dict.get("mouthSmileRight", 0)) / 2
+        base_funnel = mediapipe_gestures_dict.get("mouthFunnel", 0)
+        base_pucker = mediapipe_gestures_dict.get("mouthPucker", 0)
+        base_blink_l = mediapipe_gestures_dict.get("eyeBlinkLeft", 0)
+        base_blink_r = mediapipe_gestures_dict.get("eyeBlinkRight", 0)
+        base_shrug_lower = mediapipe_gestures_dict.get("mouthShrugLower", 0)
+        
+        
+
+        # 2. CÁLCULO DE SCORES FINALES (Listos para depurar)
+        
+        # --- Ojos ---
+        score_eyes_wide = max(mediapipe_gestures_dict.get("eyeWideLeft", 0), mediapipe_gestures_dict.get("eyeWideRight", 0))
+        score_blink_right = max(base_blink_r - base_blink_l, 0)
+        score_blink_left = max(base_blink_l - base_blink_r, 0)
+        score_brow_down = max(mediapipe_gestures_dict.get("browDownLeft", 0), mediapipe_gestures_dict.get("browDownRight", 0))
+
+        # --- Labios y Sonrisa ---
+        score_smile = max(base_smile -  base_shrug_lower, 0)
+        score_mouth_pucker = max(base_pucker - base_funnel, 0)
+        score_mouth_funnel = base_funnel 
+        score_mouth_press = (mediapipe_gestures_dict.get("mouthPressLeft", 0) + mediapipe_gestures_dict.get("mouthPressRight", 0)) / 2
+
+        # --- Mandíbula y Mejillas ---
+        score_jaw_open = max(mediapipe_gestures_dict.get("jawOpen", 0) - base_funnel, 0)
+        score_mouth_shrug = max(base_shrug_lower - base_pucker - base_funnel - score_mouth_press, 0)
+        score_mouth_right = mediapipe_gestures_dict.get("mouthRight", 0)
+        score_mouth_left = mediapipe_gestures_dict.get("mouthLeft", 0)
+        
+
+
+        # =====================================================================
+        # 🟢 ZONA DE DEPURACIÓN: Descomenta esta línea para ver los valores en crudo
+        #print(f"EyesWide: {score_eyes_wide:.2f} | BlinkL: {score_blink_left:.2f} | MouthPress: {score_mouth_press:.2f} | Smile: {score_smile:.2f} | MouthShrug: {score_mouth_shrug:.2f} | eyeBrowsDown: {score_brow_down:.2f} | Dimples: {score_dimples:.2f} | MouthRight: {score_mouth_right:.2f}")
+        # =====================================================================
+
+        # 3. ASIGNACIÓN AL MODELO (Limpia y directa)
+        self.set_score("smile", score_smile)
+        self.set_score("mouthPucker", score_mouth_pucker)
+        self.set_score("mouthFunnel", score_mouth_funnel)
+        
+        self.set_score("eyeBlinkRight", score_blink_right)
+        self.set_score("eyeBlinkLeft", score_blink_left)
+        self.set_score("eyesWide", score_eyes_wide)
+        self.set_score("browDown", score_brow_down)
+        
+        self.set_score("jawOpen", score_jaw_open)
+        self.set_score("mouthLeft", score_mouth_left)
+        self.set_score("mouthRight", score_mouth_right)
+
+        self.set_score("mouthPress", score_mouth_press)
+        self.set_score("mouthShrug", score_mouth_shrug)
+
 
     def set_score(self, gesture, value):
         if gesture in self.input_structure:
@@ -421,4 +482,21 @@ class AppModel:
         }
         return mapping.get(ext, None)
 
+
+    def get_available_gestures_metadata(self):
+        """Devuelve el catálogo maestro de gestos con sus nombres legibles."""
+        return {
+            "smile": "Sonrisa",
+            "mouthPucker": "Morritos",
+            "mouthFunnel": "Boca en O",
+            "eyeBlinkRight": "Guiño Dcho",
+            "eyeBlinkLeft": "Guiño Izq",
+            "eyesWide": "Ojos Abiertos",
+            "jawOpen": "Abrir Boca",
+            "mouthLeft": "Boca Izq",
+            "mouthRight": "Boca Dcha",
+            "mouthPress": "Apretar Labios",
+            "mouthShrug": "Encoger Labios",
+            "browDown": "Cejas Fruncidas"
+        }
 
