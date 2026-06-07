@@ -807,10 +807,14 @@ class MainPresenter(QObject):
         if not action_code or action_code == "SYS_NONE":
             return
             
-        # We only need to physically release gamepad buttons.
-        # System actions (change mode, navigate) are not "held down".
         if action_code.startswith("XUSB_"):
-            self.gamepad.release_button(button=self.buttons_map[action_code])
+            if action_code == "XUSB_GAMEPAD_L2":
+                self.gamepad.left_trigger_float(value_float=0.0)
+            elif action_code == "XUSB_GAMEPAD_R2":
+                self.gamepad.right_trigger_float(value_float=0.0)
+            else:
+                # Botones normales (A, B, L1, Start...)
+                self.gamepad.release_button(button=self.buttons_map[action_code])
 
 
     def handle_emulator_settings_opened(self):
