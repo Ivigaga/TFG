@@ -2,7 +2,7 @@ import os
 
 from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QGridLayout, QLabel, QPushButton, QButtonGroup, QToolButton, QSizePolicy
 from PySide6.QtGui import QColor, QIcon, QAction, QImage, QPainter, QPixmap
-from PySide6.QtCore import QPoint, Signal, Qt, QSize
+from PySide6.QtCore import QEvent, QPoint, Signal, Qt, QSize
 from PySide6.QtUiTools import QUiLoader
 
 from model import get_asset_path
@@ -11,12 +11,15 @@ import math
 import textwrap
 
 class PipWindow(QWidget):
+    # 1. Nueva señal para avisar de que la ventana muere
+    window_closed = Signal()
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Video PiP")
-        self.resize(320, 240)
+        self.resize(400, 300)
         self.setWindowFlags(Qt.Tool | Qt.WindowStaysOnTopHint)
-        
+        self.move(0, 0)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         
@@ -29,6 +32,11 @@ class PipWindow(QWidget):
         self.video_label.setPixmap(pixmap.scaled(
             self.video_label.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
         ))
+
+    # 2. Capturamos cuando el usuario le da a la 'X' de Windows
+    def closeEvent(self, event):
+        self.window_closed.emit() # Gritamos que nos estamos cerrando
+        super().closeEvent(event) # Dejamos que Windows termine de destruirla
 
 
 class MainView(QMainWindow):
@@ -325,15 +333,27 @@ class MainView(QMainWindow):
     def toggle_pip(self):
         if not self.pip_window:
             self.pip_window = PipWindow()
+            # Conectamos la señal que creamos para detectar la 'X'
+            self.pip_window.window_closed.connect(self._on_pip_closed_externally)
             self.pip_window.show()
             self.ui.videoLabel.setText("PiP Mode Active. Look at floating window.")
             self.ui.pipButton.setText("Return to Main UI")
             return True
         else:
+            # Al cerrar por código, también se disparará window_closed automáticamente
             self.pip_window.close()
-            self.pip_window = None
-            self.ui.pipButton.setText("PiP Mode")
             return False
+
+    def _on_pip_closed_externally(self):
+        """Restaura la interfaz cuando la ventana PiP se cierra por cualquier motivo."""
+        # 1. Comprobamos si la ventana principal está minimizada
+        if self.isMinimized():
+            self.showNormal()      # La desminimizamos al estado en el que estaba
+            self.activateWindow()  # La traemos al frente y le damos el foco del sistema
+            
+        # 2. Limpiamos la referencia y restauramos los textos del botón
+        self.pip_window = None
+        self.ui.pipButton.setText("PiP Mode")
 
     def closeEvent(self, event):
         if self.pip_window:
@@ -895,3 +915,21 @@ class MainView(QMainWindow):
             self.ui.slider_y.low_thumb = low_y
             self.ui.slider_y.high_thumb = high_y
             self.ui.slider_y.update()
+
+    def changeEvent(self, event):
+        """Detecta cambios en el estado de la ventana (minimizar, restaurar, maximizar)."""
+        # 1. Comprobamos si el evento es un cambio en el estado de la ventana
+        if event.type() == QEvent.WindowStateChange:
+            
+            # 2. Comprobamos si la ventana YA NO está minimizada (es decir, acaba de restaurarse)
+            if not (self.windowState() & Qt.WindowMinimized):
+                
+                # 3. Si la ventana PiP flotante está viva (separada), la destruimos
+                if getattr(self, 'pip_window', None) is not None:
+                    self.pip_window.close() 
+                    # Nota: Al hacer .close(), saltará automáticamente tu método 
+                    # _on_pip_closed_externally, el cual se encargará de reubicar
+                    # el vídeo en la interfaz principal y resetear los botones.
+                    
+        # Siempre debemos llamar al método original al final para no romper Qt
+        super().changeEvent(event)

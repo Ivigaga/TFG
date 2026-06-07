@@ -485,6 +485,7 @@ class MainPresenter(QObject):
                 os.startfile(exe_path)
                 print(f"Successfully launched: {exe_path}")
                 # --- NEW: Minimize window after successful launch ---
+                self.view.toggle_pip()
                 self.view.showMinimized()
             except Exception as e:
                 print(f"Critical error trying to open the game at '{exe_path}': {e}")
@@ -504,12 +505,14 @@ class MainPresenter(QObject):
                 os.startfile(exe_path)
                 print(f"Launching ROM with Windows Default: {exe_path}")
                 # --- NEW: Minimize window after successful launch ---
+                self.view.toggle_pip()
                 self.view.showMinimized()
             else:
                 # Launch the custom emulator, passing the ROM path as the main argument
                 subprocess.Popen([emulator_path, exe_path])
                 print(f"Launching ROM with custom emulator ({console_name}): {emulator_path} -> {exe_path}")
                 # --- NEW: Minimize window after successful launch ---
+                self.view.toggle_pip()
                 self.view.showMinimized()
                 
         except Exception as e:
