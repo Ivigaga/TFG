@@ -23,7 +23,23 @@ class MainPresenter(QObject):
             "XUSB_GAMEPAD_B": vg.XUSB_BUTTON.XUSB_GAMEPAD_B,
             "XUSB_GAMEPAD_START": vg.XUSB_BUTTON.XUSB_GAMEPAD_START,
             "XUSB_GAMEPAD_BACK": vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK,
-            "XUSB_GAMEPAD_A": vg.XUSB_BUTTON.XUSB_GAMEPAD_A
+            "XUSB_GAMEPAD_A": vg.XUSB_BUTTON.XUSB_GAMEPAD_A,
+            "XUSB_GAMEPAD_Y": vg.XUSB_BUTTON.XUSB_GAMEPAD_Y,
+            "XUSB_GAMEPAD_X": vg.XUSB_BUTTON.XUSB_GAMEPAD_X,
+            "XUSB_GAMEPAD_L1": vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER,
+            "XUSB_GAMEPAD_R1": vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER,
+            "XUSB_GAMEPAD_L2": "TRIGGER_L",
+            "XUSB_GAMEPAD_R2": "TRIGGER_R"
+        }
+
+        self.platform_buttons={
+            "Game Boy": ["XUSB_GAMEPAD_A", "XUSB_GAMEPAD_B", "XUSB_GAMEPAD_BACK", "XUSB_GAMEPAD_START"],
+            "Game Boy Color": ["XUSB_GAMEPAD_A", "XUSB_GAMEPAD_B", "XUSB_GAMEPAD_BACK", "XUSB_GAMEPAD_START"],
+            "Game Boy Advance": ["XUSB_GAMEPAD_A", "XUSB_GAMEPAD_B", "XUSB_GAMEPAD_Y", "XUSB_GAMEPAD_X", "XUSB_GAMEPAD_BACK", "XUSB_GAMEPAD_START", "XUSB_GAMEPAD_L1", "XUSB_GAMEPAD_R1"],
+            "SNES": ["XUSB_GAMEPAD_A", "XUSB_GAMEPAD_B", "XUSB_GAMEPAD_Y", "XUSB_GAMEPAD_X", "XUSB_GAMEPAD_BACK", "XUSB_GAMEPAD_START", "XUSB_GAMEPAD_L1", "XUSB_GAMEPAD_R1"],
+            "NES": ["XUSB_GAMEPAD_A", "XUSB_GAMEPAD_B", "XUSB_GAMEPAD_START", "XUSB_GAMEPAD_BACK"],
+            "Nintendo DS": ["XUSB_GAMEPAD_A", "XUSB_GAMEPAD_B", "XUSB_GAMEPAD_Y", "XUSB_GAMEPAD_X", "XUSB_GAMEPAD_BACK", "XUSB_GAMEPAD_START", "XUSB_GAMEPAD_L1", "XUSB_GAMEPAD_R1"],
+            "Steam": ["XUSB_GAMEPAD_A", "XUSB_GAMEPAD_B", "XUSB_GAMEPAD_Y", "XUSB_GAMEPAD_X", "XUSB_GAMEPAD_BACK", "XUSB_GAMEPAD_START", "XUSB_GAMEPAD_L1", "XUSB_GAMEPAD_R1", "XUSB_GAMEPAD_L2", "XUSB_GAMEPAD_R2"]
         }
         
         # State variables
@@ -209,12 +225,8 @@ class MainPresenter(QObject):
         # ==========================================
         # BLOCK 3: HUD DATA PREPARATION (Active inputs & Movement)
         # ==========================================
-        target_buttons = []
-        if self.current_platform == "Game Boy":
-            target_buttons = ["XUSB_GAMEPAD_A", "XUSB_GAMEPAD_B", "XUSB_GAMEPAD_BACK", "XUSB_GAMEPAD_START"]
-        elif self.current_platform == "SNES":
-            target_buttons = ["XUSB_GAMEPAD_A", "XUSB_GAMEPAD_B", "XUSB_GAMEPAD_X", "XUSB_GAMEPAD_Y", "XUSB_GAMEPAD_BACK", "XUSB_GAMEPAD_START"]
-        # Add more platforms as needed...
+        target_buttons = self.platform_buttons.get(self.current_platform, [])
+        
 
         # 1. Initialize all platform buttons as inactive (False) by default
         input_states = {btn: False for btn in target_buttons}
@@ -765,9 +777,15 @@ class MainPresenter(QObject):
         if not action_code or action_code == "SYS_NONE":
             return
             
-        # 1. Virtual gamepad button
+        # 1. Virtual gamepad button / Trigger
         if action_code.startswith("XUSB_"):
-            self.gamepad.press_button(button=self.buttons_map[action_code])
+            if action_code == "XUSB_GAMEPAD_L2":
+                self.gamepad.left_trigger_float(1.0)  # Presión al 100%
+            elif action_code == "XUSB_GAMEPAD_R2":
+                self.gamepad.right_trigger_float(1.0) # Presión al 100%
+            else:
+                # Botones normales (A, B, L1, Start...)
+                self.gamepad.press_button(button=self.buttons_map[action_code])
             
         # 2. Internal system action
         elif action_code.startswith("SYS_"):

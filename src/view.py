@@ -286,12 +286,12 @@ class MainView(QMainWindow):
             suffix = "active" if is_active else "inactive"
             
             # Handle platform-specific naming for back and start buttons
-            if clean_name in ["back", "start"] and platform_name:
-                platform_slug = platform_name.lower().replace(" ", "_")
-                icon_path = f"images/hud/btn_{clean_name}_{platform_slug}_{suffix}.png"
-            else:
-                icon_path = f"images/hud/btn_{clean_name}_{suffix}.png"
-            
+            #if clean_name in ["back", "start"] and platform_name:
+            #    platform_slug = platform_name.lower().replace(" ", "_")
+            #    icon_path = f"images/hud/btn_{clean_name}_{platform_slug}_{suffix}.png"
+            #else:
+            #    icon_path = f"images/hud/btn_{clean_name}_{suffix}.png"
+            icon_path = f"images/hud/btn_{clean_name}_{suffix}.png"
             img_btn = self._get_cached_hud_image(icon_path)
             if not img_btn.isNull():
                 painter.drawImage(QPoint(x_offset, y_pos), img_btn)

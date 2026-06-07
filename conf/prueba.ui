@@ -171,7 +171,7 @@
              </sizepolicy>
             </property>
             <property name="currentIndex">
-             <number>9</number>
+             <number>2</number>
             </property>
             <widget class="QWidget" name="platformsPage">
              <property name="sizeIncrement">
@@ -336,10 +336,23 @@
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>Guardar y volver</string>
+                   <string>Guardar</string>
                   </property>
                   <property name="type" stdset="0">
                    <string>primary</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="gesturesSaveExternalButton">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Guardar Como</string>
                   </property>
                  </widget>
                 </item>
@@ -353,19 +366,6 @@
                   </property>
                   <property name="text">
                    <string>Cargar archivo</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="gesturesSaveExternalButton">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Guardar archivo</string>
                   </property>
                  </widget>
                 </item>
@@ -637,7 +637,7 @@
               <item>
                <widget class="QStackedWidget" name="stackedWidgetAcciones">
                 <property name="currentIndex">
-                 <number>0</number>
+                 <number>1</number>
                 </property>
                 <widget class="QWidget" name="page_category">
                  <layout class="QHBoxLayout" name="horizontalLayout_cat">
@@ -689,8 +689,8 @@
                   </item>
                   <item>
                    <layout class="QGridLayout" name="gridLayout_mando">
-                    <item row="1" column="1">
-                     <widget class="QPushButton" name="Start_button">
+                    <item row="0" column="2">
+                     <widget class="QPushButton" name="Y_button">
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                         <horstretch>0</horstretch>
@@ -698,7 +698,7 @@
                        </sizepolicy>
                       </property>
                       <property name="text">
-                       <string>Start</string>
+                       <string>Y</string>
                       </property>
                       <property name="checkable">
                        <bool>true</bool>
@@ -707,14 +707,39 @@
                        <bool>true</bool>
                       </property>
                       <property name="gamepadInput" stdset="0">
-                       <string>XUSB_GAMEPAD_START</string>
+                       <string>XUSB_GAMEPAD_Y</string>
                       </property>
                       <attribute name="buttonGroup">
                        <string notr="true">controlButtons</string>
                       </attribute>
                      </widget>
                     </item>
-                    <item row="1" column="0">
+                    <item row="0" column="3">
+                     <widget class="QPushButton" name="X_button">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string>X</string>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="autoExclusive">
+                       <bool>true</bool>
+                      </property>
+                      <property name="gamepadInput" stdset="0">
+                       <string>XUSB_GAMEPAD_X</string>
+                      </property>
+                      <attribute name="buttonGroup">
+                       <string notr="true">controlButtons</string>
+                      </attribute>
+                     </widget>
+                    </item>
+                    <item row="2" column="0">
                      <widget class="QPushButton" name="Select_button">
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -783,6 +808,131 @@
                       </property>
                       <property name="gamepadInput" stdset="0">
                        <string>XUSB_GAMEPAD_B</string>
+                      </property>
+                      <attribute name="buttonGroup">
+                       <string notr="true">controlButtons</string>
+                      </attribute>
+                     </widget>
+                    </item>
+                    <item row="2" column="1">
+                     <widget class="QPushButton" name="Start_button">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string>Start</string>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="autoExclusive">
+                       <bool>true</bool>
+                      </property>
+                      <property name="gamepadInput" stdset="0">
+                       <string>XUSB_GAMEPAD_START</string>
+                      </property>
+                      <attribute name="buttonGroup">
+                       <string notr="true">controlButtons</string>
+                      </attribute>
+                     </widget>
+                    </item>
+                    <item row="1" column="1">
+                     <widget class="QPushButton" name="L2_button">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string>L2</string>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="autoExclusive">
+                       <bool>true</bool>
+                      </property>
+                      <property name="gamepadInput" stdset="0">
+                       <string>XUSB_GAMEPAD_L2</string>
+                      </property>
+                      <attribute name="buttonGroup">
+                       <string notr="true">controlButtons</string>
+                      </attribute>
+                     </widget>
+                    </item>
+                    <item row="1" column="2">
+                     <widget class="QPushButton" name="R1_button">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string>R1</string>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="autoExclusive">
+                       <bool>true</bool>
+                      </property>
+                      <property name="gamepadInput" stdset="0">
+                       <string>XUSB_GAMEPAD_R1</string>
+                      </property>
+                      <attribute name="buttonGroup">
+                       <string notr="true">controlButtons</string>
+                      </attribute>
+                     </widget>
+                    </item>
+                    <item row="1" column="3">
+                     <widget class="QPushButton" name="R2_button">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string>R2</string>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="autoExclusive">
+                       <bool>true</bool>
+                      </property>
+                      <property name="gamepadInput" stdset="0">
+                       <string>XUSB_GAMEPAD_R2</string>
+                      </property>
+                      <attribute name="buttonGroup">
+                       <string notr="true">controlButtons</string>
+                      </attribute>
+                     </widget>
+                    </item>
+                    <item row="1" column="0">
+                     <widget class="QPushButton" name="L1_button">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string>L1</string>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="autoExclusive">
+                       <bool>true</bool>
+                      </property>
+                      <property name="gamepadInput" stdset="0">
+                       <string>XUSB_GAMEPAD_L1</string>
                       </property>
                       <attribute name="buttonGroup">
                        <string notr="true">controlButtons</string>
@@ -1082,8 +1232,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>70</width>
-                   <height>18</height>
+                   <width>783</width>
+                   <height>413</height>
                   </rect>
                  </property>
                  <layout class="QGridLayout" name="layoutProfiles"/>
@@ -1956,8 +2106,8 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="controlButtons"/>
-  <buttongroup name="navigationButtons"/>
   <buttongroup name="gestureButtons"/>
+  <buttongroup name="navigationButtons"/>
+  <buttongroup name="controlButtons"/>
  </buttongroups>
 </ui>

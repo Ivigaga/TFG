@@ -229,19 +229,19 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_5.addWidget(self.gesturesSaveLocalButton)
 
-        self.gesturesLoadButton = QPushButton(self.gesturesPage)
-        self.gesturesLoadButton.setObjectName(u"gesturesLoadButton")
-        sizePolicy2.setHeightForWidth(self.gesturesLoadButton.sizePolicy().hasHeightForWidth())
-        self.gesturesLoadButton.setSizePolicy(sizePolicy2)
-
-        self.horizontalLayout_5.addWidget(self.gesturesLoadButton)
-
         self.gesturesSaveExternalButton = QPushButton(self.gesturesPage)
         self.gesturesSaveExternalButton.setObjectName(u"gesturesSaveExternalButton")
         sizePolicy2.setHeightForWidth(self.gesturesSaveExternalButton.sizePolicy().hasHeightForWidth())
         self.gesturesSaveExternalButton.setSizePolicy(sizePolicy2)
 
         self.horizontalLayout_5.addWidget(self.gesturesSaveExternalButton)
+
+        self.gesturesLoadButton = QPushButton(self.gesturesPage)
+        self.gesturesLoadButton.setObjectName(u"gesturesLoadButton")
+        sizePolicy2.setHeightForWidth(self.gesturesLoadButton.sizePolicy().hasHeightForWidth())
+        self.gesturesLoadButton.setSizePolicy(sizePolicy2)
+
+        self.horizontalLayout_5.addWidget(self.gesturesLoadButton)
 
         self.horizontalLayout_5.setStretch(0, 1)
         self.horizontalLayout_5.setStretch(1, 1)
@@ -419,17 +419,27 @@ class Ui_MainWindow(object):
 
         self.gridLayout_mando = QGridLayout()
         self.gridLayout_mando.setObjectName(u"gridLayout_mando")
-        self.Start_button = QPushButton(self.page_mando)
+        self.Y_button = QPushButton(self.page_mando)
         self.controlButtons = QButtonGroup(MainWindow)
         self.controlButtons.setObjectName(u"controlButtons")
-        self.controlButtons.addButton(self.Start_button)
-        self.Start_button.setObjectName(u"Start_button")
-        sizePolicy.setHeightForWidth(self.Start_button.sizePolicy().hasHeightForWidth())
-        self.Start_button.setSizePolicy(sizePolicy)
-        self.Start_button.setCheckable(True)
-        self.Start_button.setAutoExclusive(True)
+        self.controlButtons.addButton(self.Y_button)
+        self.Y_button.setObjectName(u"Y_button")
+        sizePolicy.setHeightForWidth(self.Y_button.sizePolicy().hasHeightForWidth())
+        self.Y_button.setSizePolicy(sizePolicy)
+        self.Y_button.setCheckable(True)
+        self.Y_button.setAutoExclusive(True)
 
-        self.gridLayout_mando.addWidget(self.Start_button, 1, 1, 1, 1)
+        self.gridLayout_mando.addWidget(self.Y_button, 0, 2, 1, 1)
+
+        self.X_button = QPushButton(self.page_mando)
+        self.controlButtons.addButton(self.X_button)
+        self.X_button.setObjectName(u"X_button")
+        sizePolicy.setHeightForWidth(self.X_button.sizePolicy().hasHeightForWidth())
+        self.X_button.setSizePolicy(sizePolicy)
+        self.X_button.setCheckable(True)
+        self.X_button.setAutoExclusive(True)
+
+        self.gridLayout_mando.addWidget(self.X_button, 0, 3, 1, 1)
 
         self.Select_button = QPushButton(self.page_mando)
         self.controlButtons.addButton(self.Select_button)
@@ -439,7 +449,7 @@ class Ui_MainWindow(object):
         self.Select_button.setCheckable(True)
         self.Select_button.setAutoExclusive(True)
 
-        self.gridLayout_mando.addWidget(self.Select_button, 1, 0, 1, 1)
+        self.gridLayout_mando.addWidget(self.Select_button, 2, 0, 1, 1)
 
         self.A_button = QPushButton(self.page_mando)
         self.controlButtons.addButton(self.A_button)
@@ -460,6 +470,56 @@ class Ui_MainWindow(object):
         self.B_button.setAutoExclusive(True)
 
         self.gridLayout_mando.addWidget(self.B_button, 0, 1, 1, 1)
+
+        self.Start_button = QPushButton(self.page_mando)
+        self.controlButtons.addButton(self.Start_button)
+        self.Start_button.setObjectName(u"Start_button")
+        sizePolicy.setHeightForWidth(self.Start_button.sizePolicy().hasHeightForWidth())
+        self.Start_button.setSizePolicy(sizePolicy)
+        self.Start_button.setCheckable(True)
+        self.Start_button.setAutoExclusive(True)
+
+        self.gridLayout_mando.addWidget(self.Start_button, 2, 1, 1, 1)
+
+        self.L2_button = QPushButton(self.page_mando)
+        self.controlButtons.addButton(self.L2_button)
+        self.L2_button.setObjectName(u"L2_button")
+        sizePolicy.setHeightForWidth(self.L2_button.sizePolicy().hasHeightForWidth())
+        self.L2_button.setSizePolicy(sizePolicy)
+        self.L2_button.setCheckable(True)
+        self.L2_button.setAutoExclusive(True)
+
+        self.gridLayout_mando.addWidget(self.L2_button, 1, 1, 1, 1)
+
+        self.R1_button = QPushButton(self.page_mando)
+        self.controlButtons.addButton(self.R1_button)
+        self.R1_button.setObjectName(u"R1_button")
+        sizePolicy.setHeightForWidth(self.R1_button.sizePolicy().hasHeightForWidth())
+        self.R1_button.setSizePolicy(sizePolicy)
+        self.R1_button.setCheckable(True)
+        self.R1_button.setAutoExclusive(True)
+
+        self.gridLayout_mando.addWidget(self.R1_button, 1, 2, 1, 1)
+
+        self.R2_button = QPushButton(self.page_mando)
+        self.controlButtons.addButton(self.R2_button)
+        self.R2_button.setObjectName(u"R2_button")
+        sizePolicy.setHeightForWidth(self.R2_button.sizePolicy().hasHeightForWidth())
+        self.R2_button.setSizePolicy(sizePolicy)
+        self.R2_button.setCheckable(True)
+        self.R2_button.setAutoExclusive(True)
+
+        self.gridLayout_mando.addWidget(self.R2_button, 1, 3, 1, 1)
+
+        self.L1_button = QPushButton(self.page_mando)
+        self.controlButtons.addButton(self.L1_button)
+        self.L1_button.setObjectName(u"L1_button")
+        sizePolicy.setHeightForWidth(self.L1_button.sizePolicy().hasHeightForWidth())
+        self.L1_button.setSizePolicy(sizePolicy)
+        self.L1_button.setCheckable(True)
+        self.L1_button.setAutoExclusive(True)
+
+        self.gridLayout_mando.addWidget(self.L1_button, 1, 0, 1, 1)
 
 
         self.verticalLayout_mando.addLayout(self.gridLayout_mando)
@@ -624,7 +684,7 @@ class Ui_MainWindow(object):
         self.scrollAreaProfiles.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 70, 18))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 783, 413))
         self.layoutProfiles = QGridLayout(self.scrollAreaWidgetContents)
         self.layoutProfiles.setObjectName(u"layoutProfiles")
         self.scrollAreaProfiles.setWidget(self.scrollAreaWidgetContents)
@@ -944,6 +1004,7 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.btn_nav_joystick.sizePolicy().hasHeightForWidth())
         self.btn_nav_joystick.setSizePolicy(sizePolicy)
         self.btn_nav_joystick.setCheckable(True)
+        self.btn_nav_joystick.setProperty(u"d-pad", False)
 
         self.horizontalLayout_2.addWidget(self.btn_nav_joystick)
 
@@ -953,6 +1014,7 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.btn_nav_dpad.sizePolicy().hasHeightForWidth())
         self.btn_nav_dpad.setSizePolicy(sizePolicy)
         self.btn_nav_dpad.setCheckable(True)
+        self.btn_nav_dpad.setProperty(u"d-pad", True)
 
         self.horizontalLayout_2.addWidget(self.btn_nav_dpad)
 
@@ -1121,8 +1183,8 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.stackedWidget.setCurrentIndex(9)
-        self.stackedWidgetAcciones.setCurrentIndex(0)
+        self.stackedWidget.setCurrentIndex(2)
+        self.stackedWidgetAcciones.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -1142,10 +1204,10 @@ class Ui_MainWindow(object):
         self.scanFolderButton.setText(QCoreApplication.translate("MainWindow", u"\U0001f4c1 A\U000000d1ADIR CARPETA", None))
         self.gesturesBackButton.setText(QCoreApplication.translate("MainWindow", u"\u25c0 Volver  sin guardar", None))
         self.gesturesBackButton.setProperty(u"type", "")
-        self.gesturesSaveLocalButton.setText(QCoreApplication.translate("MainWindow", u"Guardar y volver", None))
+        self.gesturesSaveLocalButton.setText(QCoreApplication.translate("MainWindow", u"Guardar", None))
         self.gesturesSaveLocalButton.setProperty(u"type", QCoreApplication.translate("MainWindow", u"primary", None))
+        self.gesturesSaveExternalButton.setText(QCoreApplication.translate("MainWindow", u"Guardar Como", None))
         self.gesturesLoadButton.setText(QCoreApplication.translate("MainWindow", u"Cargar archivo", None))
-        self.gesturesSaveExternalButton.setText(QCoreApplication.translate("MainWindow", u"Guardar archivo", None))
         self.pushButton_21.setText(QCoreApplication.translate("MainWindow", u"Morritos", None))
         self.pushButton_21.setProperty(u"gesture", QCoreApplication.translate("MainWindow", u"mouthPucker", None))
         self.pushButton_20.setText(QCoreApplication.translate("MainWindow", u"Sonrisa", None))
@@ -1166,14 +1228,26 @@ class Ui_MainWindow(object):
         self.btn_cat_sys.setText(QCoreApplication.translate("MainWindow", u"\u2699\ufe0f ACCI\u00d3N DE SISTEMA", None))
         self.btn_volver_cat1.setText(QCoreApplication.translate("MainWindow", u"\u25c0  CAMBIAR TIPO DE ACCI\u00d3N", None))
         self.btn_volver_cat1.setProperty(u"type", QCoreApplication.translate("MainWindow", u"secondary", None))
-        self.Start_button.setText(QCoreApplication.translate("MainWindow", u"Start", None))
-        self.Start_button.setProperty(u"gamepadInput", QCoreApplication.translate("MainWindow", u"XUSB_GAMEPAD_START", None))
+        self.Y_button.setText(QCoreApplication.translate("MainWindow", u"Y", None))
+        self.Y_button.setProperty(u"gamepadInput", QCoreApplication.translate("MainWindow", u"XUSB_GAMEPAD_Y", None))
+        self.X_button.setText(QCoreApplication.translate("MainWindow", u"X", None))
+        self.X_button.setProperty(u"gamepadInput", QCoreApplication.translate("MainWindow", u"XUSB_GAMEPAD_X", None))
         self.Select_button.setText(QCoreApplication.translate("MainWindow", u"Select", None))
         self.Select_button.setProperty(u"gamepadInput", QCoreApplication.translate("MainWindow", u"XUSB_GAMEPAD_BACK", None))
         self.A_button.setText(QCoreApplication.translate("MainWindow", u"A", None))
         self.A_button.setProperty(u"gamepadInput", QCoreApplication.translate("MainWindow", u"XUSB_GAMEPAD_A", None))
         self.B_button.setText(QCoreApplication.translate("MainWindow", u"B", None))
         self.B_button.setProperty(u"gamepadInput", QCoreApplication.translate("MainWindow", u"XUSB_GAMEPAD_B", None))
+        self.Start_button.setText(QCoreApplication.translate("MainWindow", u"Start", None))
+        self.Start_button.setProperty(u"gamepadInput", QCoreApplication.translate("MainWindow", u"XUSB_GAMEPAD_START", None))
+        self.L2_button.setText(QCoreApplication.translate("MainWindow", u"L2", None))
+        self.L2_button.setProperty(u"gamepadInput", QCoreApplication.translate("MainWindow", u"XUSB_GAMEPAD_L2", None))
+        self.R1_button.setText(QCoreApplication.translate("MainWindow", u"R1", None))
+        self.R1_button.setProperty(u"gamepadInput", QCoreApplication.translate("MainWindow", u"XUSB_GAMEPAD_R1", None))
+        self.R2_button.setText(QCoreApplication.translate("MainWindow", u"R2", None))
+        self.R2_button.setProperty(u"gamepadInput", QCoreApplication.translate("MainWindow", u"XUSB_GAMEPAD_R2", None))
+        self.L1_button.setText(QCoreApplication.translate("MainWindow", u"L1", None))
+        self.L1_button.setProperty(u"gamepadInput", QCoreApplication.translate("MainWindow", u"XUSB_GAMEPAD_L1", None))
         self.btn_volver_cat2.setText(QCoreApplication.translate("MainWindow", u"\u25c0  CAMBIAR TIPO DE ACCI\u00d3N", None))
         self.btn_volver_cat2.setProperty(u"type", QCoreApplication.translate("MainWindow", u"secondary", None))
         self.btn_sys_modo.setText(QCoreApplication.translate("MainWindow", u"Cambiar Modo Movimiento", None))
