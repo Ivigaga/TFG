@@ -172,7 +172,7 @@ class MainView(QMainWindow):
 
         self.ui.gamesBackButton.clicked.connect(self.remove_platform.emit)
         self.ui.gamesScanButton.clicked.connect(self.scan_games_requested.emit)
-
+        self.ui.steamGamesScanButton.clicked.connect(self.scan_games_requested.emit)
         # Controles de las páginas de ajustes
         self.ui.settingsBackButton.clicked.connect(lambda: self.navigation_requested.emit(0))
         self.ui.emulatorSettingsBackButton.clicked.connect(lambda: self.navigation_requested.emit(0))
@@ -778,7 +778,11 @@ class MainView(QMainWindow):
         
         if(platform_name=="Steam"):
             self.ui.gamesEmulatorsButton.hide()  # Oculta el botón de emuladores para Steam
+            self.ui.steamGamesScanButton.show()  # Muestra el botón de escaneo específico para Steam
+            self.ui.gamesScanFolderButton.hide()  # Oculta el botón de escaneo de carpeta para Steam
         else:
+            self.ui.steamGamesScanButton.hide()  # Oculta el botón de escaneo específico para Steam
+            self.ui.gamesScanFolderButton.show()  # Muestra el botón de escaneo de carpeta para otras plataformas
             if(emulator_name!=None):
                 self.ui.gamesEmulatorsButton.show()  # Asegura que el botón esté visible para otras plataformas
                 self.ui.gamesEmulatorsButton.setText(f"Emulador:\n{os.path.splitext(os.path.basename(emulator_name))[0].upper()}")
