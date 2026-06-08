@@ -51,6 +51,7 @@ class MainView(QMainWindow):
     load_profiles_requested = Signal()
     profile_accepted = Signal(str)
     save_as_requested = Signal(str) # Envía el nombre del nuevo archivo
+    open_save_as_requested = Signal()
 
     games_catalog_requested = Signal()
     scan_games_requested = Signal()
@@ -160,7 +161,7 @@ class MainView(QMainWindow):
         self.ui.loadAcceptButton.clicked.connect(self._on_accept_profile)
 
         # El botón de "Guardar Archivo" del catálogo ahora abre el teclado (Página 4)
-        self.ui.gesturesSaveExternalButton.clicked.connect(self.open_virtual_keyboard)
+        self.ui.gesturesSaveExternalButton.clicked.connect(self.open_save_as_requested.emit)
         
         # Controles del teclado
         self.ui.keyboardCancelButton.clicked.connect(lambda: self.navigation_requested.emit(1))
@@ -576,15 +577,17 @@ class MainView(QMainWindow):
             return
             
         elif char == 'ESPACIO':
+            self.is_default_text_untouched = False # Apagamos la flag
             if len(current_text) < 30:
                 self.ui.keyboardDisplay.setText(current_text + " ")
                 
         elif char == 'TAB':
+            self.is_default_text_untouched = False # Apagamos la flag
             if len(current_text) < 30:
-                # El tabulador inserta un bloque de 4 espacios para mantener un espaciado limpio
                 self.ui.keyboardDisplay.setText(current_text + "    ")
                 
         else:
+            self.is_default_text_untouched = False # Apagamos la flag
             if len(current_text) < 30:
                 # Recupera de forma segura el texto pintado en el botón pulsado actualmente
                 for item in self.keyboard_buttons:
@@ -600,20 +603,25 @@ class MainView(QMainWindow):
             self.is_shift = False
             self._update_keyboard_labels()
 
-    def open_virtual_keyboard(self):
-        """Limpia la pantalla del teclado y resetea los modificadores al entrar."""
-        self.ui.keyboardDisplay.setText("")
+    def open_virtual_keyboard(self, default_text=""):
+        """Limpia la pantalla del teclado y carga el nombre por defecto sugerido."""
+        self.ui.keyboardDisplay.setText(default_text)
         self.is_shift = False
-        self.is_caps = False # CORRECCIÓN: Minúsculas por defecto al abrir la pantalla de escritura
+        self.is_caps = False
+        self.is_default_text_untouched = bool(default_text) # <-- NUEVA FLAG
         self._update_keyboard_labels()
         self.show_page(4)
 
    
 
     def _on_keyboard_backspace(self):
-        """Borra la última letra."""
-        texto_actual = self.ui.keyboardDisplay.text()
-        self.ui.keyboardDisplay.setText(texto_actual[:-1])
+        """Borra la última letra, o el texto completo si es el autogenerado y no se ha tocado."""
+        if getattr(self, 'is_default_text_untouched', False):
+            self.ui.keyboardDisplay.setText("")
+            self.is_default_text_untouched = False # Apagamos la flag
+        else:
+            texto_actual = self.ui.keyboardDisplay.text()
+            self.ui.keyboardDisplay.setText(texto_actual[:-1])
 
     def _on_keyboard_accept(self):
         """Envía el texto al presentador si no está vacío."""
@@ -965,3 +973,23 @@ class MainView(QMainWindow):
             if col > 2:
                 col = 0
                 row += 1
+
+    # En view.py dentro de MainView
+    def set_onboarding_mode(self, enabled):
+        """Oculta o muestra los botones de navegación y guardado local durante el tutorial."""
+        self.ui.gesturesBackButton.setVisible(not enabled)
+        self.ui.gesturesLoadButton.setVisible(not enabled)
+        self.ui.gesturesSaveLocalButton.setVisible(not enabled)
+
+
+    def show_tutorial_message(self, title, message):
+        """Muestra un cuadro de diálogo informativo que bloquea la app hasta leerlo."""
+        from PySide6.QtWidgets import QMessageBox
+        msg = QMessageBox(self)
+        msg.setWindowTitle(title)
+        msg.setText(message)
+        msg.setIcon(QMessageBox.Information)
+        msg.setStandardButtons(QMessageBox.Ok)
+        # Estilo rápido para que encaje con tu Dark Mode si lo tienes
+        msg.setStyleSheet("QLabel{ min-width: 400px; font-size: 14px; }")
+        msg.exec()

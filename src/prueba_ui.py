@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'prueba.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.11.0
+## Created by: Qt User Interface Compiler version 6.11.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -173,7 +173,7 @@ class Ui_MainWindow(object):
         self.scrollAreaPlaforms.setWidgetResizable(True)
         self.scrollAreaPlatformsContents = QWidget()
         self.scrollAreaPlatformsContents.setObjectName(u"scrollAreaPlatformsContents")
-        self.scrollAreaPlatformsContents.setGeometry(QRect(0, 0, 783, 374))
+        self.scrollAreaPlatformsContents.setGeometry(QRect(0, 0, 100, 30))
         self.layoutPlatforms = QGridLayout(self.scrollAreaPlatformsContents)
         self.layoutPlatforms.setObjectName(u"layoutPlatforms")
         self.scrollAreaPlaforms.setWidget(self.scrollAreaPlatformsContents)
@@ -684,7 +684,7 @@ class Ui_MainWindow(object):
         self.scrollAreaProfiles.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 783, 413))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 100, 30))
         self.layoutProfiles = QGridLayout(self.scrollAreaWidgetContents)
         self.layoutProfiles.setObjectName(u"layoutProfiles")
         self.scrollAreaProfiles.setWidget(self.scrollAreaWidgetContents)
@@ -806,7 +806,7 @@ class Ui_MainWindow(object):
         self.scrollAreaGame.setWidgetResizable(True)
         self.scrollAreaGamesContents = QWidget()
         self.scrollAreaGamesContents.setObjectName(u"scrollAreaGamesContents")
-        self.scrollAreaGamesContents.setGeometry(QRect(0, 0, 783, 374))
+        self.scrollAreaGamesContents.setGeometry(QRect(0, 0, 100, 30))
         self.layoutGames = QGridLayout(self.scrollAreaGamesContents)
         self.layoutGames.setObjectName(u"layoutGames")
         self.scrollAreaGame.setWidget(self.scrollAreaGamesContents)
@@ -866,7 +866,7 @@ class Ui_MainWindow(object):
         self.scrollAreaExplorer.setWidgetResizable(True)
         self.scrollAreaExplorerContents = QWidget()
         self.scrollAreaExplorerContents.setObjectName(u"scrollAreaExplorerContents")
-        self.scrollAreaExplorerContents.setGeometry(QRect(0, 0, 783, 423))
+        self.scrollAreaExplorerContents.setGeometry(QRect(0, 0, 100, 30))
         self.layoutExplorer = QGridLayout(self.scrollAreaExplorerContents)
         self.layoutExplorer.setObjectName(u"layoutExplorer")
         self.scrollAreaExplorer.setWidget(self.scrollAreaExplorerContents)
@@ -958,7 +958,7 @@ class Ui_MainWindow(object):
         self.scrollAreaEmulators.setWidgetResizable(True)
         self.scrollAreaEmulatorsContents = QWidget()
         self.scrollAreaEmulatorsContents.setObjectName(u"scrollAreaEmulatorsContents")
-        self.scrollAreaEmulatorsContents.setGeometry(QRect(0, 0, 783, 457))
+        self.scrollAreaEmulatorsContents.setGeometry(QRect(0, 0, 100, 30))
         self.layoutDynamicEmulators = QVBoxLayout(self.scrollAreaEmulatorsContents)
         self.layoutDynamicEmulators.setObjectName(u"layoutDynamicEmulators")
         self.scrollAreaEmulators.setWidget(self.scrollAreaEmulatorsContents)
@@ -1183,8 +1183,8 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.stackedWidget.setCurrentIndex(2)
-        self.stackedWidgetAcciones.setCurrentIndex(1)
+        self.stackedWidget.setCurrentIndex(1)
+        self.stackedWidgetAcciones.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -1218,7 +1218,8 @@ class Ui_MainWindow(object):
         self.pushButton_19.setProperty(u"gesture", QCoreApplication.translate("MainWindow", u"eyeBrowsUp", None))
         self.pushButton_22.setText(QCoreApplication.translate("MainWindow", u"Abrir boca", None))
         self.pushButton_22.setProperty(u"gesture", QCoreApplication.translate("MainWindow", u"jawOpen", None))
-        self.noseButton.setText(QCoreApplication.translate("MainWindow", u"Nariz", None))
+        self.noseButton.setText(QCoreApplication.translate("MainWindow", u"Movimiento \n"
+"de Cabeza", None))
         self.controlsCancelButton.setText(QCoreApplication.translate("MainWindow", u"\u25c0 VOLVER", None))
         self.controlsSaveButon.setText(QCoreApplication.translate("MainWindow", u"\u2714 GUARDAR Y VOLVER", None))
         self.controlsSaveButon.setProperty(u"type", QCoreApplication.translate("MainWindow", u"primary", None))

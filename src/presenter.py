@@ -74,6 +74,24 @@ class MainPresenter(QObject):
 
         self.current_platform = None # Variable para almacenar la plataforma seleccionada en el catálogo de juegos
         self.handle_selected_navigation_mode(self.model.input_structure.get("noseLeft", {}).get("d-pad", False)) # Variable para controlar el modo de navegación (Joystick vs D-Pad)
+        if self.model.is_first_run_session:
+            # 1. Preparamos la vista
+            self.view.set_onboarding_mode(True)
+            
+            # 2. Mostramos los mensajes explicativos iniciales (secuencia)
+            self.view.show_tutorial_message("¡Bienvenido!", 
+                "Parece que es la primera vez que usas la aplicación.\n\n"
+                "Vamos a configurar tus gestos para que puedas controlar el ordenador con la cara.\n\n"
+                "SONRÍE para CONTINUAR.")
+            
+            self.view.show_tutorial_message("Cómo Navegar", 
+                "1. Mueve la NARIZ para mover el foco por los botones.\n"
+                "2. SONRÍE para pulsar (hacer click) en el botón seleccionado.\n"
+                "\t(Esto puedes cambiarlo luego) \n\n"
+                "Pruébalo ahora para configurar el resto de tus controles.")
+
+            # 3. Forzamos la entrada a la pantalla de controles
+            self.handle_controls_opened()
 
 
     def _connect_view_signals(self):
@@ -123,6 +141,7 @@ class MainPresenter(QObject):
         self.view.save_navigation_requested.connect(self.handle_save_navigation)
 
         self.view.selectedNavigationMode.connect(self.handle_selected_navigation_mode)
+        self.view.open_save_as_requested.connect(self.handle_open_save_as)
     # --- PRESENTER LOGIC ---
 
     def start_video(self):
@@ -453,13 +472,20 @@ class MainPresenter(QObject):
         # 5. Volver al catálogo de gestos (Página 1)
         self.view.show_page(1)
 
+   # En presenter.py, dentro de handle_save_as_requested
     def handle_save_as_requested(self, filename):
         """El usuario ha escrito un nombre y pulsado guardar."""
-        # 1. El modelo crea el JSON y guarda los datos de la memoria
         self.model.save_as_profile(filename)
         
-        # 2. Volvemos al catálogo de gestos
-        self.view.show_page(1)
+        # Si estábamos en pleno tutorial, lo cerramos de forma persistente
+        if self.model.is_first_run_session:
+            self.model.complete_onboarding() # <-- Guarda el app_settings.json en el disco
+            self.view.set_onboarding_mode(False)
+            self.view.show_tutorial_message("¡Hecho!", "Perfil guardado. Ahora ya puedes navegar libremente por los menús.")
+            self.view.show_page(0)
+        else:
+            self.view.show_page(1)
+
 
     def handle_games_catalog_requested(self):
         """Solicita los juegos al modelo, ordena pintarlos y cambia a la pantalla de catálogo."""
@@ -1039,3 +1065,21 @@ class MainPresenter(QObject):
         if hasattr(self.view.ui, 'btn_nav_joystick') and hasattr(self.view.ui, 'btn_nav_dpad'):
             self.view.ui.btn_nav_dpad.setChecked(mode)
             self.view.ui.btn_nav_joystick.setChecked(not mode)
+
+
+    def handle_open_save_as(self):
+        """Genera un nombre de archivo por defecto y abre el teclado virtual."""
+        import datetime
+        
+        # Añadimos %H (Hora en 24h) y %M (Minutos). Ej: 08-06-2026_12-21
+        fecha_hora = datetime.datetime.now().strftime("%d-%m-%Y_%H-%M")
+        
+        if self.current_platform:
+            # Quitamos los espacios de la plataforma (ej: 'Game Boy' -> 'GameBoy')
+            plataforma_limpia = self.current_platform.replace(" ", "")
+            nombre_defecto = f"{plataforma_limpia}_{fecha_hora}"
+        else:
+            nombre_defecto = f"Perfil_{fecha_hora}"
+            
+        # Ordenamos a la vista que abra el teclado con el texto inyectado
+        self.view.open_virtual_keyboard(nombre_defecto)

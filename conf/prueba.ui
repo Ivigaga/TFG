@@ -171,7 +171,7 @@
              </sizepolicy>
             </property>
             <property name="currentIndex">
-             <number>2</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="platformsPage">
              <property name="sizeIncrement">
@@ -252,8 +252,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>783</width>
-                   <height>374</height>
+                   <width>100</width>
+                   <height>30</height>
                   </rect>
                  </property>
                  <layout class="QGridLayout" name="layoutPlatforms"/>
@@ -553,7 +553,8 @@
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>Nariz</string>
+                     <string>Movimiento 
+de Cabeza</string>
                     </property>
                    </widget>
                   </item>
@@ -637,7 +638,7 @@
               <item>
                <widget class="QStackedWidget" name="stackedWidgetAcciones">
                 <property name="currentIndex">
-                 <number>1</number>
+                 <number>0</number>
                 </property>
                 <widget class="QWidget" name="page_category">
                  <layout class="QHBoxLayout" name="horizontalLayout_cat">
@@ -1232,8 +1233,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>783</width>
-                   <height>413</height>
+                   <width>100</width>
+                   <height>30</height>
                   </rect>
                  </property>
                  <layout class="QGridLayout" name="layoutProfiles"/>
@@ -1440,8 +1441,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>783</width>
-                   <height>374</height>
+                   <width>100</width>
+                   <height>30</height>
                   </rect>
                  </property>
                  <layout class="QGridLayout" name="layoutGames"/>
@@ -1545,8 +1546,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>783</width>
-                   <height>423</height>
+                   <width>100</width>
+                   <height>30</height>
                   </rect>
                  </property>
                  <layout class="QGridLayout" name="layoutExplorer"/>
@@ -1709,8 +1710,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>783</width>
-                   <height>457</height>
+                   <width>100</width>
+                   <height>30</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="layoutDynamicEmulators"/>
@@ -2106,8 +2107,8 @@
  <resources/>
  <connections/>
  <buttongroups>
+  <buttongroup name="controlButtons"/>
   <buttongroup name="gestureButtons"/>
   <buttongroup name="navigationButtons"/>
-  <buttongroup name="controlButtons"/>
  </buttongroups>
 </ui>

@@ -1,3 +1,4 @@
+import ctypes
 import json
 import os
 import sys
@@ -28,6 +29,8 @@ class AppModel:
     def __init__(self, json_path="controls/default_inputs.json"):
         self.json_path = get_asset_path(json_path)
         self.default_json_path = get_asset_path("controls/default_inputs.json")
+        self.settings_path = get_save_path("app_settings.json")
+        self.is_first_run_session = True
         self.input_structure = {}
         self.is_continuous_mode = True
         self.target_fps = 60
@@ -53,45 +56,62 @@ class AppModel:
 
 
     def load_inputs(self):
-        """Loads the configuration from the JSON file."""
-        if not os.path.exists(self.json_path):
+        """Carga la configuración de gestos y verifica el estado del tutorial."""
+        # 1. Aseguramos que la plantilla base existe para que la app pueda arrancar
+        if not os.path.exists(self.default_json_path):
             self.input_structure = {
-                "smile": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
-                "mouthPucker": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
-                "mouthFunnel": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
-                "eyeBlinkRight": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
-                "eyeBlinkLeft": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
-                "eyesWide": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
-                "jawOpen": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
-                "jawLeft": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
-                "jawRight": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
-                "cheekPuff": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
-                "mouthRoll": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
-                "jawForward": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
-                "noseSneer": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
-                "mouthPress": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
-                "mouthFrown": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5},
-                
-                "noseLeft": {"threshold": 0.6, "d-pad": False, "score": 0.0, "active": False},
-                "noseRight": {"threshold": 0.4, "d-pad": False, "score": 0.0, "active": False},
-                "noseUp": {"threshold": 0.4, "d-pad": False, "score": 0.0, "active": False},
-                "noseDown": {"threshold": 0.6, "d-pad": False, "score": 0.0, "active": False}
+                "smile": {"category_type": "system", "function": "click", "input": "SYS_NAV_ENTER", "threshold": 0.4, "score": 0.0, "active": False},
+                "mouthPucker": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
+                "mouthFunnel": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
+                "eyeBlinkRight": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
+                "eyeBlinkLeft": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
+                "eyesWide": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
+                "browDown": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
+                "jawOpen": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
+                "mouthLeft": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
+                "mouthRight": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
+                "mouthPress": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
+                "mouthShrug": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False}
             }
-            self.json_path =self.default_json_path
-            self.save_inputs()  # Guardamos el JSON por primera vez con la estructura por defecto
-            for gesture, data in self.input_structure.items():
-                data["score"] = 0.0
-                data["active"] = False
-            return
-            
-        with open(self.json_path, 'r') as f:
-            self.input_structure = json.load(f)
-            
-        # Ensure 'score' and 'active' keys exist for runtime
-        for gesture, data in self.input_structure.items():
-            data["score"] = 0.0
-            data["active"] = False
+            self.save_inputs()
+        else:
+            with open(self.json_path, 'r') as f:
+                self.input_structure = json.load(f)
+                # Ensure 'score' and 'active' keys exist for runtime
+                for gesture, data in self.input_structure.items():
+                    data["score"] = 0.0
+                    data["active"] = False
 
+        # 2. FISCALIZACIÓN DEL TUTORIAL: Miramos el estado global del sistema
+        onboarding_completed = False
+        if os.path.exists(self.settings_path):
+            try:
+                with open(self.settings_path, 'r') as f:
+                    settings = json.load(f)
+                    onboarding_completed = settings.get("onboarding_completed", False)
+            except Exception:
+                onboarding_completed = False
+
+        # Solo si explícitamente se completó el tutorial, dejamos de marcar la primera ejecución
+        self.is_first_run_session = not onboarding_completed
+
+    def complete_onboarding(self):
+        """Guarda de forma persistente que el usuario ya ha superado el tutorial y oculta el archivo."""
+           
+        self.is_first_run_session = False
+        settings_data = {"onboarding_completed": True}
+        
+        # 1. Creamos y escribimos el archivo normalmente
+        with open(self.settings_path, 'w') as f:
+            json.dump(settings_data, f, indent=4)
+            
+        # 2. Le pedimos a Windows que le ponga el atributo de "Oculto" (código 0x02)
+        try:
+            ctypes.windll.kernel32.SetFileAttributesW(self.settings_path, 0x02)
+        except Exception:
+            pass # Si falla por algún motivo de permisos raros, simplemente no se oculta, pero la app no crashea
+
+    
     def save_inputs(self):
         """Saves current input configuration to JSON."""
         with open(self.json_path, 'w') as f:
