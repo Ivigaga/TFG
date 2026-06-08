@@ -937,13 +937,19 @@ class MainPresenter(QObject):
         if self.current_platform != None:
             if self.current_platform == "Game Boy":
                 ruta_imagen = "images/controlGB.png"
+            elif self.current_platform == "Game Boy Color":
+                ruta_imagen = "images/controlGBC.png"
+            elif self.current_platform == "Game Boy Advance":
+                ruta_imagen = "images/controlGBA.png"
+            elif self.current_platform == "Nintendo DS":
+                ruta_imagen = "images/controlNDS.png"
             elif self.current_platform == "SNES":
                 ruta_imagen = "images/controlSNES.png"
             elif self.current_platform == "NES":
                 ruta_imagen = "images/controlNES.png"
             else:
                 # Placeholder genérico para Steam, Nintendo DS, etc.
-                ruta_imagen = "images/controlGenerico.png"
+                ruta_imagen = "images/controlSteam.png"
             
             # 4. Ordenamos a la vista que ponga la imagen
             self.view.show_controller_image(ruta_imagen)
