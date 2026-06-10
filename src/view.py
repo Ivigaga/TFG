@@ -259,9 +259,7 @@ class MainView(QMainWindow):
 
     def update_main_video(self, pixmap, active_inputs, movement_direction, platform_name, dpad_mode):
         """Overlays real-time HUD inputs on top of the camera frame using RAM cache."""
-        from PySide6.QtGui import QPainter, QColor
-        from PySide6.QtCore import QPoint, Qt
-        
+
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.Antialiasing)
         
@@ -451,7 +449,7 @@ class MainView(QMainWindow):
         row, col = 0, 0
         
         # Obtenemos la ruta absoluta al icono que el usuario puso en la raíz
-        icon_path = get_asset_path('file_icon.png') # <-- Asegúrate de que existe este archivo
+        icon_path = get_asset_path('images/file_icon.png') # <-- Asegúrate de que existe este archivo
         file_icon = QIcon(icon_path)
 
         for profile in profiles_list:
@@ -647,8 +645,8 @@ class MainView(QMainWindow):
 
         ideal_columns = 5 
         row, col = 0, 0
-        folder_icon = get_asset_path('folder_icon.png')
-        file_icon = get_asset_path('file_icon.png')
+        folder_icon = QIcon(get_asset_path('images/folder_icon.png'))
+        emulator_icon = QIcon(get_asset_path('images/emulator_icon.png'))
         # items_list now receives tuples: (filename, type)
         for item_name, item_type in items_list:
             btn = QToolButton()
@@ -666,7 +664,7 @@ class MainView(QMainWindow):
                 btn.setIcon(folder_icon)
             elif item_type == "exe":
                 btn.clicked.connect(lambda checked=False, f=item_name: self.emulator_exe_chosen.emit(f, page_index_return))
-                btn.setIcon(file_icon)
+                btn.setIcon(emulator_icon)
             
             self.ui.layoutExplorer.addWidget(btn, row, col)
             
@@ -732,7 +730,7 @@ class MainView(QMainWindow):
                 display_text = current_emu
                 
             btn.setText(display_text)
-            btn.clicked.connect(lambda checked=False, c=console: self.emulator_setup_requested.emit(c,6))
+            btn.clicked.connect(lambda checked=False, c=console: self.emulator_setup_requested.emit(c,8))
             
             row_layout.addWidget(console_lbl)
             row_layout.addWidget(btn)
