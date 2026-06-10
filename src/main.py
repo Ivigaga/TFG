@@ -1,16 +1,15 @@
 import sys
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QMessageBox  # <-- Añadir QMessageBox aquí
 from model import AppModel, get_asset_path
 from view import MainView
 from vision import VisionEngine
 from presenter import MainPresenter
 
-
 def main():
     app = QApplication(sys.argv)
     
     # 1. Cargar y aplicar la hoja de estilos externa
-    ruta_estilos = get_asset_path("style.qss") # Cambia a .css si prefieres esa extensión
+    ruta_estilos = get_asset_path("style.qss") 
     try:
         with open(ruta_estilos, "r", encoding="utf-8") as archivo_estilo:
             app.setStyleSheet(archivo_estilo.read())
@@ -20,8 +19,19 @@ def main():
     # 1. Instantiate the Model (Data & Logic)
     model = AppModel("controls/default_inputs.json")
     
-    # 2. Instantiate the Vision Engine (Hardware/AI)
-    vision_engine = VisionEngine(model.model_path, model.target_fps)
+    # 2. Instantiate the Vision Engine (Hardware/AI) con manejo de errores
+    try:
+        vision_engine = VisionEngine(model.model_path, model.target_fps)
+    except Exception as e:
+        # Si la cámara falla, mostramos un mensaje gráfico y cerramos
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Critical)
+        msg_box.setWindowTitle("Error Crítico")
+        msg_box.setText("No se ha detectado ninguna cámara web.")
+        msg_box.setInformativeText("Por favor, conecta una cámara al equipo y vuelve a iniciar la aplicación.")
+        msg_box.setStandardButtons(QMessageBox.Ok)
+        msg_box.exec()
+        sys.exit(1)  # Cierre controlado devolviendo código de error
     
     # 3. Instantiate the View (GUI)
     view = MainView()
@@ -34,10 +44,9 @@ def main():
     def custom_close(event):
         presenter.shutdown()
         original_close_event(event)
-        sys.exit(0)  # Forzar salida completa de la aplicación
     view.closeEvent = custom_close
-
-    # Start the app
+    
+    # Start the GUI loop
     view.show()
     sys.exit(app.exec())
 
