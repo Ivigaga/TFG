@@ -451,7 +451,6 @@ class MainView(QMainWindow):
         row, col = 0, 0
         
         # Obtenemos la ruta absoluta al icono que el usuario puso en la raíz
-        from model import get_asset_path
         icon_path = get_asset_path('file_icon.png') # <-- Asegúrate de que existe este archivo
         file_icon = QIcon(icon_path)
 
@@ -648,7 +647,8 @@ class MainView(QMainWindow):
 
         ideal_columns = 5 
         row, col = 0, 0
-        
+        folder_icon = get_asset_path('folder_icon.png')
+        file_icon = get_asset_path('file_icon.png')
         # items_list now receives tuples: (filename, type)
         for item_name, item_type in items_list:
             btn = QToolButton()
@@ -663,8 +663,10 @@ class MainView(QMainWindow):
             # Emit different signals based on the file type
             if item_type == "folder":
                 btn.clicked.connect(lambda checked=False, f=item_name: self.explorer_folder_clicked.emit(f))
+                btn.setIcon(folder_icon)
             elif item_type == "exe":
                 btn.clicked.connect(lambda checked=False, f=item_name: self.emulator_exe_chosen.emit(f, page_index_return))
+                btn.setIcon(file_icon)
             
             self.ui.layoutExplorer.addWidget(btn, row, col)
             
