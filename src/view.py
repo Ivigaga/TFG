@@ -265,13 +265,29 @@ class MainView(QMainWindow):
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.Antialiasing)
         
-        # Semi-transparent dark overlay for better HUD visibility
-        painter.fillRect(0, 0, pixmap.width(), 70, QColor(0, 0, 0, 140))
+        # 1. Parámetros de diseño
+        icon_size = 80
+        spacing = 100
+        start_x = 20
+        start_y = 15
+        frame_width = pixmap.width()
         
-        x_offset = 20
-        y_pos = 15
-        direction_text="dpad" if dpad_mode else "joy"
-        # 1. Draw Joystick/Movement status
+        # 2. Calcular cuántas filas necesitamos matemáticamente
+        import math
+        max_icons_per_row = max(1, int((frame_width - start_x) / spacing))
+        total_icons = 1 + len(active_inputs) # 1 del joystick + los botones
+        needed_rows = math.ceil(total_icons / max_icons_per_row)
+        
+        bg_height = (needed_rows * 90) + 20 # 90px por fila + un pequeño margen inferior
+        
+        # 3. Dibujar el fondo oscuro con la altura dinámica calculada
+        painter.fillRect(0, 0, frame_width, bg_height, QColor(0, 0, 0, 140))
+        
+        x_offset = start_x
+        y_pos = start_y
+        direction_text = "dpad" if dpad_mode else "joy"
+        
+        # 4. Draw Joystick/Movement status
         if movement_direction == "IDLE":
             joy_path = f"images/hud/{direction_text}_inactive.png"
         else:
@@ -280,28 +296,33 @@ class MainView(QMainWindow):
         img_joy = self._get_cached_hud_image(joy_path)
         if not img_joy.isNull():
             painter.drawImage(QPoint(x_offset, y_pos), img_joy)
-            x_offset += 60
             
-        # 2. Draw active/inactive buttons dynamically
+            # Avanzar cursor y comprobar salto de línea
+            x_offset += spacing
+            if x_offset + icon_size > frame_width:
+                x_offset = start_x
+                y_pos += 90
+            
+        # 5. Draw active/inactive buttons dynamically
         for btn_code, is_active in active_inputs.items():
             clean_name = btn_code.replace("XUSB_GAMEPAD_", "").lower()
             suffix = "active" if is_active else "inactive"
             
-            # Handle platform-specific naming for back and start buttons
-            #if clean_name in ["back", "start"] and platform_name:
-            #    platform_slug = platform_name.lower().replace(" ", "_")
-            #    icon_path = f"images/hud/btn_{clean_name}_{platform_slug}_{suffix}.png"
-            #else:
-            #    icon_path = f"images/hud/btn_{clean_name}_{suffix}.png"
             icon_path = f"images/hud/btn_{clean_name}_{suffix}.png"
             img_btn = self._get_cached_hud_image(icon_path)
+            
             if not img_btn.isNull():
                 painter.drawImage(QPoint(x_offset, y_pos), img_btn)
-                x_offset += 50
+                
+                # Avanzar cursor y comprobar salto de línea
+                x_offset += spacing
+                if x_offset + icon_size > frame_width:
+                    x_offset = start_x
+                    y_pos += 90
                 
         painter.end()
         
-        # --- NEW: Route the painted frame to PiP or Main Label ---
+        # --- Route the painted frame to PiP or Main Label ---
         if self.pip_window and self.pip_window.isVisible():
             # Send the painted frame to the floating window
             self.pip_window.update_image(pixmap)
@@ -904,8 +925,9 @@ class MainView(QMainWindow):
             
             if not img.isNull():
                 # Cache the image ALREADY SCALED to save CPU cycles during the video loop
+                # AUMENTAMOS EL TAMAÑO A 80x80 (Antes 40x40)
                 self.hud_image_cache[relative_path] = img.scaled(
-                    40, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                    80, 80, Qt.KeepAspectRatio, Qt.SmoothTransformation
                 )
             else:
                 # Cache an empty image to prevent spamming disk reads if a file is missing

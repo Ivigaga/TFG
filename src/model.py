@@ -71,7 +71,11 @@ class AppModel:
                 "mouthLeft": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
                 "mouthRight": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
                 "mouthPress": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
-                "mouthShrug": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False}
+                "mouthShrug": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
+                "noseLeft": {"threshold": 0.6,"d-pad": False,"score": 0.0,"active": False},
+                "noseRight": {"threshold": 0.4,"d-pad": False,"score": 0.0,"active": False},
+                "noseUp": {"threshold": 0.4,"d-pad": False,"score": 0.0,"active": False},
+                "noseDown": {"threshold": 0.6,"d-pad": False,"score": 0.0,"active": False}
             }
             self.save_inputs()
         else:
