@@ -244,6 +244,12 @@ QPushButton:focus {
     outline: none;
 }
 
+QToolButton:focus {
+    border: 3px solid #00FF00;
+    outline: none;
+}
+
+
 
 /* Añadimos el nuevo contenedor de plataformas a la lista */
 #scrollAreaWidgetContents QToolButton,
@@ -264,4 +270,31 @@ QPushButton:focus {
     margin: 8px;
     font-weight: bold;
     font-size: 12px;           
+}
+
+
+QToolButton[gesture] {
+    background-color: #3d3d3d;
+    border: 2px solid #555555;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #ffffff;
+    padding: 10px; 
+}
+
+QToolButton[gesture]:hover {
+    background-color: #4d4d4d;
+    border: 2px solid #0078D7;
+}
+
+QToolButton[gesture]:focus {
+    border: 3px solid #00FF00;
+    outline: none;
+}
+
+QToolButton[gesture]:checked {
+    background-color: #FF5722;
+    border: 2px solid #ffffff;
+    color: #ffffff;
 }

@@ -107,6 +107,7 @@ class MainView(QMainWindow):
         self.pip_window = None
         
         self._connect_signals()
+        self.ui.noseButton.setIcon(QIcon(get_asset_path("images/gestures/movement.png")))  # Icono para el botón de navegación
         
 
     def _connect_signals(self):
@@ -960,8 +961,19 @@ class MainView(QMainWindow):
 
         row, col = 0, 0
         for code, name in gestures_dict.items():
-            btn = QPushButton(name)
+            # 1. Usamos QToolButton en lugar de QPushButton
+            btn = QToolButton()
+            btn.setText(name)
+            
+            # 2. Hacemos el icono mucho más grande (puedes ajustar este 80, 80 a tu gusto)
+            btn.setIconSize(QSize(80, 80))
+            
+            # 3. Posicionamos el texto justo debajo del icono
+            btn.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+            
+            # Mantenemos el resto de tus configuraciones
             btn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
+            btn.setIcon(QIcon(get_asset_path(f"images/gestures/{code}.png"))) 
             btn.setProperty("gesture", code)
             
             btn.clicked.connect(lambda checked=False, b=btn: self.gesture_selected.emit(b))

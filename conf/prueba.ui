@@ -545,18 +545,29 @@
                    </spacer>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="noseButton">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Movimiento 
-de Cabeza</string>
-                    </property>
-                   </widget>
+                   <widget class="QToolButton" name="noseButton">
+                        <property name="sizePolicy">
+                        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                        </sizepolicy>
+                        </property>
+                        <property name="text">
+                        <string>Movimiento de Cabeza</string>
+                        </property>
+                        <property name="iconSize">
+                        <size>
+                        <width>80</width>
+                        <height>80</height>
+                        </size>
+                        </property>
+                        <property name="toolButtonStyle">
+                        <enum>Qt::ToolButtonTextUnderIcon</enum>
+                        </property>
+                        <property name="gesture" stdset="0">
+                        <string>nose</string>
+                        </property>
+                    </widget>
                   </item>
                   <item>
                    <spacer name="verticalSpacer_5">
