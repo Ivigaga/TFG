@@ -27,8 +27,8 @@ def get_save_path(relative_path):
 
 class AppModel:
     def __init__(self, json_path="controls/default_inputs.json"):
-        self.json_path = get_asset_path(json_path)
-        self.default_json_path = get_asset_path("controls/default_inputs.json")
+        self.json_path = get_save_path(json_path)
+        self.default_json_path = get_save_path("controls/default_inputs.json")
         self.settings_path = get_save_path("app_settings.json")
         self.is_first_run_session = True
         self.input_structure = {}
