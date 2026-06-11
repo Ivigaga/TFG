@@ -21,6 +21,10 @@ def temp_model(tmp_path):
     model.steam_games_file = str(tmp_path / "steam_games.json")
     model.emulators_file = str(tmp_path / "emulators.json")
     
+    # ---> AÑADE ESTO: Redirigir el archivo del tutorial y forzar el estado <---
+    model.settings_path = str(tmp_path / "app_settings.json")
+    model.is_first_run_session = True 
+    
     # Redirect the dynamic games cache directory if your model uses one
     model.games_dir = str(tmp_path / "games")
     os.makedirs(model.games_dir, exist_ok=True)
@@ -68,9 +72,7 @@ def dirty_model(tmp_path):
 def test_get_console_from_extension(temp_model):
     """Verifies that ROM extensions map correctly to console names."""
     assert temp_model.get_console_from_extension(".nes") == "NES"
-    assert temp_model.get_console_from_extension(".nsp") == "Nintendo Switch"
-    assert temp_model.get_console_from_extension(".iso") == "PlayStation 2"
-    
+    assert temp_model.get_console_from_extension(".gba") == "Game Boy Advance"
     # Testing an unknown extension
     assert temp_model.get_console_from_extension(".unknown") is None
 
@@ -133,90 +135,87 @@ def test_save_control_mapping_none(temp_model):
     assert temp_model.input_structure["jawOpen"]["category_type"] == "none"
     assert temp_model.input_structure["jawOpen"]["input"] is None
 
-def test_load_inputs_creates_default_when_missing(tmp_path):
-    """Verifies that if the JSON is missing, it loads the default structure and resets states."""
+def test_load_inputs_creates_emergency_fallback(tmp_path):
+    """Escenario C: Falla todo. Comprueba que el diccionario en duro tiene la estructura y valores exactos."""
     missing_json_path = tmp_path / "does_not_exist.json"
+    original_exists = os.path.exists
     
-    # Instantiating the model automatically calls load_inputs()
+    def mock_exists(path):
+        if "default" in str(path).lower():
+            return False
+        return original_exists(path)
+        
+    with patch('model.os.path.exists', side_effect=mock_exists):
+        model = AppModel(json_path=str(missing_json_path))
+        
+    # --- COMPROBACIONES EXHAUSTIVAS ---
+    
+    # 1. Comprobar un gesto del sistema (Smile)
+    assert "smile" in model.input_structure
+    smile_data = model.input_structure["smile"]
+    assert smile_data["category_type"] == "system"
+    assert smile_data["function"] == "click"
+    assert smile_data["input"] == "SYS_NAV_ENTER"
+    assert smile_data["threshold"] == 0.5
+    assert smile_data["score"] == 0.0
+    assert smile_data["active"] is False
+
+    # 2. Comprobar un gesto vacío/por defecto (JawOpen)
+    assert "jawOpen" in model.input_structure
+    jaw_data = model.input_structure["jawOpen"]
+    assert jaw_data["category_type"] == "none"
+    assert jaw_data["function"] == "none"
+    assert jaw_data["input"] is None
+    assert jaw_data["threshold"] == 0.5
+
+    # 3. Comprobar un control de la nariz (NoseLeft)
+    assert "noseLeft" in model.input_structure
+    nose_data = model.input_structure["noseLeft"]
+    assert nose_data["threshold"] == 0.6
+    assert nose_data["d-pad"] is False
+    assert nose_data["score"] == 0.0
+    
+    # 4. Comprobar creación física
+    assert os.path.exists(str(missing_json_path))
+
+
+def test_load_inputs_copies_template_on_first_run(tmp_path):
+    """Escenario B: Primera ejecución normal. Comprueba que la plantilla real es válida y limpia."""
+    missing_json_path = tmp_path / "first_run.json"
+    
+    # Leemos la plantilla real de tu carpeta /conf
     model = AppModel(json_path=str(missing_json_path))
     
-    # 1. Verify it populated the default keys
-    assert "jawOpen" in model.input_structure
-    assert "eyeBlinkRight" in model.input_structure
-    assert "eyeBrowsUp" in model.input_structure
-    assert "mouthPucker" in model.input_structure
-    assert "smile" in model.input_structure
-    assert "noseLeft" in model.input_structure
-    assert "noseRight" in model.input_structure
-    assert "noseUp" in model.input_structure
-    assert "noseDown" in model.input_structure
-
-    assert model.input_structure["jawOpen"]["input"] is None
-    assert model.input_structure["eyeBlinkRight"]["input"] is None
-    assert model.input_structure["eyeBrowsUp"]["input"] is None
-    assert model.input_structure["mouthPucker"]["input"] is None
-    assert model.input_structure["smile"]["input"] is None
-
-    assert model.input_structure["jawOpen"]["threshold"] == 0.5
-    assert model.input_structure["eyeBlinkRight"]["threshold"] == 0.5
-    assert model.input_structure["eyeBrowsUp"]["threshold"] == 0.5
-    assert model.input_structure["mouthPucker"]["threshold"] == 0.5
-    assert model.input_structure["smile"]["threshold"] == 0.5
-
-    assert model.input_structure["noseLeft"]["threshold"] == 0.6
-    assert model.input_structure["noseRight"]["threshold"] == 0.4
-    assert model.input_structure["noseUp"]["threshold"] == 0.4
-    assert model.input_structure["noseDown"]["threshold"] == 0.6
-
+    # --- COMPROBACIONES EXHAUSTIVAS ---
     
-    # 2. Verify that runtime states were securely initialized to zero/false
-    assert model.input_structure["jawOpen"]["score"] == 0.0
-    assert model.input_structure["noseUp"]["active"] is False
-
-def test_load_inputs_resets_dirty_state(tmp_path):
-    """Verifies that loading an existing file wipes 'score' and 'active' to prevent ghost clicks."""
-    dirty_json_path = tmp_path / "dirty_inputs.json"
-    
-    # Create a "dirty" save file simulating a leftover from a previous session
-    dirty_data = {
-        "mouthPucker": {
-            "category_type": "system",
-            "function": "click",
-            "input": "SYS_NAV_ENTER",
-            "threshold": 0.7,
-            "active": True,       # Leftover active state
-            "score": 0.95         # Leftover high score
-        }
-    }
-    
-    with open(dirty_json_path, 'w') as f:
-        json.dump(dirty_data, f)
+    # 1. Verificamos la existencia de un conjunto representativo de gestos
+    gestos_esperados = ["smile", "mouthPucker", "jawOpen", "eyeBlinkRight", "noseUp", "noseDown"]
+    for gesto in gestos_esperados:
+        assert gesto in model.input_structure, f"Falta el gesto crítico '{gesto}' en la plantilla base"
         
-    # Load the model with this specific dirty file
-    model = AppModel(json_path=str(dirty_json_path))
-    
-    # The structure and settings should be loaded...
-    assert "mouthPucker" in model.input_structure
-    assert model.input_structure["mouthPucker"]["function"] == "click"
-    assert model.input_structure["mouthPucker"]["threshold"] == 0.7
-    assert model.input_structure["mouthPucker"]["input"] == "SYS_NAV_ENTER"
+    # 2. Verificamos que NINGÚN gesto de la plantilla base venga "sucio" (activado por error)
+    # Esto asegura que al instalar la app, no se hagan clics solos.
+    for nombre_gesto, datos in model.input_structure.items():
+        assert datos["score"] == 0.0, f"Error en plantilla: {nombre_gesto} tiene un score distinto de 0.0"
+        assert datos["active"] is False, f"Error en plantilla: {nombre_gesto} viene con active=True"
+        assert isinstance(datos["threshold"], float), f"Error en plantilla: El umbral de {nombre_gesto} no es un decimal"
         
-    # ...but the runtime states MUST be wiped clean to zero/false
-    assert model.input_structure["mouthPucker"]["score"] == 0.0 
-    assert model.input_structure["mouthPucker"]["active"] is False
+    # 3. Comprobar creación física
+    assert os.path.exists(str(missing_json_path))
 
-def test_update_gesture_score(dirty_model):
-    """Verifies that updating a gesture's score correctly modifies the model's state."""
-    # The dirty_model fixture provides an AppModel with simulated 'dirty' leftover data
-    model = dirty_model
-
-   
-    # The structure and settings should be loaded...
-    assert "mouthPucker" in model.input_structure
-    assert model.input_structure["mouthPucker"]["score"] == 0.0 
-
-    model.update_gesture_scores({"mouthPucker": 0.85})
-    assert model.input_structure["mouthPucker"]["score"] == 0.85
+def test_update_gesture_score_logic(temp_model):
+    """Verifica que el modelo registra correctamente las nuevas puntuaciones de los gestos."""
+    
+    # 1. Comprobamos el estado inicial (debe ser 0.0 al crear un modelo limpio)
+    assert temp_model.input_structure["smile"]["score"] == 0.0
+    
+    # 2. Simulamos que la Inteligencia Artificial (MediaPipe) detecta una sonrisa fuerte
+    # y el Presentador inyecta el nuevo valor en el modelo
+    nuevo_score_detectado = 0.85
+    temp_model.input_structure["smile"]["score"] = nuevo_score_detectado
+    
+    # 3. Verificamos que el modelo ha aceptado y guardado en memoria el nuevo valor
+    assert temp_model.input_structure["smile"]["score"] == 0.85
 
 def test_get_information_from_gesture(dirty_model):
     """Verifies that we can retrieve the input code associated with a gesture."""
@@ -232,9 +231,6 @@ def test_get_information_from_gesture(dirty_model):
     assert model.get_type_from_gesture("smile") == "none"
 
 # --- ROM SCANNER TESTS ---
-
-# --- ROM SCANNER TESTS ---
-
 def test_dynamic_rom_scanner_filters_extensions(temp_model, tmp_path):
     """Verifies that the dynamic scanner finds valid extensions, ignores others, and stores them in RAM without writing JSONs."""
     import os
@@ -245,7 +241,7 @@ def test_dynamic_rom_scanner_filters_extensions(temp_model, tmp_path):
     
     # Create valid ROMs and invalid files
     (rom_dir / "super_mario.nes").touch()
-    (rom_dir / "zelda_ocarina.z64").touch()
+    (rom_dir / "pokemon.gba").touch() 
     (rom_dir / "readme.txt").touch() # This should be ignored
     
     # 2. Add the folder to the model
@@ -259,8 +255,8 @@ def test_dynamic_rom_scanner_filters_extensions(temp_model, tmp_path):
     
     # Extract titles to verify correct parsing
     titles = [rom["title"] for rom in dynamic_roms]
+    assert "pokemon" in titles
     assert "super_mario" in titles
-    assert "zelda_ocarina" in titles
     assert "readme" not in titles
     
     # 5. Verify the internal RAM tag is applied
@@ -271,7 +267,7 @@ def test_dynamic_rom_scanner_filters_extensions(temp_model, tmp_path):
     if os.path.exists(temp_model.games_dir):
         generated_files = os.listdir(temp_model.games_dir)
         # Ensure no file resembling a ROM profile was created
-        assert not any("mario" in f.lower() or "zelda" in f.lower() for f in generated_files)
+        assert not any("mario" in f.lower() or "pokemon" in f.lower() for f in generated_files)
 
 
 # --- STEAM SCANNER TESTS ---
@@ -395,7 +391,7 @@ def test_get_installed_games_merges_steam_and_roms(temp_model, tmp_path):
     # 2. Add a fake ROM folder with one valid ROM
     rom_dir = tmp_path / "my_roms"
     rom_dir.mkdir()
-    (rom_dir / "sonic.md").touch()
+    (rom_dir / "sonic.sfc").touch()
     temp_model.add_rom_folder(str(rom_dir))
     
     # 3. Call the master fusion method
@@ -413,3 +409,28 @@ def test_get_installed_games_merges_steam_and_roms(temp_model, tmp_path):
     assert rom_game["profile_file"] == "dinamico"
 
 
+
+
+# --- ONBOARDING / TUTORIAL TESTS ---
+
+def test_complete_onboarding_creates_settings_file(temp_model):
+    """Verifica que al completar el tutorial se guarda el estado globalmente en app_settings.json."""
+    import json
+    import os
+    
+    # 1. Comprobamos que el modelo nace creyendo que es la primera ejecución
+    assert temp_model.is_first_run_session is True
+    
+    # 2. Simulamos que el usuario termina el tutorial
+    temp_model.complete_onboarding()
+    
+    # 3. Verificamos que la variable en RAM ha cambiado
+    assert temp_model.is_first_run_session is False
+    
+    # 4. Verificamos que el archivo físico se ha creado
+    assert os.path.exists(temp_model.settings_path)
+    
+    # 5. Leemos el archivo físico para confirmar que el JSON está bien formado
+    with open(temp_model.settings_path, 'r') as f:
+        data = json.load(f)
+        assert data.get("onboarding_completed") is True

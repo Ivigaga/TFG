@@ -446,3 +446,112 @@ def test_toggle_video_states(setup_presenter):
     
     # --- FIX: Le preguntamos a la visión del presentador, no a una variable suelta ---
     presenter.vision.start.assert_called_once()
+
+# --- ONBOARDING & TUTORIAL TESTS ---
+
+def test_handle_save_as_requested_completes_tutorial(setup_presenter):
+    """Verifica que guardar el perfil en el primer uso finaliza el tutorial y cambia la UI."""
+    presenter, mock_view, mock_model = setup_presenter
+    
+    # Simulamos que el sistema está en modo "Primera ejecución"
+    mock_model.is_first_run_session = True
+    
+    # ---> BORRAMOS LA MEMORIA DE LA INICIALIZACIÓN <---
+    mock_view.set_onboarding_mode.reset_mock()
+    mock_view.show_tutorial_message.reset_mock()  # <-- Añade esta línea
+    
+    # Simulamos que el usuario guarda su perfil con el nombre "mi_perfil"
+    presenter.handle_save_as_requested("mi_perfil")
+    
+    # Verificaciones:
+    # 1. ¿Le dijo al modelo que guardara el archivo?
+    mock_model.save_as_profile.assert_called_once_with("mi_perfil")
+    
+    # 2. ¿Le dijo al modelo que marcara el tutorial como completado?
+    mock_model.complete_onboarding.assert_called_once()
+    
+    # 3. ¿Ordenó a la UI quitar el modo onboarding y volver al menú principal (0)?
+    mock_view.set_onboarding_mode.assert_called_once_with(False)
+    
+    # 4. Ahora sí, solo habrá registrado 1 llamada (el mensaje de "¡Hecho!")
+    mock_view.show_tutorial_message.assert_called_once()
+    mock_view.show_page.assert_called_with(0)
+
+# --- NAVIGATION SLIDERS MATH TESTS ---
+
+def test_navigation_settings_math_translation(setup_presenter):
+    """Verifica que el presentador traduce bien los valores crudos a % de UI y viceversa."""
+    presenter, mock_view, mock_model = setup_presenter
+    
+    # --- PRUEBA 1: LECTURA (Modelo -> Interfaz) ---
+    # Simulamos valores crudos en el modelo (de 0.0 a 1.0)
+    mock_model.input_structure = {
+        "noseLeft": {"threshold": 0.6},
+        "noseRight": {"threshold": 0.4},
+        "noseUp": {"threshold": 0.3},
+        "noseDown": {"threshold": 0.7}
+    }
+    
+    presenter.handle_navigation_settings_opened()
+    
+    # La matemática invertida debe ser: 100 - (valor * 100)
+    # Left: 100 - 60 = 40
+    # Right: 100 - 40 = 60
+    # Down: 100 - 70 = 30
+    # Up: 100 - 30 = 70
+    mock_view.set_navigation_thumbs.assert_called_once_with(40, 60, 30, 70)
+    
+    
+    # --- PRUEBA 2: ESCRITURA (Interfaz -> Modelo) ---
+    # Simulamos que el usuario mueve los sliders y le da a guardar
+    presenter.using_dPad = True
+    presenter.handle_save_navigation(low_x=20, high_x=80, low_y=10, high_y=90)
+    
+    # La matemática de vuelta debe ser: (100 - valor_ui) / 100.0
+    assert mock_model.input_structure["noseLeft"]["threshold"] == 0.80
+    assert mock_model.input_structure["noseRight"]["threshold"] == 0.20
+    assert mock_model.input_structure["noseDown"]["threshold"] == 0.90
+    assert mock_model.input_structure["noseUp"]["threshold"] == 0.10
+    
+    # Además debe haber guardado el estado del d-pad
+    assert mock_model.input_structure["noseLeft"]["d-pad"] is True
+
+
+# --- NAVIGATION SLIDERS MATH TESTS ---
+
+def test_navigation_settings_math_translation(setup_presenter):
+    """Verifica que el presentador traduce bien los valores crudos a % de UI y viceversa."""
+    presenter, mock_view, mock_model = setup_presenter
+    
+    # --- PRUEBA 1: LECTURA (Modelo -> Interfaz) ---
+    # Simulamos valores crudos en el modelo (de 0.0 a 1.0)
+    mock_model.input_structure = {
+        "noseLeft": {"threshold": 0.6},
+        "noseRight": {"threshold": 0.4},
+        "noseUp": {"threshold": 0.3},
+        "noseDown": {"threshold": 0.7}
+    }
+    
+    presenter.handle_navigation_settings_opened()
+    
+    # La matemática invertida debe ser: 100 - (valor * 100)
+    # Left: 100 - 60 = 40
+    # Right: 100 - 40 = 60
+    # Down: 100 - 70 = 30
+    # Up: 100 - 30 = 70
+    mock_view.set_navigation_thumbs.assert_called_once_with(40, 60, 30, 70)
+    
+    
+    # --- PRUEBA 2: ESCRITURA (Interfaz -> Modelo) ---
+    # Simulamos que el usuario mueve los sliders y le da a guardar
+    presenter.using_dPad = True
+    presenter.handle_save_navigation(low_x=20, high_x=80, low_y=10, high_y=90)
+    
+    # La matemática de vuelta debe ser: (100 - valor_ui) / 100.0
+    assert mock_model.input_structure["noseLeft"]["threshold"] == 0.80
+    assert mock_model.input_structure["noseRight"]["threshold"] == 0.20
+    assert mock_model.input_structure["noseDown"]["threshold"] == 0.90
+    assert mock_model.input_structure["noseUp"]["threshold"] == 0.10
+    
+    # Además debe haber guardado el estado del d-pad
+    assert mock_model.input_structure["noseLeft"]["d-pad"] is True

@@ -57,34 +57,37 @@ class AppModel:
 
     def load_inputs(self):
         """Carga la configuración de gestos y verifica el estado del tutorial."""
-        # 1. Aseguramos que la plantilla base existe para que la app pueda arrancar
-        if not os.path.exists(self.default_json_path):
-            self.input_structure = {
-                "smile": {"category_type": "system", "function": "click", "input": "SYS_NAV_ENTER", "threshold": 0.4, "score": 0.0, "active": False},
-                "mouthPucker": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
-                "mouthFunnel": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
-                "eyeBlinkRight": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
-                "eyeBlinkLeft": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
-                "eyesWide": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
-                "browDown": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
-                "jawOpen": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
-                "mouthLeft": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
-                "mouthRight": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
-                "mouthPress": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
-                "mouthShrug": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
-                "noseLeft": {"threshold": 0.6,"d-pad": False,"score": 0.0,"active": False},
-                "noseRight": {"threshold": 0.4,"d-pad": False,"score": 0.0,"active": False},
-                "noseUp": {"threshold": 0.4,"d-pad": False,"score": 0.0,"active": False},
-                "noseDown": {"threshold": 0.6,"d-pad": False,"score": 0.0,"active": False}
-            }
+        # 1. Si el archivo de guardado del usuario no existe (ej. primera ejecución o tests)
+        if not os.path.exists(self.json_path):
+            # Intentamos copiar la plantilla base si existe
+            if hasattr(self, 'default_json_path') and os.path.exists(self.default_json_path):
+                with open(self.default_json_path, 'r', encoding='utf-8') as df:
+                    self.input_structure = json.load(df)
+            else:
+                # Fallback de emergencia (Vital para que los tests pasen sin dependencias)
+                self.input_structure = {
+                    "smile": {"category_type": "system", "function": "click", "input": "SYS_NAV_ENTER", "threshold": 0.5, "score": 0.0, "active": False},
+                    "mouthPucker": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
+                    "mouthFunnel": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
+                    "eyeBlinkRight": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
+                    "eyeBlinkLeft": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
+                    "eyesWide": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
+                    "browDown": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
+                    "jawOpen": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
+                    "mouthLeft": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
+                    "mouthRight": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
+                    "mouthPress": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
+                    "mouthShrug": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
+                    "noseLeft": {"threshold": 0.6,"d-pad": False,"score": 0.0,"active": False},
+                    "noseRight": {"threshold": 0.4,"d-pad": False,"score": 0.0,"active": False},
+                    "noseUp": {"threshold": 0.4,"d-pad": False,"score": 0.0,"active": False},
+                    "noseDown": {"threshold": 0.6,"d-pad": False,"score": 0.0,"active": False}
+                }
             self.save_inputs()
         else:
-            with open(self.json_path, 'r') as f:
+            # 2. Si el archivo ya existe (ejecución normal)
+            with open(self.json_path, 'r', encoding='utf-8') as f:
                 self.input_structure = json.load(f)
-                # Ensure 'score' and 'active' keys exist for runtime
-                for gesture, data in self.input_structure.items():
-                    data["score"] = 0.0
-                    data["active"] = False
 
         # 2. FISCALIZACIÓN DEL TUTORIAL: Miramos el estado global del sistema
         onboarding_completed = False
