@@ -251,7 +251,7 @@ QToolButton:focus {
 
 
 
-/* Añadimos el nuevo contenedor de plataformas a la lista */
+/* --- ESTILO DE TARJETAS CUADRADAS Y COMPACTAS --- */
 #scrollAreaWidgetContents QToolButton,
 #scrollAreaGamesContents QToolButton,
 #scrollAreaExplorerContents QToolButton,
@@ -261,15 +261,16 @@ QToolButton:focus {
     border: 2px solid #555555;
     border-radius: 15px;       
     
-    min-width: 130px;
-    max-width: 130px;
-    min-height: 130px;
-    max-height: 130px;
+    /* Bajamos el mínimo a 90px para que puedan comprimirse más */
+    min-width: 90px;
+    max-width: 160px;
+    min-height: 90px;
+    max-height: 160px;
     
-    padding: 10px;
-    margin: 8px;
+    padding: 5px;
+    margin: 5px;
     font-weight: bold;
-    font-size: 12px;           
+    font-size: 11px;           
 }
 
 

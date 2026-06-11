@@ -464,9 +464,11 @@ class MainView(QMainWindow):
         if not profiles_list:
             return
             
-        # 2. Calcular columnas ideales para la forma cuadrada
-        import math
-        columnas_ideales = math.ceil(math.sqrt(len(profiles_list)))
+        # 2. Calcular columnas ideales 
+
+        ancho_disponible = self.ui.scrollAreaProfiles.viewport().width()
+        if ancho_disponible < 100: ancho_disponible = 800
+        columnas_ideales = max(1, ancho_disponible // 140)
                 
         # 3. Generar los nuevos QToolButtons
         row, col = 0, 0
@@ -666,7 +668,9 @@ class MainView(QMainWindow):
         elif mode == "EMULATOR":
             self.ui.explorerSelectButton.setText("🖥️ PREDETERMINADO WINDOWS")
 
-        ideal_columns = 5 
+        ancho_disponible = self.ui.scrollAreaExplorer.viewport().width()
+        if ancho_disponible < 100: ancho_disponible = 800
+        ideal_columns = max(1, ancho_disponible // 140)
         row, col = 0, 0
         folder_icon = QIcon(get_asset_path('images/folder_icon.png'))
         emulator_icon = QIcon(get_asset_path('images/emulator_icon.png'))
@@ -678,7 +682,7 @@ class MainView(QMainWindow):
             
             btn.setIconSize(QSize(60, 60))
             btn.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
-            btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+            btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
             btn.setFocusPolicy(Qt.StrongFocus)
             
             # Emit different signals based on the file type
@@ -773,8 +777,9 @@ class MainView(QMainWindow):
             if widget:
                 widget.deleteLater()
 
-        # --- NUEVA LÓGICA DE CUADRÍCULA ---
-        max_columnas = 4 # Cámbialo al número de tarjetas que quieras por fila
+        ancho_disponible = self.ui.scrollAreaPlaforms.viewport().width()
+        if ancho_disponible < 100: ancho_disponible = 800
+        max_columnas = max(1, ancho_disponible // 140)
         fila = 0
         columna = 0
 
@@ -786,7 +791,7 @@ class MainView(QMainWindow):
             
             # Opcional: Asignar icono
             # if platform_name == "Steam": btn.setIcon(QIcon("rutas/steam.png"))
-            
+            btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
             # Conexión del botón
             btn.clicked.connect(lambda checked=False, p=platform_name: self.platform_selected.emit(p))
             
@@ -803,8 +808,7 @@ class MainView(QMainWindow):
     def populate_games_catalog(self, games_list, platform_name, emulator_name=None):
         """Genera botones solo para los juegos recibidos y actualiza el título."""
         
-        # --- NUEVO: Actualizar el label superior ---
-        # (Asegúrate de que el label se llama 'platformLabel' en tu Qt Designer)
+
         self.ui.platformLabel.setText(f"Plataforma: {platform_name}")
         
         if(platform_name=="Steam"):
@@ -839,7 +843,9 @@ class MainView(QMainWindow):
             return
 
 
-        columnas_ideales = math.ceil(math.sqrt(len(games_list)))
+        ancho_disponible = self.ui.scrollAreaGame.viewport().width()
+        if ancho_disponible < 100: ancho_disponible = 800 # Seguro anti-cierres
+        columnas_ideales = max(1, ancho_disponible // 140)
         icono_defecto = QIcon(get_asset_path('game_default.png')) 
 
         row, col = 0, 0
@@ -855,11 +861,10 @@ class MainView(QMainWindow):
             
             ruta_icono = juego.get("icon")
             btn.setIcon(QIcon(get_asset_path(ruta_icono)) if ruta_icono else icono_defecto)
-            btn.setIconSize(QSize(100,80))
+            btn.setIconSize(QSize(87.5, 70))
             btn.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
             btn.setFocusPolicy(Qt.StrongFocus)
-            btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-            
+            btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
             btn.clicked.connect(lambda checked=False, path=exe_path: self.game_launch_requested.emit(path))
             
             self.ui.layoutGames.addWidget(btn, row, col)

@@ -126,6 +126,8 @@ class Ui_MainWindow(object):
         self.stackedWidget.setSizePolicy(sizePolicy)
         self.platformsPage = QWidget()
         self.platformsPage.setObjectName(u"platformsPage")
+        sizePolicy.setHeightForWidth(self.platformsPage.sizePolicy().hasHeightForWidth())
+        self.platformsPage.setSizePolicy(sizePolicy)
         self.platformsPage.setSizeIncrement(QSize(5, 0))
         self.verticalLayout_games = QVBoxLayout(self.platformsPage)
         self.verticalLayout_games.setObjectName(u"verticalLayout_games")
@@ -173,7 +175,7 @@ class Ui_MainWindow(object):
         self.scrollAreaPlaforms.setWidgetResizable(True)
         self.scrollAreaPlatformsContents = QWidget()
         self.scrollAreaPlatformsContents.setObjectName(u"scrollAreaPlatformsContents")
-        self.scrollAreaPlatformsContents.setGeometry(QRect(0, 0, 100, 30))
+        self.scrollAreaPlatformsContents.setGeometry(QRect(0, 0, 783, 374))
         self.layoutPlatforms = QGridLayout(self.scrollAreaPlatformsContents)
         self.layoutPlatforms.setObjectName(u"layoutPlatforms")
         self.scrollAreaPlaforms.setWidget(self.scrollAreaPlatformsContents)
@@ -325,7 +327,7 @@ class Ui_MainWindow(object):
         sizePolicy2.setHeightForWidth(self.noseButton.sizePolicy().hasHeightForWidth())
         self.noseButton.setSizePolicy(sizePolicy2)
         self.noseButton.setIconSize(QSize(80, 80))
-        self.noseButton.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        self.noseButton.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
 
         self.verticalLayout_5.addWidget(self.noseButton)
 
@@ -686,7 +688,7 @@ class Ui_MainWindow(object):
         self.scrollAreaProfiles.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 100, 30))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 783, 413))
         self.layoutProfiles = QGridLayout(self.scrollAreaWidgetContents)
         self.layoutProfiles.setObjectName(u"layoutProfiles")
         self.scrollAreaProfiles.setWidget(self.scrollAreaWidgetContents)
@@ -808,7 +810,7 @@ class Ui_MainWindow(object):
         self.scrollAreaGame.setWidgetResizable(True)
         self.scrollAreaGamesContents = QWidget()
         self.scrollAreaGamesContents.setObjectName(u"scrollAreaGamesContents")
-        self.scrollAreaGamesContents.setGeometry(QRect(0, 0, 100, 30))
+        self.scrollAreaGamesContents.setGeometry(QRect(0, 0, 783, 374))
         self.layoutGames = QGridLayout(self.scrollAreaGamesContents)
         self.layoutGames.setObjectName(u"layoutGames")
         self.scrollAreaGame.setWidget(self.scrollAreaGamesContents)
@@ -868,7 +870,7 @@ class Ui_MainWindow(object):
         self.scrollAreaExplorer.setWidgetResizable(True)
         self.scrollAreaExplorerContents = QWidget()
         self.scrollAreaExplorerContents.setObjectName(u"scrollAreaExplorerContents")
-        self.scrollAreaExplorerContents.setGeometry(QRect(0, 0, 100, 30))
+        self.scrollAreaExplorerContents.setGeometry(QRect(0, 0, 783, 423))
         self.layoutExplorer = QGridLayout(self.scrollAreaExplorerContents)
         self.layoutExplorer.setObjectName(u"layoutExplorer")
         self.scrollAreaExplorer.setWidget(self.scrollAreaExplorerContents)
@@ -947,6 +949,10 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_10.addWidget(self.settingsBackButton)
 
+        self.verticalLayout_10.setStretch(0, 2)
+        self.verticalLayout_10.setStretch(1, 2)
+        self.verticalLayout_10.setStretch(2, 2)
+        self.verticalLayout_10.setStretch(3, 1)
         self.stackedWidget.addWidget(self.settingsPage)
         self.emulatorSettingsPage = QWidget()
         self.emulatorSettingsPage.setObjectName(u"emulatorSettingsPage")
@@ -960,7 +966,7 @@ class Ui_MainWindow(object):
         self.scrollAreaEmulators.setWidgetResizable(True)
         self.scrollAreaEmulatorsContents = QWidget()
         self.scrollAreaEmulatorsContents.setObjectName(u"scrollAreaEmulatorsContents")
-        self.scrollAreaEmulatorsContents.setGeometry(QRect(0, 0, 100, 30))
+        self.scrollAreaEmulatorsContents.setGeometry(QRect(0, 0, 783, 457))
         self.layoutDynamicEmulators = QVBoxLayout(self.scrollAreaEmulatorsContents)
         self.layoutDynamicEmulators.setObjectName(u"layoutDynamicEmulators")
         self.scrollAreaEmulators.setWidget(self.scrollAreaEmulatorsContents)
@@ -976,7 +982,9 @@ class Ui_MainWindow(object):
         self.stackedWidget.addWidget(self.emulatorSettingsPage)
         self.navigationPage = QWidget()
         self.navigationPage.setObjectName(u"navigationPage")
-        self.navigationPage.setMaximumSize(QSize(801, 561))
+        sizePolicy.setHeightForWidth(self.navigationPage.sizePolicy().hasHeightForWidth())
+        self.navigationPage.setSizePolicy(sizePolicy)
+        self.navigationPage.setMaximumSize(QSize(16777215, 16777215))
         self.verticalLayout_9 = QVBoxLayout(self.navigationPage)
         self.verticalLayout_9.setObjectName(u"verticalLayout_9")
         self.horizontalLayout_nav_buttons = QHBoxLayout()
@@ -1185,7 +1193,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.stackedWidget.setCurrentIndex(1)
+        self.stackedWidget.setCurrentIndex(9)
         self.stackedWidgetAcciones.setCurrentIndex(0)
 
 
