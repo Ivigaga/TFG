@@ -24,6 +24,7 @@ class PipWindow(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         
         self.video_label = QLabel(self)
+        self.video_label.setMinimumSize(100, 100)
         self.video_label.setAlignment(Qt.AlignCenter)
         self.video_label.setStyleSheet("background-color: black;")
         layout.addWidget(self.video_label)
