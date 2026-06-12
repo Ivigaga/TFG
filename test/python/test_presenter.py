@@ -124,6 +124,11 @@ def test_on_frame_processed_new_data(mock_pixmap, mock_image, mock_cvtcolor, moc
     presenter, mock_view, mock_model = setup_presenter
     presenter.is_video_playing = True
     mock_view.pip_window=False  # Ensure pip_window exists to avoid attribute errors
+    
+    # --- LA SOLUCIÓN: Engañamos al temporizador de 4 segundos ---
+    import time
+    presenter.app_start_time = time.perf_counter() - 5.0 
+    
     # Create a fake image frame to satisfy OpenCV/Qt shape requirements
     dummy_frame = MagicMock()
     dummy_frame.shape = (480, 640, 3) 
@@ -435,47 +440,117 @@ def test_toggle_video_states(setup_presenter):
     # 1. Toggle to PAUSE
     presenter.toggle_video()
     assert presenter.is_video_playing is False
-    mock_view.ui.stopButton.setText.assert_called_with("Resume Video")
+    mock_view.ui.stopButton.setText.assert_called_with("Reanudar Vídeo")
     
     # 2. Toggle back to PLAY
     presenter.vision.isRunning.return_value = False
     presenter.toggle_video()
     
     assert presenter.is_video_playing is True
-    mock_view.ui.stopButton.setText.assert_called_with("Pause Video")
+    mock_view.ui.stopButton.setText.assert_called_with("Parar Vídeo")
     
     # --- FIX: Le preguntamos a la visión del presentador, no a una variable suelta ---
     presenter.vision.start.assert_called_once()
 
 # --- ONBOARDING & TUTORIAL TESTS ---
 
-def test_handle_save_as_requested_completes_tutorial(setup_presenter):
-    """Verifica que guardar el perfil en el primer uso finaliza el tutorial y cambia la UI."""
-    presenter, mock_view, mock_model = setup_presenter
+@patch("presenter.QTimer.singleShot")
+def test_init_starts_tutorial_flow(mock_timer):
+    """Verifica que si es la primera vez, el presentador arranca el tutorial interactivo y programa el popup."""
+    from presenter import MainPresenter
+    from unittest.mock import MagicMock
     
-    # Simulamos que el sistema está en modo "Primera ejecución"
+    mock_view = MagicMock()
+    mock_model = MagicMock()
+    mock_vision = MagicMock()
+    
+    # Simulamos que es una instalación limpia
     mock_model.is_first_run_session = True
     
-    # ---> BORRAMOS LA MEMORIA DE LA INICIALIZACIÓN <---
+    # Instanciamos el presentador
+    presenter = MainPresenter(mock_view, mock_model, mock_vision)
+    
+    # 1. Verificamos preparativos visuales
+    mock_view.set_onboarding_mode.assert_called_with(True)
+    mock_view.setup_tutorial_step.assert_called_with("RIGHT")
+    
+    # 2. Verificamos que se usó el temporizador para no bloquear el hilo con la ventana emergente
+    mock_timer.assert_called_once()
+    args, kwargs = mock_timer.call_args
+    assert args[0] == 500  # Se programó a 500ms
+    assert callable(args[1]) # El segundo argumento es la función lambda
+
+
+@patch("presenter.MainPresenter.handle_controls_opened")
+def test_tutorial_cross_sends_to_gestures(mock_controls_opened, setup_presenter):
+    """Verifica que al terminar la cruz interactiva, te envía a crear un perfil pero NO termina el tutorial."""
+    presenter, mock_view, mock_model = setup_presenter
+    
+    mock_model.is_first_run_session = True
+    presenter.tutorial_sequence = ["RIGHT", "DOWN", "LEFT", "UP"]
+    presenter.current_tutorial_step = 3  # Último paso (UP)
+    
+    # Simulamos que el usuario acierta la última dirección
+    presenter.handle_tutorial_click("UP")
+    
+    # Verificamos que le mandó a la pantalla de configuración de controles
+    mock_controls_opened.assert_called_once()
+    
+    # CRÍTICO: Verificamos que NO completó el onboarding todavía (eso lo hace el botón guardar)
+    mock_model.complete_onboarding.assert_not_called()
+
+
+def test_handle_save_as_requested_completes_tutorial(setup_presenter):
+    """Verifica que guardar el perfil tras jugar a la cruz es lo que realmente finaliza el tutorial."""
+    presenter, mock_view, mock_model = setup_presenter
+    
+    # Simulamos que el sistema sigue en modo "Primera ejecución"
+    mock_model.is_first_run_session = True
+    
     mock_view.set_onboarding_mode.reset_mock()
-    mock_view.show_tutorial_message.reset_mock()  # <-- Añade esta línea
+    mock_view.show_tutorial_message.reset_mock()
     
     # Simulamos que el usuario guarda su perfil con el nombre "mi_perfil"
     presenter.handle_save_as_requested("mi_perfil")
     
-    # Verificaciones:
-    # 1. ¿Le dijo al modelo que guardara el archivo?
+    # Verificaciones del final absoluto del tutorial
     mock_model.save_as_profile.assert_called_once_with("mi_perfil")
+    mock_model.complete_onboarding.assert_called_once() # Aquí se guarda en el JSON general
+    mock_view.set_onboarding_mode.assert_called_once_with(False) # Se liberan los botones
+    mock_view.show_tutorial_message.assert_called_once() # Sale el pop-up de felicidades
+    mock_view.show_page.assert_called_with(0) # Se manda al menú principal
+
+
+@patch("presenter.time.perf_counter")
+@patch("presenter.cv2.cvtColor")
+@patch("presenter.QImage")
+@patch("presenter.QPixmap")
+def test_on_frame_processed_tutorial_icon_update(mock_pixmap, mock_image, mock_cvtcolor, mock_time, setup_presenter):
+    """Verifica que el bucle de visión actualiza el icono de la cruz (sonrisa/flechas) en tiempo real."""
+    presenter, mock_view, mock_model = setup_presenter
+    presenter.is_video_playing = True
+    mock_view.pip_window = False
     
-    # 2. ¿Le dijo al modelo que marcara el tutorial como completado?
-    mock_model.complete_onboarding.assert_called_once()
+    dummy_frame = MagicMock()
+    dummy_frame.shape = (480, 640, 3)
+    mock_cvtcolor.return_value = dummy_frame
     
-    # 3. ¿Ordenó a la UI quitar el modo onboarding y volver al menú principal (0)?
-    mock_view.set_onboarding_mode.assert_called_once_with(False)
+    # Simulamos que el usuario está atrapado en la página del tutorial
+    mock_view.ui.stackedWidget.currentWidget().objectName.return_value = "tutorialPage"
     
-    # 4. Ahora sí, solo habrá registrado 1 llamada (el mensaje de "¡Hecho!")
-    mock_view.show_tutorial_message.assert_called_once()
-    mock_view.show_page.assert_called_with(0)
+    presenter.tutorial_sequence = ["RIGHT", "DOWN"]
+    presenter.current_tutorial_step = 0
+    
+    # Avanzamos el reloj artificialmente para pasar el cooldown de UI de 0.1s
+    presenter.last_ui_update_time = 0.0
+    mock_time.return_value = 1.0
+    
+    # Procesamos un frame del bucle principal
+    presenter._on_frame_processed(dummy_frame, {}, [], False)
+    
+    # Verificamos que el presentador ordenó analizar si el foco está sobre la casilla objetivo ("RIGHT")
+    mock_view.update_tutorial_icon.assert_called_once_with("RIGHT")
+
 
 # --- NAVIGATION SLIDERS MATH TESTS ---
 
@@ -500,47 +575,6 @@ def test_navigation_settings_math_translation(setup_presenter):
     # Down: 100 - 70 = 30
     # Up: 100 - 30 = 70
     mock_view.set_navigation_thumbs.assert_called_once_with(40, 60, 30, 70)
-    
-    
-    # --- PRUEBA 2: ESCRITURA (Interfaz -> Modelo) ---
-    # Simulamos que el usuario mueve los sliders y le da a guardar
-    presenter.using_dPad = True
-    presenter.handle_save_navigation(low_x=20, high_x=80, low_y=10, high_y=90)
-    
-    # La matemática de vuelta debe ser: (100 - valor_ui) / 100.0
-    assert mock_model.input_structure["noseLeft"]["threshold"] == 0.80
-    assert mock_model.input_structure["noseRight"]["threshold"] == 0.20
-    assert mock_model.input_structure["noseDown"]["threshold"] == 0.90
-    assert mock_model.input_structure["noseUp"]["threshold"] == 0.10
-    
-    # Además debe haber guardado el estado del d-pad
-    assert mock_model.input_structure["noseLeft"]["d-pad"] is True
-
-
-# --- NAVIGATION SLIDERS MATH TESTS ---
-
-def test_navigation_settings_math_translation(setup_presenter):
-    """Verifica que el presentador traduce bien los valores crudos a % de UI y viceversa."""
-    presenter, mock_view, mock_model = setup_presenter
-    
-    # --- PRUEBA 1: LECTURA (Modelo -> Interfaz) ---
-    # Simulamos valores crudos en el modelo (de 0.0 a 1.0)
-    mock_model.input_structure = {
-        "noseLeft": {"threshold": 0.6},
-        "noseRight": {"threshold": 0.4},
-        "noseUp": {"threshold": 0.3},
-        "noseDown": {"threshold": 0.7}
-    }
-    
-    presenter.handle_navigation_settings_opened()
-    
-    # La matemática invertida debe ser: 100 - (valor * 100)
-    # Left: 100 - 60 = 40
-    # Right: 100 - 40 = 60
-    # Down: 100 - 70 = 30
-    # Up: 100 - 30 = 70
-    mock_view.set_navigation_thumbs.assert_called_once_with(40, 60, 30, 70)
-    
     
     # --- PRUEBA 2: ESCRITURA (Interfaz -> Modelo) ---
     # Simulamos que el usuario mueve los sliders y le da a guardar

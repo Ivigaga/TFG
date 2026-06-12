@@ -1,3 +1,28 @@
+"""
+Módulo Presenter - Capa de Lógica de Negocio de la Arquitectura MVP
+
+Responsabilidades principales:
+  - Mediar la comunicación entre Vista (UI) y Modelo (datos/estado)
+  - Procesar datos de reconocimiento de gestos faciales desde MediaPipe
+  - Gestionar control virtual de mando Xbox 360 mediante vgamepad
+  - Orquestar lanzamiento de juegos, gestión de perfiles y configuración
+  - Manejar todos los eventos disparados por interacciones de usuario en la UI
+  - Mapear gestos a entrada de mando con lógica de umbrales configurables
+  - Implementar navegación direccional a través de la interfaz usando seguimiento facial
+  - Gestionar el estado de la aplicación (plataforma actual, ruta del explorador, progreso tutorial)
+
+Características principales:
+  - Control de mando en tiempo real via emulación de Xbox 360
+  - Monitoreo continuo de puntuación de gestos con umbrales configurables
+  - Selección de modo de navegación D-Pad vs Joystick
+  - Navegación inteligente de UI usando cálculos de proximidad geométrica
+  - Sistema de guardar/cargar perfiles y configuración
+  - Catálogo de juegos con soporte Steam + emuladores ROM
+  - Sistema de tutorial para incorporación de nuevos usuarios
+  - Monitoreo de FPS y gestión de velocidad de fotogramas
+  - Control de enfriamiento para prevenir navegación rápida repetida
+"""
+
 import os
 import subprocess
 import string
@@ -10,15 +35,47 @@ from PySide6.QtWidgets import QApplication, QWidget, QScrollArea
 import math
 
 class MainPresenter(QObject):
+    """
+    Capa de lógica de negocio implementando el componente Presenter de la arquitectura MVP.
+    
+    Gestiona el flujo central de la aplicación: recibir datos de gestos del motor de visión,
+    actualizar el estado del modelo, emitir comandos de mando, y orquestar actualizaciones de la vista.
+    Actúa como el centro coordinador conectando todos los componentes de la aplicación.
+    """
+    
     def __init__(self, view, model, vision_engine):
+        """
+        Inicializar el Presenter con referencias a Vista, Modelo y Motor de Visión.
+        
+        Args:
+            view: Instancia de MainView - gestiona toda la renderización UI e interacción de usuario
+            model: Instancia de Modelo - mantiene estado de aplicación, perfiles y configuración
+            vision_engine: Procesador MediaPipe basado en QThread - proporciona landmarks faciales y puntuaciones de gestos
+        
+        Inicializa:
+            - Emulación de mando Xbox 360 virtual (librería vgamepad)
+            - Mapeo de códigos de botones desde nombres de gestos a códigos de mando
+            - Configuraciones de botones específicas por plataforma (Game Boy, SNES, Steam, etc.)
+            - Variables de seguimiento de estado (is_reading_score, current_mapped_gesture, etc.)
+            - Contador de FPS para monitoreo de rendimiento
+            - Enfriamiento de navegación para prevenir entrada rápida repetida
+            - Seguimiento de ruta del explorador para selección de archivo
+            - Estado de máquina de tutorial (4-dirección patrón cruz)
+            - Conexiones de señales entre Vista y Presenter
+            - Callback de procesamiento de fotogramas del motor de visión
+            - Inicialización automática de pantalla de plataformas y tutorial si es primera ejecución
+        """
         super().__init__()
         self.view = view
         self.model = model
         self.vision = vision_engine
         
+        # Mando virtual Xbox 360 - emula un controlador real para compatibilidad con juegos legacy
         self.gamepad = vg.VX360Gamepad()
         
-        # Mapeo exacto que tenías en CameraController.py
+        # Mapeo de códigos de botones desde nombres de gestos (XUSB_GAMEPAD_*) a constantes de vgamepad
+        # Ejemplo: "XUSB_GAMEPAD_B" -> vg.XUSB_BUTTON.XUSB_GAMEPAD_B
+        # Casos especiales: L2/R2 son disparadores (strings como "TRIGGER_L") requiriendo valores float
         self.buttons_map = {
             "XUSB_GAMEPAD_B": vg.XUSB_BUTTON.XUSB_GAMEPAD_B,
             "XUSB_GAMEPAD_START": vg.XUSB_BUTTON.XUSB_GAMEPAD_START,
@@ -42,54 +99,61 @@ class MainPresenter(QObject):
             "Steam": ["XUSB_GAMEPAD_A", "XUSB_GAMEPAD_B", "XUSB_GAMEPAD_Y", "XUSB_GAMEPAD_X", "XUSB_GAMEPAD_BACK", "XUSB_GAMEPAD_START", "XUSB_GAMEPAD_L1", "XUSB_GAMEPAD_R1", "XUSB_GAMEPAD_L2", "XUSB_GAMEPAD_R2"]
         }
         
-        # State variables
-        self.is_reading_score = False
-        self.current_mapped_gesture = None
-        self.last_ui_update_time = 0
+        # === Variables de Seguimiento de Estado ===
+        self.is_reading_score = False  # Bandera: monitoreando puntuación de gesto para mapeo de control
+        self.current_mapped_gesture = None  # Gesto actual siendo configurado (ej: "smile", "blink")
+        self.last_ui_update_time = 0  # Timestamp de última actualización UI (limita frecuencia refresco)
+
+        self.app_start_time = time.perf_counter()  # Momento de inicio de aplicación - usado para retraso de precalentamiento
         
-        # FPS Control variables
-        self.fps_counter = 0
-        self.last_fps_time = time.perf_counter()
+        # === Monitoreo de FPS ===
+        self.fps_counter = 0  # Contador de fotogramas para cálculo de FPS
+        self.last_fps_time = time.perf_counter()  # Última vez que se calculó FPS (intervalos de 1-segundo)
         
-        # Navigation Cooldown variables
-        self.last_nav_time = 0.0
-        self.nav_cooldown = 0.4  # Seconds between jumps (adjust to your liking, 0.4 is a good start)
+        # === Control de Navegación ===
+        self.last_nav_time = 0.0  # Timestamp de última navegación UI (ARRIBA/ABAJO/IZQUIERDA/DERECHA)
+        self.nav_cooldown = 0.4  # Segundos mínimos entre saltos de navegación (previene navegación repetida rápida)
         
-        # Nueva variable para sustituir al QTimer
-        self.is_video_playing = False 
+        # === Control de Vídeo ===
+        self.is_video_playing = False  # Bandera: si el procesamiento de vídeo está activo (puede pausarse por usuario) 
         
+        # Conectar señales y iniciar el motor de visión
         self._connect_view_signals()
         
-        # CONEXIÓN MÁGICA: Conectamos la Señal del QThread con nuestro método
+        # Conectar señal del motor de visión al método de procesamiento de fotogramas del presenter
+        # Este es el bucle de eventos principal: el motor de visión emite fotogramas procesados continuamente
         self.vision.frame_processed.connect(self._on_frame_processed)
         
-        # Arrancamos el hilo
+        # Iniciar el hilo de procesamiento de visión
         self.start_video()
 
-        self.current_explorer_path = os.path.expanduser('~') # Empieza en la carpeta del usuario (C:\Users\...)
-        self.explorer_mode = "FOLDER" 
-        self.current_setup_console = None
-        self.explorer_page_return_index = 8
-        self.handle_platforms_screen_requested() # Prepara la pantalla de plataformas desde el inicio para evitar retrasos al abrirla por primera vez
+        # === Variables del Explorador de Archivos ===
+        self.current_explorer_path = os.path.expanduser('~')  # Directorio actual (comienza en carpeta de usuario)
+        self.explorer_mode = "FOLDER"  # Modo: "FOLDER" (añadir carpetas ROM) o "EMULATOR" (elegir .exe)
+        self.current_setup_console = None  # Qué emulador de consola se está configurando
+        self.explorer_page_return_index = 8  # Índice de página a donde volver después de cerrar explorador
 
-        self.current_platform = None # Variable para almacenar la plataforma seleccionada en el catálogo de juegos
-        self.handle_selected_navigation_mode(self.model.input_structure.get("noseLeft", {}).get("d-pad", False)) # Variable para controlar el modo de navegación (Joystick vs D-Pad)
-        self.tutorial_sequence = ["RIGHT", "DOWN", "LEFT", "UP"] # Orden de los botones a pulsar
-        self.current_tutorial_step = 0
+        # === Variables de Plataforma/Juegos ===
+        self.current_platform = None  # Plataforma seleccionada actualmente (ej: "SNES", "Steam")
+        self.handle_selected_navigation_mode(self.model.input_structure.get("noseLeft", {}).get("d-pad", False))
 
+        # === Variables de Tutorial ===
+        self.tutorial_sequence = ["RIGHT", "DOWN", "LEFT", "UP"]  # Orden de botones de cruz a presionar
+        self.current_tutorial_step = 0  # Progreso a través del tutorial (0-3)
+
+        # === Inicialización de Primera Ejecución ===
         if self.model.is_first_run_session:
-            # 1. Preparamos la vista ocultando los botones de volver
+            # 1. Ocultar botones de navegación durante tutorial
             self.view.set_onboarding_mode(True)
             
-            # 2. Mostramos la nueva página del tutorial dinámicamente
+            # 2. Navegar a página de tutorial
             self.view.show_page(self.view.ui.stackedWidget.indexOf(self.view.ui.tutorialPage))
             
-            # 3. Activamos el primer paso (DERECHA)
+            # 3. Resaltar primer botón (DERECHA)
             self.view.setup_tutorial_step(self.tutorial_sequence[self.current_tutorial_step])
-            self.view.ui.label_tut_info.setText("Centra tu cebeza en la cámara\nMueve tu cabeza hacia el botón\nazul y SONRÍE para pulsarlo.")
+            self.view.ui.label_tut_info.setText("Centra tu cabeza en la cámara\nMueve tu cabeza hacia el botón\nazul y SONRÍE para pulsarlo.")
 
-            # 4. Lanzamos la ventana de bienvenida emergente.
-            # Usamos singleShot (500ms) para permitir que la cámara y la interfaz se dibujen primero.
+            # 4. Mostrar diálogo de bienvenida con retraso de 500ms para permitir que UI se renderice primero
             QTimer.singleShot(500, lambda: self.view.show_tutorial_message(
                 "¡Bienvenido!", 
                 "Parece que es la primera vez que usas la aplicación.\n\nVamos a configurar tus controles para que puedas manejar el ordenador con la cara.\n\nSONRÍE para CONTINUAR."
@@ -97,22 +161,43 @@ class MainPresenter(QObject):
 
 
     def _connect_view_signals(self):
-        """Binds View signals to Presenter logic."""
+        """
+        Establecer conexiones de señal-slot entre Vista y Presenter.
+        
+        Vincula todas las señales de la Vista (interacciones de usuario) a métodos controladores del Presenter.
+        Implementa la arquitectura dirigida por señales donde la Vista no modifica directamente el Modelo;
+        en su lugar, emite señales que el Presenter interpreta y actúa sobre.
+        
+        Señales conectadas incluyen:
+        - Vídeo: pip_toggled, video_control_toggled, stop_reading_score
+        - Navegación: navigation_requested (cambios de página)
+        - Gestos: gesture_selected (mapeo de control)
+        - Perfiles: load_profiles_requested, profile_accepted, save_as_requested
+        - Juegos: games_catalog_requested, scan_games_requested, game_launch_requested
+        - Explorador: explorer_opened, explorer_folder_clicked, explorer_up_clicked, etc.
+        - Emuladores: emulator_settings_opened, emulator_setup_requested, emulator_exe_chosen
+        - Plataformas: platform_selected, remove_platform
+        - Controles: controls_opened, controls_closed
+        - Configuración de Navegación: navigation_settings_opened, save_navigation_requested, selectedNavigationMode
+        - Tutorial: tutorial_step_clicked
+        """
+        # Señales de control de vídeo
         self.view.pip_toggled.connect(self.view.toggle_pip)
         self.view.video_control_toggled.connect(self.toggle_video)
         self.view.navigation_requested.connect(self.view.show_page)
         
+        # Señales de mapeo de control de gestos
         self.view.gesture_selected.connect(self.handle_gesture_selection)
         self.view.stop_reading_score.connect(self.stop_reading)
 
+        # Señales de gestión de perfiles
         self.view.save_controls.connect(self.save_control_mapping)
-
         self.view.save_mapping_current.connect(self.save_control_mapping_current)
-
         self.view.load_profiles_requested.connect(self.handle_load_profiles_requested)
         self.view.profile_accepted.connect(self.handle_profile_accepted)
-
         self.view.save_as_requested.connect(self.handle_save_as_requested)
+
+        # Señales del catálogo de juegos
 
         self.view.games_catalog_requested.connect(self.handle_games_catalog_requested)
         self.view.scan_games_requested.connect(self.handle_scan_games)
@@ -146,66 +231,162 @@ class MainPresenter(QObject):
         self.view.open_save_as_requested.connect(self.handle_open_save_as)
 
         self.view.tutorial_step_clicked.connect(self.handle_tutorial_click)
-    # --- PRESENTER LOGIC ---
+        
+        # Preparar pantalla de plataformas al iniciar
+        self.handle_platforms_screen_requested()
+
+    # ===========================
+    # MÉTODOS DE CONTROL DE VÍDEO
+    # ===========================
 
     def start_video(self):
+        """
+        Iniciar procesamiento de vídeo desde la cámara.
+        
+        Establece la bandera is_video_playing y lanza el hilo del motor de visión.
+        Actualiza el texto del botón a \"Parar Vídeo\".
+        """
         self.is_video_playing = True
         
-        # Si el hilo de la cámara no está corriendo, lo arrancamos
+        # Iniciar el hilo de la cámara si no está corriendo
         if not self.vision.isRunning():
             self.vision.start()
             
-        self.view.ui.stopButton.setText("Pause Video")
+        self.view.ui.stopButton.setText("Parar Vídeo")
 
     def stop_video(self):
-        # Al poner esto a False, _on_frame_processed ignorará los frames
+        """
+        Pausar procesamiento de vídeo (fotogramas se ignoran).
+        
+        Establece is_video_playing a False, haciendo que _on_frame_processed salte procesamiento.
+        Actualiza el texto del botón a \"Reanudar Vídeo\".
+        Nota: No detiene el hilo del motor de visión; solo ignora su salida.
+        """
         self.is_video_playing = False
-        self.view.ui.stopButton.setText("Resume Video")
+        self.view.ui.stopButton.setText("Reanudar Vídeo")
 
     def toggle_video(self):
+        """
+        Alternar procesamiento de vídeo encendido o apagado.
+        
+        Llama a start_video() o stop_video() dependiendo del estado actual.
+        """
         if self.is_video_playing:
             self.stop_video()
         else:
             self.start_video()
 
     def stop_reading(self):
+        """
+        Detener monitoreo de puntuación de gesto durante mapeo de control.
+        
+        Establece is_reading_score a False, previniendo actualizaciones de barra de puntuación en _on_frame_processed.
+        """
         self.is_reading_score = False
 
     def save_control_mapping_current(self):
-        self.model.save_inputs()  # Guardamos el JSON con la configuración actual en memoria
-        self.view.show_page(0)  # Volvemos a la página principal del catálogo de gestos
+        """
+        Guardar mapeo de control actual y volver al catálogo de gestos.
+        
+        Llama a model.save_inputs() para persistir configuración en memoria a JSON.
+        Vuelve a página 0 (catálogo principal de gestos).
+        """
+        self.model.save_inputs()  # Guardar configuración JSON
+        self.view.show_page(0)  # Volver a catálogo principal de gestos
 
     def handle_gesture_selection(self, gesture_button):
-        """Fired when user clicks 'Smile', 'Blink', etc."""
+        """
+        Manejar usuario haciendo clic en botón de gesto (Sonrisa, Parpadeo, etc.).
+        
+        Args:
+            gesture_button: QToolButton - el botón de gesto hizo clic
+        
+        Actualiza:
+            - current_mapped_gesture: Almacenar código de gesto para monitoreo de umbral
+            - is_reading_score: Habilitar actualizaciones de barra de puntuación durante mapeo
+            - Resaltado de tipo de gesto de Vista
+            - Selección automática de botón de entrada
+            - Slider sincronizado con umbral actual
+            - Navegación a página de mapeo de control (página 2)
+        """
         gesture_name = gesture_button.text()
         gesture_code = gesture_button.property("gesture")
         self.current_mapped_gesture = gesture_code
-        self.view.set_mapping_label(gesture_code,gesture_name)
+        self.view.set_mapping_label(gesture_code, gesture_name)
         self.is_reading_score = True
+        
+        # 1. Resaltar la categoría de gesto en la UI
+        gesture_type = self.model.get_type_from_gesture(gesture_code)
+        self.view.highlight_category(gesture_type)
+        
+        # 2. Hacer clic automático en botón de entrada si ya está mapeado
         gesture_input = self.model.get_input_from_gesture(gesture_code)
         if gesture_input:
             self.view.click_input_button(gesture_input)
             
-        self.view.show_page(2)
+        # 3. Sincronizar slider con umbral actual en modelo
+        gesture_data = self.model.input_structure.get(gesture_code, {})
+        current_threshold = int(gesture_data.get("threshold", 0.5) * 100)
+        self.view.set_slider_threshold(current_threshold)
+            
+        self.view.show_page(2)  # Navegar a página de mapeo de control
 
-
-    # --- MAIN LOOP ---
+    # ===========================
+    # BUCLE PRINCIPAL - PROCESAMIENTO DE FOTOGRAMAS
+    # ===========================
 
     def _on_frame_processed(self, frame, blendshapes, landmarks, is_new_processing):
-        # If the video is paused from the UI, ignore the frame
+        """
+        Callback principal del bucle de procesamiento - ejecutado por cada fotograma procesado por el motor de visión.
+        
+        Esta es la función más crítica de rendimiento. Se ejecuta en el hilo de visión a ~30 FPS.
+        
+        Estructura de la función:
+        BLOQUE 1: Lógica CORE (limitada por TARGET_FPS del motor de visión)
+          - Actualizar puntuaciones de gestos cada ~33ms (30 FPS)
+          - Procesar lógica de mando virtual
+          - Calcular FPS para monitoreo
+        
+        BLOQUE 2: Lógica de UI (velocidad máxima, pero con throttle de 50-100ms)
+          - Actualizar sliders de navegación en página de calibración
+          - Actualizar icono de tutorial en página de tutorial
+          - Actualizar barra de puntuación durante mapeo de control
+        
+        BLOQUE 3: Preparación de datos HUD (Heads-Up Display)
+          - Determinar qué botones del mando están activos
+          - Calcular dirección de movimiento de la cabeza
+        
+        BLOQUE 4: Actualizar Vista
+          - Renderizar fotograma de vídeo con overlay HUD
+          - Mostrar botones activos e indicadores de movimiento
+        
+        Args:
+            frame: numpy.ndarray - fotograma RGB de la cámara (H x W x 3)
+            blendshapes: dict - puntuaciones de BlendShapes MediaPipe (ej: {\"smile\": 0.85, ...})
+            landmarks: list - landmarks faciales 468 puntos de MediaPipe
+            is_new_processing: bool - True si es un nuevo fotograma procesado, False si es frame interpolado
+        """
+        # Si el vídeo está pausado desde la UI, ignorar el fotograma
         if not self.is_video_playing:
             return
 
         # ==========================================
-        # BLOCK 1: CORE LOGIC (Limited by TARGET_FPS)
+        # BLOQUE 1: LÓGICA CORE (Limitada por TARGET_FPS)
         # ==========================================
+        # Esta sección se ejecuta cuando hay un nuevo fotograma procesado por MediaPipe (cada ~33ms a 30 FPS)
         if is_new_processing:
-            self.model.update_gesture_scores(blendshapes)
-            self._process_gamepad_logic(landmarks)
+            # Esperar 4 segundos para que la cámara se caliente y se calibre
+            if (time.perf_counter() - self.app_start_time) >= 4.0:
+                # Actualizar puntuaciones de gestos en el modelo
+                self.model.update_gesture_scores(blendshapes)
+                # Procesar lógica de mando virtual (evaluar umbrales, emitir botones)
+                self._process_gamepad_logic(landmarks)
 
+            # Contar fotograma para cálculo de FPS
             self.fps_counter += 1
             current_time = time.perf_counter()
             
+            # Actualizar display de FPS cada segundo
             if (current_time - self.last_fps_time) >= 1.0:
                 real_fps = int(self.fps_counter / (current_time - self.last_fps_time))
                 self.view.update_fps(real_fps)
@@ -213,12 +394,14 @@ class MainPresenter(QObject):
                 self.last_fps_time = current_time
 
         # ==========================================
-        # BLOCK 2: UI LOGIC (Maximum speed)
+        # BLOQUE 2: LÓGICA DE UI (Velocidad máxima)
         # ==========================================
+        # Esta sección se ejecuta para cada fotograma (incluso interpolados) pero se throttlea por página
         current_time = time.perf_counter()
 
-        # --- NUEVO: Actualización de los sliders de navegación ---
+        # --- Actualización de sliders de navegación en página de calibración ---
         if self.view.ui.stackedWidget.currentWidget().objectName() == "navigationPage":
+            # Limitar actualizaciones a 20 FPS (50ms) para evitar sobrecarga
             if (current_time - self.last_ui_update_time) >= 0.05: 
                 if landmarks:
                     nose = landmarks[1]
@@ -226,164 +409,202 @@ class MainPresenter(QObject):
                     # Ahora, al mover la cabeza arriba o a la izquierda, la barra irá a la derecha.
                     ui_x = int((1.0 - nose.x) * 100)
                     ui_y = int((1.0 - nose.y) * 100)
+                    # Invertir valores: mover cabeza arriba/izquierda = barra va derecha (intuitivo para calibración)
                     self.view.update_navigation_sliders(ui_x, ui_y)
                 self.last_ui_update_time = current_time
 
         elif self.view.ui.stackedWidget.currentWidget().objectName() == "tutorialPage":
+            # Actualizar icono de tutorial basado en foco del widget (indicar si botón correcto tiene foco)
             if (current_time - self.last_ui_update_time) >= 0.1:
-                # Comprobamos de forma segura si el tutorial sigue activo
+                # Verificar de forma segura si tutorial sigue activo
                 if hasattr(self, 'tutorial_sequence') and self.current_tutorial_step < len(self.tutorial_sequence):
                     target = self.tutorial_sequence[self.current_tutorial_step]
                     self.view.update_tutorial_icon(target)
                 self.last_ui_update_time = current_time
 
-        # --- Actualización de la barra del catálogo de gestos ---
         elif self.is_reading_score and self.current_mapped_gesture:
+            # Actualizar barra de puntuación de gesto durante mapeo de control (mostrar si umbral alcanzado)
             if (current_time - self.last_ui_update_time) >= 0.1:
                 score = self.model.get_score(self.current_mapped_gesture)
                 score_int = int(score * 100)
                 threshold = self.view.get_slider_threshold()
-                
+                # Mostrar barra de progreso y cambiar color si supera umbral
                 self.view.update_score_bar(score_int, score_int >= threshold)
                 self.last_ui_update_time = current_time
 
-        # Convert frame to QPixmap
+        # Convertir fotograma OpenCV a QPixmap para renderización Qt
         color_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         h, w, ch = color_frame.shape
         qt_img = QImage(color_frame.data, w, h, ch * w, QImage.Format_RGB888)
         pixmap = QPixmap.fromImage(qt_img)
 
         # ==========================================
-        # BLOCK 3: HUD DATA PREPARATION (Active inputs & Movement)
+        # BLOQUE 3: PREPARACIÓN DE DATOS HUD
         # ==========================================
+        # Compilar estado de botones activos y dirección de movimiento para renderización overlay
         target_buttons = self.platform_buttons.get(self.current_platform, [])
         
-
-        # 1. Initialize all platform buttons as inactive (False) by default
+        # 1. Inicializar todos los botones de plataforma como inactivos (False) por defecto
         input_states = {btn: False for btn in target_buttons}
 
-        # 2. Iterate through gestures to see if any mapped button is currently active
+        # 2. Iterar a través de gestos para ver si algún botón mapeado está activo actualmente
         for gesture_name, gesture_data in self.model.input_structure.items():
             btn_code = gesture_data.get("input")
-            # If the mapped button belongs to the current platform
+        # 2. Si el botón mapeado pertenece a la plataforma actual
             if btn_code in input_states:
-                # We use 'or' so if multiple gestures map to the same button, 
-                # it stays True if at least one is active.
+                # Usar 'or' para que si múltiples gestos mapean al mismo botón,
+                # permanezca True si al menos uno está activo
                 input_states[btn_code] = input_states[btn_code] or gesture_data.get("active", False)
 
-        # Get movement direction
+        # Obtener dirección de movimiento basada en seguimiento de nariz
         movement_direction = self._calculate_movement_direction()
 
         # ==========================================
-        # BLOCK 4: UPDATE VIEW
+        # BLOQUE 4: ACTUALIZAR VISTA
         # ==========================================
+        # Renderizar fotograma con overlay HUD mostrando botones activos e indicadores de movimiento
         self.view.update_main_video(pixmap, input_states, movement_direction, self.current_platform, self.using_dPad)
 
     def _process_gamepad_logic(self, landmarks):
-        """Evaluates thresholds, triggers vgamepad events, and moves joysticks."""
+        """
+        Evaluar umbrales de gestos, disparar eventos de mando virtual, y mover joysticks analógicos.
+        
+        Esta función implementa la lógica core de mapeo de gestos a entrada de mando.
+        Se ejecuta una vez por fotograma procesado (no interpolado).
+        
+        Realiza dos operaciones principales:
+        1. GESTOS DE BOTONES: Evaluar cada gesto contra su umbral y emitir eventos de botón
+        2. GESTOS DE JOYSTICK: Posición de nariz controla joystick analógico izquierdo
+        
+        Args:
+            landmarks: list - 468 landmarks faciales de MediaPipe (nose en índice 1)
+        """
         inputs = self.model.input_structure
 
-        # 1. EVALUAR GESTOS (Botones y Modos)
+        # === PARTE 1: EVALUAR GESTOS DE BOTONES Y MODOS ===
+        # Iterar a través de todos los gestos excepto los gestos de nariz (que se manejan por separado)
         for gesture_name, data in inputs.items():
-            # Saltamos los gestos de la nariz en este bucle, van por separado
+            # Saltamos los gestos de la nariz en este bucle, se evalúan en PARTE 2
             if gesture_name.startswith("nose"):
                 continue
 
-            score = data.get("score", 0.0)
-            threshold = data.get("threshold", 0.5)
-            is_currently_active = data.get("active", False)
+            score = data.get("score", 0.0)  # Puntuación actual del gesto (0.0 - 1.0)
+            threshold = data.get("threshold", 0.5)  # Umbral de activación (0.0 - 1.0)
+            is_currently_active = data.get("active", False)  # Estado anterior del gesto
             
             # Qué debe hacer este gesto (pushInputButton o changeMovementMode)
             funcion_asignada = data.get("function")
             action_code = data.get("input")
 
+            # Lógica de detección de cambio de estado (transition detection)
             if score > threshold:
-                    # THE USER JUST EXCEEDED THE THRESHOLD
-                    
+                if not is_currently_active:
+                    # EL USUARIO ACABA DE SUPERAR EL UMBRAL - transición INACTIVO -> ACTIVO
+                    # Ejecutar acción de presión (emitir botón del mando o cambiar modo)
                     self._execute_press_action(data)
                     self.model.input_structure[gesture_name]["active"] = True
                         
             else:
                 if is_currently_active:
-                    # THE USER DROPPED BELOW THE THRESHOLD
-                    
+                    # EL USUARIO CAYÓ POR DEBAJO DEL UMBRAL - transición ACTIVO -> INACTIVO
+                    # Ejecutar acción de liberación (liberar botón del mando)
                     self._execute_release_action(data)
                     self.model.input_structure[gesture_name]["active"] = False
 
-        # 2. EVALUAR JOYSTICK (Movimiento de la nariz)
+        # === PARTE 2: EVALUAR GESTOS DE JOYSTICK (Movimiento de la nariz) ===
+        # La nariz es el punto de control principal para navegación/movimiento
         if landmarks:
             # En MediaPipe, el índice 1 corresponde a la punta de la nariz
             nose = landmarks[1]
 
-            jx, jy = 0, 0
+            jx, jy = 0, 0  # Valores del joystick analógico (-32767 a +32767)
             
-            # --- CORRECCIÓN: Separamos las direcciones ---
+            # Rastrear estado individual de cada dirección para visualización/HUD
             is_left, is_right, is_up, is_down = False, False, False, False
 
-            # Obtenemos los umbrales configurados
+            # Obtener umbrales de nariz configurados (valores entre 0.0 y 1.0)
+            # Estos definen qué tan extremo es el movimiento de cabeza antes de activar
             th_left = inputs.get("noseLeft", {}).get("threshold", 0.6)
             th_right = inputs.get("noseRight", {}).get("threshold", 0.4)
             th_up = inputs.get("noseUp", {}).get("threshold", 0.4)
             th_down = inputs.get("noseDown", {}).get("threshold", 0.6)
 
-            # Eje X
+            # === Evaluar Eje X (IZQUIERDA/DERECHA) ===
+            # nose.x va de 0.0 (izquierda) a 1.0 (derecha)
             if nose.x > th_left:
+                # Nariz hacia la izquierda = joystick hacia la izquierda
                 jx = -20000
                 is_left = True
             elif nose.x < th_right:
+                # Nariz hacia la derecha = joystick hacia la derecha
                 jx = 20000
                 is_right = True
 
-            # Eje Y
+            # === Evaluar Eje Y (ARRIBA/ABAJO) ===
+            # nose.y va de 0.0 (arriba) a 1.0 (abajo)
             if nose.y > th_down:
+                # Nariz hacia abajo = joystick hacia abajo
                 jy = -20000
                 is_down = True
             elif nose.y < th_up:
+                # Nariz hacia arriba = joystick hacia arriba
                 jy = 20000
                 is_up = True
 
-            # Control de modo continuo vs pasos 
+            # Control de modo: Continuo (libre movimiento) vs Pasos (movimiento por etapas)
+            # En modo de pasos, solo emitir un movimiento por fotograma procesado
             if not self.model.is_continuous_mode and (inputs.get("noseUp", {}).get("active") or inputs.get("noseDown", {}).get("active")):
-                jy = 0
+                jy = 0  # Congelar movimiento vertical en modo pasos
             if not self.model.is_continuous_mode and (inputs.get("noseLeft", {}).get("active") or inputs.get("noseRight", {}).get("active")):
-                jx = 0
+                jx = 0  # Congelar movimiento horizontal en modo pasos
 
+            # === Manejar Eje X en Mando Virtual ===
             if jx == 20000:
+                # Navegar a la DERECHA en la interfaz
                 self.navigate_interface("RIGHT") 
-                if(self.using_dPad):
+                # Emitir botón D-Pad si está en modo D-Pad (no analógico)
+                if self.using_dPad:
                     self.gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_RIGHT)
             
             elif jx == -20000:
+                # Navegar a la IZQUIERDA en la interfaz
                 self.navigate_interface("LEFT")  
-                if(self.using_dPad):
+                if self.using_dPad:
                     self.gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_LEFT)
             else:
+                # No hay movimiento horizontal - liberar ambos botones D-Pad
                 self.gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_RIGHT)
                 self.gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_LEFT)
+            
+            # === Manejar Eje Y en Mando Virtual ===
             if jy == 20000:
+                # Navegar ARRIBA en la interfaz
                 self.navigate_interface("UP")
-                if(self.using_dPad):
+                if self.using_dPad:
                     self.gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_UP)
             elif jy == -20000:
+                # Navegar ABAJO en la interfaz
                 self.navigate_interface("DOWN")  
-                if(self.using_dPad):
+                if self.using_dPad:
                     self.gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_DOWN)
             else:
+                # No hay movimiento vertical - liberar ambos botones D-Pad
                 self.gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_UP)  
                 self.gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_DOWN)
 
-            # --- CORRECCIÓN: Asignamos el estado exacto de cada dirección al modelo ---
+            # === Sincronizar estado de direcciones con el modelo ===
+            # El modelo rastrea esto para visualización HUD y lógica de modo
             if "noseLeft" in inputs: inputs["noseLeft"]["active"] = is_left
             if "noseRight" in inputs: inputs["noseRight"]["active"] = is_right
             if "noseUp" in inputs: inputs["noseUp"]["active"] = is_up
             if "noseDown" in inputs: inputs["noseDown"]["active"] = is_down
 
-            
-
-            # Mover el joystick izquierdo del mando de Xbox
+            # === Mover Joystick Analógico Izquierdo del Mando Xbox ===
+            # Este es el movimiento suave continuo (opuesto al D-Pad discreto)
             self.gamepad.left_joystick(x_value=jx, y_value=jy)
 
-        # 3. ENVIAR SEÑAL AL DRIVER
+        # === PARTE 3: ENVIAR ACTUALIZACIÓN AL DRIVER DE MANDO VIRTUAL ===
+        # Sincronizar todos los cambios de estado con el driver de Windows
         self.gamepad.update()
 
     def shutdown(self):
