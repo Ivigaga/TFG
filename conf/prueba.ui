@@ -135,7 +135,7 @@
              </sizepolicy>
             </property>
             <property name="text">
-             <string>PushButton</string>
+             <string>Extraer Cámara</string>
             </property>
            </widget>
           </item>
@@ -155,6 +155,12 @@
               <width>27</width>
               <height>16</height>
              </size>
+            </property>
+            <property name="shortcut">
+             <string>Ctrl+C</string>
+            </property>
+            <property name="checkable">
+             <bool>false</bool>
             </property>
            </widget>
           </item>
@@ -258,8 +264,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>783</width>
-                   <height>374</height>
+                   <width>100</width>
+                   <height>30</height>
                   </rect>
                  </property>
                  <layout class="QGridLayout" name="layoutPlatforms"/>
@@ -1250,8 +1256,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>783</width>
-                   <height>413</height>
+                   <width>100</width>
+                   <height>30</height>
                   </rect>
                  </property>
                  <layout class="QGridLayout" name="layoutProfiles"/>
@@ -1458,8 +1464,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>783</width>
-                   <height>374</height>
+                   <width>100</width>
+                   <height>30</height>
                   </rect>
                  </property>
                  <layout class="QGridLayout" name="layoutGames"/>
@@ -1563,8 +1569,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>783</width>
-                   <height>423</height>
+                   <width>100</width>
+                   <height>30</height>
                   </rect>
                  </property>
                  <layout class="QGridLayout" name="layoutExplorer"/>
@@ -1727,8 +1733,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>783</width>
-                   <height>457</height>
+                   <width>100</width>
+                   <height>30</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="layoutDynamicEmulators"/>
@@ -1914,6 +1920,9 @@
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
+                  </property>
+                  <property name="autoFillBackground">
+                   <bool>false</bool>
                   </property>
                  </widget>
                 </item>
@@ -2107,8 +2116,15 @@
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
-                <property name="text"><string>⬆ ARRIBA</string></property>
-                <property name="font"><font><pointsize>20</pointsize><bold>true</bold></font></property>
+                <property name="font">
+                 <font>
+                  <pointsize>20</pointsize>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>⬆ ARRIBA</string>
+                </property>
                </widget>
               </item>
               <item row="1" column="0">
@@ -2119,8 +2135,15 @@
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
-                <property name="text"><string>⬅ IZQ</string></property>
-                <property name="font"><font><pointsize>20</pointsize><bold>true</bold></font></property>
+                <property name="font">
+                 <font>
+                  <pointsize>20</pointsize>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>⬅ IZQ</string>
+                </property>
                </widget>
               </item>
               <item row="1" column="1">
@@ -2146,6 +2169,12 @@
                 </item>
                 <item>
                  <widget class="QLabel" name="label_tut_info">
+                  <property name="font">
+                   <font>
+                    <pointsize>16</pointsize>
+                    <bold>true</bold>
+                   </font>
+                  </property>
                   <property name="text">
                    <string>¡Mueve tu nariz hacia el botón verde y SONRÍE para pulsarlo!</string>
                   </property>
@@ -2154,12 +2183,6 @@
                   </property>
                   <property name="wordWrap">
                    <bool>true</bool>
-                  </property>
-                  <property name="font">
-                   <font>
-                    <pointsize>16</pointsize>
-                    <bold>true</bold>
-                   </font>
                   </property>
                  </widget>
                 </item>
@@ -2173,8 +2196,15 @@
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
-                <property name="text"><string>DER ➡</string></property>
-                <property name="font"><font><pointsize>20</pointsize><bold>true</bold></font></property>
+                <property name="font">
+                 <font>
+                  <pointsize>20</pointsize>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>DER ➡</string>
+                </property>
                </widget>
               </item>
               <item row="2" column="1">
@@ -2185,8 +2215,15 @@
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
-                <property name="text"><string>⬇ ABAJO</string></property>
-                <property name="font"><font><pointsize>20</pointsize><bold>true</bold></font></property>
+                <property name="font">
+                 <font>
+                  <pointsize>20</pointsize>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>⬇ ABAJO</string>
+                </property>
                </widget>
               </item>
              </layout>
@@ -2200,7 +2237,6 @@
      </layout>
     </item>
    </layout>
-   
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -2225,8 +2261,8 @@
  <resources/>
  <connections/>
  <buttongroups>
+  <buttongroup name="gestureButtons"/>
   <buttongroup name="navigationButtons"/>
   <buttongroup name="controlButtons"/>
-  <buttongroup name="gestureButtons"/>
  </buttongroups>
 </ui>

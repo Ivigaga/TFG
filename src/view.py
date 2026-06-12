@@ -20,14 +20,12 @@ Características:
 
 import os
 
-from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QGridLayout, QLabel, QPushButton, QButtonGroup, QToolButton, QSizePolicy
-from PySide6.QtGui import QColor, QIcon, QAction, QImage, QPainter, QPixmap
+from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QButtonGroup, QToolButton, QSizePolicy
+from PySide6.QtGui import QColor, QIcon, QImage, QKeySequence, QPainter, QPixmap, QShortcut
 from PySide6.QtCore import QEvent, QPoint, Signal, Qt, QSize
-from PySide6.QtUiTools import QUiLoader
 
 from model import get_asset_path
 from prueba_ui import Ui_MainWindow
-import math
 import textwrap
 
 class PipWindow(QWidget):
@@ -195,6 +193,10 @@ class MainView(QMainWindow):
         self.ui.pipButton.clicked.connect(self.pip_toggled.emit)
         # Botón para pausar/reanudar el video
         self.ui.stopButton.clicked.connect(self.video_control_toggled.emit)
+
+        # "F5" pausará/reanudará el vídeo sin importar en qué menú estés
+        self.atajo_video = QShortcut(QKeySequence("F5"), self)
+        self.atajo_video.activated.connect(self.video_control_toggled.emit)
 
         # ==========================================
         # 2. ACCESOS A PANTALLAS PRINCIPALES Y MENÚS
