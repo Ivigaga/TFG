@@ -4,7 +4,7 @@ import string
 import cv2
 import time
 import vgamepad as vg
-from PySide6.QtCore import QObject, Qt, QCoreApplication, QEvent
+from PySide6.QtCore import QObject, QTimer, Qt, QCoreApplication, QEvent
 from PySide6.QtGui import QImage, QPixmap,QKeyEvent
 from PySide6.QtWidgets import QApplication, QWidget, QScrollArea
 import math
@@ -74,24 +74,26 @@ class MainPresenter(QObject):
 
         self.current_platform = None # Variable para almacenar la plataforma seleccionada en el catálogo de juegos
         self.handle_selected_navigation_mode(self.model.input_structure.get("noseLeft", {}).get("d-pad", False)) # Variable para controlar el modo de navegación (Joystick vs D-Pad)
+        self.tutorial_sequence = ["RIGHT", "DOWN", "LEFT", "UP"] # Orden de los botones a pulsar
+        self.current_tutorial_step = 0
+
         if self.model.is_first_run_session:
-            # 1. Preparamos la vista
+            # 1. Preparamos la vista ocultando los botones de volver
             self.view.set_onboarding_mode(True)
             
-            # 2. Mostramos los mensajes explicativos iniciales (secuencia)
-            self.view.show_tutorial_message("¡Bienvenido!", 
-                "Parece que es la primera vez que usas la aplicación.\n\n"
-                "Vamos a configurar tus gestos para que puedas controlar el ordenador con la cara.\n\n"
-                "SONRÍE para CONTINUAR.")
+            # 2. Mostramos la nueva página del tutorial dinámicamente
+            self.view.show_page(self.view.ui.stackedWidget.indexOf(self.view.ui.tutorialPage))
             
-            self.view.show_tutorial_message("Cómo Navegar", 
-                "1. Mueve la NARIZ para mover el foco por los botones.\n"
-                "2. SONRÍE para pulsar (hacer click) en el botón seleccionado.\n"
-                "\t(Esto puedes cambiarlo luego) \n\n"
-                "Pruébalo ahora para configurar el resto de tus controles.")
+            # 3. Activamos el primer paso (DERECHA)
+            self.view.setup_tutorial_step(self.tutorial_sequence[self.current_tutorial_step])
+            self.view.ui.label_tut_info.setText("Centra tu cebeza en la cámara\nMueve tu cabeza hacia el botón\nazul y SONRÍE para pulsarlo.")
 
-            # 3. Forzamos la entrada a la pantalla de controles
-            self.handle_controls_opened()
+            # 4. Lanzamos la ventana de bienvenida emergente.
+            # Usamos singleShot (500ms) para permitir que la cámara y la interfaz se dibujen primero.
+            QTimer.singleShot(500, lambda: self.view.show_tutorial_message(
+                "¡Bienvenido!", 
+                "Parece que es la primera vez que usas la aplicación.\n\nVamos a configurar tus controles para que puedas manejar el ordenador con la cara.\n\nSONRÍE para CONTINUAR."
+            ))
 
 
     def _connect_view_signals(self):
@@ -142,6 +144,8 @@ class MainPresenter(QObject):
 
         self.view.selectedNavigationMode.connect(self.handle_selected_navigation_mode)
         self.view.open_save_as_requested.connect(self.handle_open_save_as)
+
+        self.view.tutorial_step_clicked.connect(self.handle_tutorial_click)
     # --- PRESENTER LOGIC ---
 
     def start_video(self):
@@ -223,6 +227,14 @@ class MainPresenter(QObject):
                     ui_x = int((1.0 - nose.x) * 100)
                     ui_y = int((1.0 - nose.y) * 100)
                     self.view.update_navigation_sliders(ui_x, ui_y)
+                self.last_ui_update_time = current_time
+
+        elif self.view.ui.stackedWidget.currentWidget().objectName() == "tutorialPage":
+            if (current_time - self.last_ui_update_time) >= 0.1:
+                # Comprobamos de forma segura si el tutorial sigue activo
+                if hasattr(self, 'tutorial_sequence') and self.current_tutorial_step < len(self.tutorial_sequence):
+                    target = self.tutorial_sequence[self.current_tutorial_step]
+                    self.view.update_tutorial_icon(target)
                 self.last_ui_update_time = current_time
 
         # --- Actualización de la barra del catálogo de gestos ---
@@ -474,17 +486,18 @@ class MainPresenter(QObject):
 
    # En presenter.py, dentro de handle_save_as_requested
     def handle_save_as_requested(self, filename):
-        """El usuario ha escrito un nombre y pulsado guardar."""
+        """Guarda la configuración actual en un nuevo archivo."""
         self.model.save_as_profile(filename)
         
-        # Si estábamos en pleno tutorial, lo cerramos de forma persistente
+        # Si estábamos en el tutorial, este es el verdadero final
         if self.model.is_first_run_session:
-            self.model.complete_onboarding() # <-- Guarda el app_settings.json en el disco
+            self.model.complete_onboarding()
             self.view.set_onboarding_mode(False)
             self.view.show_tutorial_message("¡Hecho!", "Perfil guardado. Ahora ya puedes navegar libremente por los menús.")
             self.view.show_page(0)
         else:
-            self.view.show_page(1)
+            # Comportamiento normal si no es la primera ejecución
+            self.view.show_page(self.view.ui.stackedWidget.indexOf(self.view.ui.gesturesPage))
 
 
     def handle_games_catalog_requested(self):
@@ -1083,3 +1096,24 @@ class MainPresenter(QObject):
             
         # Ordenamos a la vista que abra el teclado con el texto inyectado
         self.view.open_virtual_keyboard(nombre_defecto)
+
+    def handle_tutorial_click(self, direction):
+        """Avanza al siguiente paso del tutorial si el usuario pulsa el botón correcto."""
+        if direction == self.tutorial_sequence[self.current_tutorial_step]:
+            self.current_tutorial_step += 1
+            
+            if self.current_tutorial_step < len(self.tutorial_sequence):
+                siguiente_direccion = self.tutorial_sequence[self.current_tutorial_step]
+                self.view.setup_tutorial_step(siguiente_direccion)
+                mensajes = [
+                    "¡Genial!\n\nAhora ve hacia ABAJO.",
+                    "¡Perfecto!\n\nAhora a la IZQUIERDA.",
+                    "¡Casi está!\n\nPor último, hacia ARRIBA."
+                ]
+                self.view.ui.label_tut_info.setText(mensajes[self.current_tutorial_step - 1])
+                
+            else:
+                # FINAL DE LA CRUZ: Ha superado la prueba de movimiento.
+                # Le mandamos a la página de gestos para que cree su perfil obligatoriamente.
+                self.view.ui.label_tut_info.setText("¡Prueba superada!\n\nCargando configuración...")
+                self.handle_controls_opened()

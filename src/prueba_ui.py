@@ -1166,6 +1166,74 @@ class Ui_MainWindow(object):
         self.verticalLayout_9.setStretch(2, 4)
         self.verticalLayout_9.setStretch(3, 4)
         self.stackedWidget.addWidget(self.navigationPage)
+        self.tutorialPage = QWidget()
+        self.tutorialPage.setObjectName(u"tutorialPage")
+        self.gridLayout_tutorial = QGridLayout(self.tutorialPage)
+        self.gridLayout_tutorial.setObjectName(u"gridLayout_tutorial")
+        self.btn_tut_up = QPushButton(self.tutorialPage)
+        self.btn_tut_up.setObjectName(u"btn_tut_up")
+        sizePolicy.setHeightForWidth(self.btn_tut_up.sizePolicy().hasHeightForWidth())
+        self.btn_tut_up.setSizePolicy(sizePolicy)
+        self.btn_tut_up.setFont(font)
+
+        self.gridLayout_tutorial.addWidget(self.btn_tut_up, 0, 1, 1, 1)
+
+        self.btn_tut_left = QPushButton(self.tutorialPage)
+        self.btn_tut_left.setObjectName(u"btn_tut_left")
+        sizePolicy.setHeightForWidth(self.btn_tut_left.sizePolicy().hasHeightForWidth())
+        self.btn_tut_left.setSizePolicy(sizePolicy)
+        self.btn_tut_left.setFont(font)
+
+        self.gridLayout_tutorial.addWidget(self.btn_tut_left, 1, 0, 1, 1)
+
+        self.verticalLayout_tut_info = QVBoxLayout()
+        self.verticalLayout_tut_info.setObjectName(u"verticalLayout_tut_info")
+        self.icon_tut_info = QLabel(self.tutorialPage)
+        self.icon_tut_info.setObjectName(u"icon_tut_info")
+        sizePolicy.setHeightForWidth(self.icon_tut_info.sizePolicy().hasHeightForWidth())
+        self.icon_tut_info.setSizePolicy(sizePolicy)
+        self.icon_tut_info.setMinimumSize(QSize(10, 10))
+        self.icon_tut_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.verticalLayout_tut_info.addWidget(self.icon_tut_info)
+
+        self.label_tut_info = QLabel(self.tutorialPage)
+        self.label_tut_info.setObjectName(u"label_tut_info")
+        self.label_tut_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_tut_info.setWordWrap(True)
+        font3 = QFont()
+        font3.setPointSize(16)
+        font3.setBold(True)
+        self.label_tut_info.setFont(font3)
+
+        self.verticalLayout_tut_info.addWidget(self.label_tut_info)
+
+
+        self.gridLayout_tutorial.addLayout(self.verticalLayout_tut_info, 1, 1, 1, 1)
+
+        self.btn_tut_right = QPushButton(self.tutorialPage)
+        self.btn_tut_right.setObjectName(u"btn_tut_right")
+        sizePolicy.setHeightForWidth(self.btn_tut_right.sizePolicy().hasHeightForWidth())
+        self.btn_tut_right.setSizePolicy(sizePolicy)
+        self.btn_tut_right.setFont(font)
+
+        self.gridLayout_tutorial.addWidget(self.btn_tut_right, 1, 2, 1, 1)
+
+        self.btn_tut_down = QPushButton(self.tutorialPage)
+        self.btn_tut_down.setObjectName(u"btn_tut_down")
+        sizePolicy.setHeightForWidth(self.btn_tut_down.sizePolicy().hasHeightForWidth())
+        self.btn_tut_down.setSizePolicy(sizePolicy)
+        self.btn_tut_down.setFont(font)
+
+        self.gridLayout_tutorial.addWidget(self.btn_tut_down, 2, 1, 1, 1)
+
+        self.gridLayout_tutorial.setRowStretch(0, 1)
+        self.gridLayout_tutorial.setRowStretch(1, 1)
+        self.gridLayout_tutorial.setRowStretch(2, 1)
+        self.gridLayout_tutorial.setColumnStretch(0, 1)
+        self.gridLayout_tutorial.setColumnStretch(1, 2)
+        self.gridLayout_tutorial.setColumnStretch(2, 1)
+        self.stackedWidget.addWidget(self.tutorialPage)
 
         self.verticalLayout_6.addWidget(self.stackedWidget)
 
@@ -1321,5 +1389,10 @@ class Ui_MainWindow(object):
         self.btn_x_high_minus.setText(QCoreApplication.translate("MainWindow", u"\u2796", None))
         self.btn_x_high_plus.setText(QCoreApplication.translate("MainWindow", u"\u2795", None))
         self.label_right.setText(QCoreApplication.translate("MainWindow", u"Derecha", None))
+        self.btn_tut_up.setText(QCoreApplication.translate("MainWindow", u"\u2b06 ARRIBA", None))
+        self.btn_tut_left.setText(QCoreApplication.translate("MainWindow", u"\u2b05 IZQ", None))
+        self.label_tut_info.setText(QCoreApplication.translate("MainWindow", u"\u00a1Mueve tu nariz hacia el bot\u00f3n verde y SONR\u00cdE para pulsarlo!", None))
+        self.btn_tut_right.setText(QCoreApplication.translate("MainWindow", u"DER \u27a1", None))
+        self.btn_tut_down.setText(QCoreApplication.translate("MainWindow", u"\u2b07 ABAJO", None))
     # retranslateUi
 

@@ -80,6 +80,7 @@ class MainView(QMainWindow):
     save_navigation_requested = Signal(int, int, int, int) # low_x, high_x, low_y, high_y
     
     selectedNavigationMode = Signal(bool) # False para Joystick, True para D-Pad
+    tutorial_step_clicked = Signal(str)
 
     def __init__(self):
         super().__init__()
@@ -230,6 +231,12 @@ class MainView(QMainWindow):
             ))
         self.ui.btn_nav_joystick.clicked.connect(lambda: self.selectedNavigationMode.emit(False))
         self.ui.btn_nav_dpad.clicked.connect(lambda: self.selectedNavigationMode.emit(True))
+
+        if hasattr(self.ui, 'btn_tut_up'):
+            self.ui.btn_tut_up.clicked.connect(lambda: self.tutorial_step_clicked.emit("UP"))
+            self.ui.btn_tut_down.clicked.connect(lambda: self.tutorial_step_clicked.emit("DOWN"))
+            self.ui.btn_tut_left.clicked.connect(lambda: self.tutorial_step_clicked.emit("LEFT"))
+            self.ui.btn_tut_right.clicked.connect(lambda: self.tutorial_step_clicked.emit("RIGHT"))
     # --- PUBLIC METHODS FOR THE PRESENTER TO CONTROL THE UI ---
 
     def show_page(self, index):
@@ -1020,7 +1027,10 @@ class MainView(QMainWindow):
         self.ui.gesturesBackButton.setVisible(not enabled)
         self.ui.gesturesLoadButton.setVisible(not enabled)
         self.ui.gesturesSaveLocalButton.setVisible(not enabled)
-
+        
+        # Ocultamos los botones de vídeo para que no roben el foco
+        self.ui.pipButton.setVisible(not enabled)
+        self.ui.stopButton.setVisible(not enabled)
 
     def show_tutorial_message(self, title, message):
         """Muestra un cuadro de diálogo informativo que bloquea la app hasta leerlo."""
@@ -1033,3 +1043,72 @@ class MainView(QMainWindow):
         # Estilo rápido para que encaje con tu Dark Mode si lo tienes
         msg.setStyleSheet("QLabel{ min-width: 400px; font-size: 14px; }")
         msg.exec()
+
+    def setup_tutorial_step(self, target_direction):
+        """Activa visualmente un botón específico del tutorial, pero mantiene habilitados los demás."""
+        buttons = {
+            "UP": self.ui.btn_tut_up,
+            "DOWN": self.ui.btn_tut_down,
+            "LEFT": self.ui.btn_tut_left,
+            "RIGHT": self.ui.btn_tut_right
+        }
+
+        for direction, btn in buttons.items():
+            # TODOS los botones deben poder recibir el foco siempre
+            btn.setEnabled(True) 
+            
+            if direction == target_direction:
+                # Objetivo: Azul primario de la app. Si tiene el foco, borde verde.
+                btn.setStyleSheet("""
+                    QPushButton {
+                        background-color: #0078D7; 
+                        color: white; 
+                        border: 2px solid #005a9e;
+                        border-radius: 15px;
+                    }
+                    QPushButton:focus {
+                        border: 3px solid #00FF00;
+                        background-color: #0086f0;
+                        outline: none;
+                    }
+                """)
+            else:
+                # Inactivo: Gris oscuro discontinuo. Si tiene el foco, borde verde.
+                btn.setStyleSheet("""
+                    QPushButton {
+                        background-color: #1e1e1e; 
+                        color: #555555; 
+                        border: 2px dashed #444444;
+                        border-radius: 15px;
+                    }
+                    QPushButton:focus {
+                        border: 3px solid #00FF00;
+                        background-color: #2b2b2b;
+                        outline: none;
+                    }
+                """)
+
+    def update_tutorial_icon(self, target_direction):
+        """Cambia el icono central dependiendo de si el foco está en el botón correcto."""
+        from PySide6.QtWidgets import QApplication
+        
+        # Le preguntamos a Qt en qué botón está el cursor actualmente
+        focused_widget = QApplication.focusWidget()
+        
+        buttons = {
+            "UP": self.ui.btn_tut_up,
+            "DOWN": self.ui.btn_tut_down,
+            "LEFT": self.ui.btn_tut_left,
+            "RIGHT": self.ui.btn_tut_right
+        }
+        
+        target_btn = buttons.get(target_direction)
+        
+        # Si el usuario ha llevado el cursor al botón objetivo, cambiamos el icono
+        if focused_widget == target_btn:
+            icon_path = get_asset_path("images/gestures/smile.png")
+        else:
+            icon_path = get_asset_path("images/gestures/movement.png")
+            
+        pixmap = QPixmap(icon_path).scaled(120, 120, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.ui.icon_tut_info.setPixmap(pixmap)

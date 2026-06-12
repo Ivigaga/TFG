@@ -2097,6 +2097,100 @@
               </item>
              </layout>
             </widget>
+            <widget class="QWidget" name="tutorialPage">
+             <layout class="QGridLayout" name="gridLayout_tutorial" rowstretch="1,1,1" columnstretch="1,2,1">
+              <item row="0" column="1">
+               <widget class="QPushButton" name="btn_tut_up">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text"><string>⬆ ARRIBA</string></property>
+                <property name="font"><font><pointsize>20</pointsize><bold>true</bold></font></property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QPushButton" name="btn_tut_left">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text"><string>⬅ IZQ</string></property>
+                <property name="font"><font><pointsize>20</pointsize><bold>true</bold></font></property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <layout class="QVBoxLayout" name="verticalLayout_tut_info">
+                <item>
+                 <widget class="QLabel" name="icon_tut_info">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>10</width>
+                    <height>10</height>
+                   </size>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignmentFlag::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="label_tut_info">
+                  <property name="text">
+                   <string>¡Mueve tu nariz hacia el botón verde y SONRÍE para pulsarlo!</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignmentFlag::AlignCenter</set>
+                  </property>
+                  <property name="wordWrap">
+                   <bool>true</bool>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>16</pointsize>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item row="1" column="2">
+               <widget class="QPushButton" name="btn_tut_right">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text"><string>DER ➡</string></property>
+                <property name="font"><font><pointsize>20</pointsize><bold>true</bold></font></property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QPushButton" name="btn_tut_down">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text"><string>⬇ ABAJO</string></property>
+                <property name="font"><font><pointsize>20</pointsize><bold>true</bold></font></property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
            </widget>
           </item>
          </layout>
@@ -2106,6 +2200,7 @@
      </layout>
     </item>
    </layout>
+   
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
