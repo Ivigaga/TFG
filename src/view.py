@@ -146,7 +146,8 @@ class MainView(QMainWindow):
         super().__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.setWindowTitle("Gesture Control - MVP Architecture")
+        self.setWindowIcon(QIcon(get_asset_path("images/icon.ico")))
+        self.setWindowTitle("FaceDrive")
         self.resize(1020, 751)
 
         self.ui.stackedWidget.setCurrentIndex(0)
@@ -544,6 +545,19 @@ class MainView(QMainWindow):
         # 2. Limpiar la referencia y restaurar textos de UI
         self.pip_window = None
         self.ui.pipButton.setText("Extraer Cámara")
+
+    def showEvent(self, event):
+        """
+        Interviene justo en el momento en que la ventana se dibuja por primera vez.
+        Fuerza al sistema operativo a poner la aplicación en primer plano.
+        """
+        super().showEvent(event)  # Ejecuta el dibujado normal de Qt
+        
+        # 1. Levanta físicamente la ventana por encima del resto de aplicaciones
+        self.raise_()
+        
+        # 2. Le exige a Windows/macOS el foco activo (teclado y ratón)
+        self.activateWindow()
 
     def closeEvent(self, event):
         """
