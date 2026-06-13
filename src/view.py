@@ -346,9 +346,26 @@ class MainView(QMainWindow):
     def show_page(self, index):
         self.ui.stackedWidget.setCurrentIndex(index)
 
-    def set_mapping_label(self,gesture_code, gesture_name):
+    def set_mapping_label(self, gesture_code, gesture_name):
         self.ui.gestureLabel.setProperty("gesture", gesture_code)
-        self.ui.gestureLabel.setText(gesture_name)
+        
+        # 1. Obtener la ruta absoluta del icono del gesto
+        icon_path = get_asset_path(f"images/gestures/{gesture_code}.png")
+        
+        # 2. Normalizar las barras de la ruta para el contenedor HTML de Qt
+        icon_path_html = icon_path.replace('\\', '/')
+        
+        # 3. Organizar el contenido: contenedor centrado, icono, salto de línea y texto
+        # Aumentamos el tamaño del icono a 48x48 para que tenga más presencia al estar arriba
+        rich_text = f"""
+            <div align='center'>
+                <img src='{icon_path_html}' width='48' height='48'>
+                <br><br>
+                <b>{gesture_name.upper()}</b>
+            </div>
+        """
+        
+        self.ui.gestureLabel.setText(rich_text)
 
     def click_gesture_button(self, gesture_name):
         """Clicks the corresponding UI button if a gesture is already mapped."""

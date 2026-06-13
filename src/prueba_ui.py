@@ -1338,7 +1338,7 @@ class Ui_MainWindow(object):
         self.btn_sys_modo.setProperty(u"gamepadInput", QCoreApplication.translate("MainWindow", u"SYS_CHANGE_MODE", None))
         self.btn_sys_enter.setText(QCoreApplication.translate("MainWindow", u"Click", None))
         self.btn_sys_enter.setProperty(u"gamepadInput", QCoreApplication.translate("MainWindow", u"SYS_NAV_ENTER", None))
-        self.btn_sys_restore.setText(QCoreApplication.translate("MainWindow", u"Restaurar", None))
+        self.btn_sys_restore.setText(QCoreApplication.translate("MainWindow", u"Minimizar", None))
         self.btn_sys_restore.setProperty(u"gamepadInput", QCoreApplication.translate("MainWindow", u"SYS_RESTORE_APP", None))
         self.label_calibracion.setText(QCoreApplication.translate("MainWindow", u"Calibra la sensibilidad:", None))
         self.btn_minus.setText(QCoreApplication.translate("MainWindow", u"\u2796", None))
