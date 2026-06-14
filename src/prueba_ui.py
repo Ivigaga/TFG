@@ -1374,7 +1374,7 @@ class Ui_MainWindow(object):
         self.settingsBackButton.setText(QCoreApplication.translate("MainWindow", u"\u25c0 VOLVER AL MEN\u00da", None))
         self.settingsBackButton.setProperty(u"type", QCoreApplication.translate("MainWindow", u"secondary", None))
         self.scrollAreaEmulators.setStyleSheet(QCoreApplication.translate("MainWindow", u"QScrollArea { border: none; background: transparent; } QWidget#scrollAreaEmulatorsContents { background: transparent; }", None))
-        self.emulatorSettingsBackButton.setText(QCoreApplication.translate("MainWindow", u"\u25c0 VOLVER A AJUSTES", None))
+        self.emulatorSettingsBackButton.setText(QCoreApplication.translate("MainWindow", u"\u25c0 VOLVER", None))
         self.emulatorSettingsBackButton.setProperty(u"type", QCoreApplication.translate("MainWindow", u"secondary", None))
         self.btn_nav_back.setText(QCoreApplication.translate("MainWindow", u"\u25c0 VOLVER AL MEN\u00da", None))
         self.btn_nav_back.setProperty(u"type", QCoreApplication.translate("MainWindow", u"secondary", None))

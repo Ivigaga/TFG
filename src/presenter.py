@@ -289,10 +289,8 @@ class MainPresenter(QObject):
         Guardar mapeo de control actual y volver al catálogo de gestos.
         
         Llama a model.save_inputs() para persistir configuración en memoria a JSON.
-        Vuelve a página 0 (catálogo principal de gestos).
         """
         self.model.save_inputs()  # Guardar configuración JSON
-        self.view.show_page(0)  # Volver a catálogo principal de gestos
 
     def handle_gesture_selection(self, gesture_button):
         """

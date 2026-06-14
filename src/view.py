@@ -20,8 +20,8 @@ Características:
 
 import os
 
-from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QButtonGroup, QToolButton, QSizePolicy
-from PySide6.QtGui import QColor, QIcon, QImage, QKeySequence, QPainter, QPixmap, QShortcut
+from PySide6.QtWidgets import QHBoxLayout, QMainWindow, QPushButton, QWidget, QVBoxLayout, QLabel, QButtonGroup, QToolButton, QSizePolicy
+from PySide6.QtGui import QColor, QFont, QIcon, QImage, QKeySequence, QPainter, QPixmap, QShortcut
 from PySide6.QtCore import QEvent, QPoint, Signal, Qt, QSize
 
 from model import get_asset_path
@@ -1012,11 +1012,6 @@ class MainView(QMainWindow):
             elif item.spacerItem():
                 layout.removeItem(item)  # Remover espaciadores
 
-        from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton
-        from PySide6.QtCore import Qt
-        from PySide6.QtGui import QFont
-        import os
-
         # Título de la sección
         title_lbl = QLabel("CONFIGURACIÓN DE EMULADORES")
         title_font = QFont()
@@ -1045,6 +1040,8 @@ class MainView(QMainWindow):
             # Si es "Default" o ruta inválida, mostrar el texto tal cual
             if current_emu != "Default" and os.path.exists(current_emu):
                 display_text = os.path.basename(current_emu)
+            elif current_emu == "Default":
+                display_text = "Predeterminado"
             else:
                 display_text = current_emu
                 
@@ -1133,7 +1130,10 @@ class MainView(QMainWindow):
             if emulator_name is not None:
                 self.ui.gamesEmulatorsButton.show()
                 # Extraer sólo el nombre del archivo sin ruta ni extensión
-                self.ui.gamesEmulatorsButton.setText(f"Emulador:\n{os.path.splitext(os.path.basename(emulator_name))[0].upper()}")
+                emulator_name=os.path.splitext(os.path.basename(emulator_name))[0].upper()
+                if emulator_name=="DEFAULT":
+                    emulator_name="PREDETERMINADO"
+                self.ui.gamesEmulatorsButton.setText(f"Emulador:\n{emulator_name}")
                 try:
                     # Limpiar cualquier conexión previa para evitar duplicados
                     self.ui.gamesEmulatorsButton.clicked.disconnect()

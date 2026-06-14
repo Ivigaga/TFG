@@ -1750,7 +1750,7 @@
                  </size>
                 </property>
                 <property name="text">
-                 <string>◀ VOLVER A AJUSTES</string>
+                 <string>◀ VOLVER</string>
                 </property>
                 <property name="type" stdset="0">
                  <string>secondary</string>
