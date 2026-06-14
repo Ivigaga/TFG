@@ -495,7 +495,7 @@ class MainPresenter(QObject):
             action_code = data.get("input")
 
             # Lógica de detección de cambio de estado (transition detection)
-            if score > threshold:
+            if score >= threshold:
                 if not is_currently_active:
                     # EL USUARIO ACABA DE SUPERAR EL UMBRAL - transición INACTIVO -> ACTIVO
                     # Ejecutar acción de presión (emitir botón del mando o cambiar modo)
@@ -529,22 +529,22 @@ class MainPresenter(QObject):
 
             # === Evaluar Eje X (IZQUIERDA/DERECHA) ===
             # nose.x va de 0.0 (izquierda) a 1.0 (derecha)
-            if nose.x > th_left:
+            if nose.x >= th_left:
                 # Nariz hacia la izquierda = joystick hacia la izquierda
                 jx = -20000
                 is_left = True
-            elif nose.x < th_right:
+            elif nose.x <= th_right:
                 # Nariz hacia la derecha = joystick hacia la derecha
                 jx = 20000
                 is_right = True
 
             # === Evaluar Eje Y (ARRIBA/ABAJO) ===
             # nose.y va de 0.0 (arriba) a 1.0 (abajo)
-            if nose.y > th_down:
+            if nose.y >= th_down:
                 # Nariz hacia abajo = joystick hacia abajo
                 jy = -20000
                 is_down = True
-            elif nose.y < th_up:
+            elif nose.y <= th_up:
                 # Nariz hacia arriba = joystick hacia arriba
                 jy = 20000
                 is_up = True
