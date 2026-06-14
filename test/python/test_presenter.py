@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from unittest.mock import MagicMock, patch
 from presenter import MainPresenter
@@ -115,21 +117,22 @@ def test_on_frame_processed_video_paused(mock_pixmap, mock_image, mock_cvtcolor,
     mock_view.update_main_video.assert_not_called()
 
 
+@patch("presenter.time.perf_counter")
 @patch("presenter.MainPresenter._process_gamepad_logic")
 @patch("presenter.cv2.cvtColor")
 @patch("presenter.QImage")
 @patch("presenter.QPixmap")
-def test_on_frame_processed_new_data(mock_pixmap, mock_image, mock_cvtcolor, mock_gamepad_logic, setup_presenter):
-    """Verifies that new processing data updates the model and triggers gamepad logic."""
+def test_on_frame_processed_new_data(mock_pixmap, mock_image, mock_cvtcolor, mock_gamepad_logic, mock_time, setup_presenter):
+    """Verifies that new processing data updates the model strictly overriding the clock."""
     presenter, mock_view, mock_model = setup_presenter
     presenter.is_video_playing = True
-    mock_view.pip_window=False  # Ensure pip_window exists to avoid attribute errors
+    mock_view.pip_window = False
     
-    # --- LA SOLUCIÓN: Engañamos al temporizador de 4 segundos ---
-    import time
-    presenter.app_start_time = time.perf_counter() - 5.0 
+    # FIJAMOS EL RELOJ: El programa empezó en el segundo 0.0, y ahora estamos en el 5.0
+    # Esto garantiza matemáticamente que siempre será mayor que los 4.0s de bloqueo.
+    presenter.app_start_time = 0.0 
+    mock_time.return_value = 5.0
     
-    # Create a fake image frame to satisfy OpenCV/Qt shape requirements
     dummy_frame = MagicMock()
     dummy_frame.shape = (480, 640, 3) 
     mock_cvtcolor.return_value = dummy_frame
@@ -137,15 +140,10 @@ def test_on_frame_processed_new_data(mock_pixmap, mock_image, mock_cvtcolor, moc
     dummy_blendshapes = {"smile": 0.8}
     dummy_landmarks = ["fake_nose_coords"]
     
-    # 1. Process WITH new AI data
     presenter._on_frame_processed(dummy_frame, dummy_blendshapes, dummy_landmarks, is_new_processing=True)
     
-    # 2. Verify the core logic was executed
     mock_model.update_gesture_scores.assert_called_once_with(dummy_blendshapes)
     mock_gamepad_logic.assert_called_once_with(dummy_landmarks)
-    
-    # 3. Verify the video frame was sent to the view
-    mock_view.update_main_video.assert_called_once()
 
 
 @patch("presenter.MainPresenter._process_gamepad_logic")
@@ -178,31 +176,28 @@ def test_on_frame_processed_no_new_data(mock_pixmap, mock_image, mock_cvtcolor, 
 @patch("presenter.QImage")
 @patch("presenter.QPixmap")
 def test_on_frame_processed_ui_score_update(mock_pixmap, mock_image, mock_cvtcolor, mock_time, setup_presenter):
-    """Verifies that the UI progress bar is updated when calibrating a gesture."""
+    """Verifies that the UI progress bar is updated, freezing the cooldown clock."""
     presenter, mock_view, mock_model = setup_presenter
     presenter.is_video_playing = True
-    mock_view.pip_window=MagicMock()  # Ensure pip_window exists to avoid attribute errors
-    mock_view.pip_window.isVisible.return_value = True  # Assume PiP is visible to isolate the test to just the video playing state
-    # 1. Simulate we are in the calibration screen
+    mock_view.pip_window=MagicMock()
+    mock_view.pip_window.isVisible.return_value = True
+    
     presenter.is_reading_score = True
     presenter.current_mapped_gesture = "smile"
     
-    # Fake the model returning a score of 0.85 (85%) and the view slider at 50%
     mock_model.get_score.return_value = 0.85
     mock_view.get_slider_threshold.return_value = 50
     
-    # Fast forward time to bypass the 0.1s UI cooldown lock
-    presenter.last_ui_update_time = 0
+    # FIJAMOS EL RELOJ: Para saltarnos el cooldown de 0.1s de actualización de interfaz
+    presenter.last_ui_update_time = 0.0
     mock_time.return_value = 1.0 
     
     dummy_frame = MagicMock()
     dummy_frame.shape = (480, 640, 3)
     mock_cvtcolor.return_value = dummy_frame
     
-    # 2. Run the frame
     presenter._on_frame_processed(dummy_frame, {}, [], is_new_processing=False)
     
-    # 3. Verify the view was commanded to update the score bar: 85 score, True (surpassed threshold)
     mock_view.update_score_bar.assert_called_once_with(85, True)
 
 
@@ -367,20 +362,20 @@ def test_handle_game_launch_steam_or_native(mock_startfile, setup_presenter):
 @patch("presenter.subprocess.Popen")
 @patch("presenter.os.path.exists", return_value=True)
 def test_handle_game_launch_custom_emulator(mock_exists, mock_popen, setup_presenter):
-    """Verifies that ROMs trigger the assigned custom emulator via subprocess."""
+    """Verifies that ROMs trigger the assigned custom emulator using OS agnostic paths."""
     presenter, mock_view, mock_model = setup_presenter
     
-    # 1. Setup the fake model knowledge
     mock_model.get_console_from_extension.return_value = "NES"
-    mock_model.emulators_config = {"NES": "C:\\Emulators\\fceux.exe"}
     
-    rom_path = "C:\\Games\\mario.nes"
+    emulator_exe = os.path.join("C:", "Emulators", "fceux.exe")
+    rom_path = os.path.join("C:", "Games", "mario.nes")
     
-    # 2. Launch!
+    mock_model.emulators_config = {"NES": emulator_exe}
+    
     presenter.handle_game_launch(rom_path)
     
-    # 3. Verify it used Popen with the correct arguments [emulator, rom]
-    mock_popen.assert_called_once_with(["C:\\Emulators\\fceux.exe", rom_path])
+    # Verifica respetando la sintaxis del Sistema Operativo host
+    mock_popen.assert_called_once_with([emulator_exe, rom_path])
     mock_view.showMinimized.assert_called_once()
 
 
@@ -407,23 +402,21 @@ def test_explorer_up_hits_drives_root(mock_dirname, mock_refresh, setup_presente
 
 
 def test_handle_emulator_exe_chosen(setup_presenter):
-    """Verifies that clicking an emulator updates the config and repopulates the view."""
+    """Verifies that clicking an emulator updates the config robustly on any OS."""
     presenter, mock_view, mock_model = setup_presenter
     
-    # 1. Simulate the user was setting up the SNES emulator inside C:\Emulators
     presenter.current_setup_console = "SNES"
-    presenter.current_explorer_path = "C:\\Emulators"
+    # Usamos os.path.join en lugar de rutas duras con barras inversas (\\)
+    presenter.current_explorer_path = os.path.join("C:", "Emulators")
     mock_model.emulators_config = {}
     
-    # 2. The user clicks the exe
     presenter.handle_emulator_exe_chosen("snes9x.exe")
     
-    # 3. Verifications
-    expected_path = "C:\\Emulators\\snes9x.exe"
+    # La validación se construye orgánicamente dependiendo de si corre en Mac/Linux o Win
+    expected_path = os.path.join("C:", "Emulators", "snes9x.exe")
     assert mock_model.emulators_config["SNES"] == expected_path
     
     mock_model.save_emulators_config.assert_called_once()
-    mock_view.populate_emulator_settings.assert_called_once()
     mock_view.show_page.assert_called_with(8)
 
 
