@@ -792,17 +792,17 @@ class MainPresenter(QObject):
         self.explorer_mode = "FOLDER"
         rutas_guardadas = self.model.get_rom_folders()
         
-        if rutas_guardadas:
+        # NUEVO: Validamos proactivamente que la última ruta guardada siga existiendo físicamente
+        if rutas_guardadas and os.path.exists(rutas_guardadas[-1]):
             self.current_explorer_path = rutas_guardadas[-1]
         else:
-
+            # Fallback seguro si la lista está vacía o la carpeta fue eliminada
             self.current_explorer_path = os.path.expanduser('~')
             
         self.refresh_explorer()
         self.view.show_page(6)
 
     def refresh_explorer(self): # Hemos quitado el parámetro de aquí
-        
         if self.current_explorer_path == "DRIVES":
             drives = [(f"{d}:\\", "folder") for d in string.ascii_uppercase if os.path.exists(f"{d}:\\")]
             self.view.populate_explorer("Este Equipo (Discos Duros)", drives, mode=self.explorer_mode)
@@ -824,9 +824,14 @@ class MainPresenter(QObject):
 
             # USAMOS LA MEMORIA DE LA CLASE: self.explorer_page_return_index
             self.view.populate_explorer(self.current_explorer_path, content_list, mode=self.explorer_mode, page_index_return=self.explorer_page_return_index)
-        except PermissionError:
-            print(f"Acceso denegado a la carpeta: {self.current_explorer_path}")
-            self.handle_explorer_up()
+            
+        # NUEVO: Añadimos FileNotFoundError a la tupla de excepciones para blindar el proceso
+        except (PermissionError, FileNotFoundError) as e:
+            print(f"Alerta del explorador: No se pudo acceder a {self.current_explorer_path}. Detalles: {e}")
+            
+            # Si la ruta no existe o está denegada, forzamos un rebote seguro a la raíz del sistema
+            self.current_explorer_path = "DRIVES"
+            self.refresh_explorer()
 
     def handle_explorer_select(self):
         """Action depends on the current explorer mode."""
