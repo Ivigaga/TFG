@@ -20,7 +20,9 @@ Características principales:
   - Gestión de tutorial y estado de primer uso
 """
 
+import csv
 import ctypes
+import datetime
 import json
 import os
 import sys
@@ -134,6 +136,18 @@ class AppModel:
         
         # === Caché ===
         self._cached_roms = None  # Almacenamiento en memoria de ROMs escaneadas (evita re-escaneo)
+
+        # === SISTEMA DE TELEMETRÍA (NUEVO) ===
+        self.test_mode = False
+        self.telemetry = {
+            "tutorial_time_seconds": 0.0,
+            "back_from_gestures_count": 0,
+            "save_load_actions_count": 0,
+            "back_from_actions_count": 0,
+            "enter_actions_count": 0,
+            "back_from_explorer_count": 0,
+            "enter_explorer_count": 0
+        }
         
         # Cargar configuración de mapeo de gestos desde archivo JSON
         self.load_inputs()
@@ -199,6 +213,8 @@ class AppModel:
                     settings = json.load(f)
                     # Obtener estado: True si tutorial completado anteriormente
                     onboarding_completed = settings.get("onboarding_completed", False)
+                    # Detectar si el desarrollador ha activado el modo test
+                    self.test_mode = settings.get("test_mode", False)
             except Exception:
                 # Si archivo corrupto o no legible, asumir que no fue completado
                 onboarding_completed = False
@@ -210,31 +226,38 @@ class AppModel:
     def complete_onboarding(self):
         """
         Marcar tutorial como completado y guardar estado persistente.
-        
-        Acciones:
-        1. Establece is_first_run_session a False en memoria
-        2. Crea app_settings.json con onboarding_completed = True
-        3. Establece atributo "Oculto" del archivo (código Windows 0x02)
-           - Esto hace que el archivo sea menos visible para el usuario
-        
-        Nota: Si la operación de ocultar falla por permisos, la aplicación
-        continúa sin error (solo no se oculta, pero persiste el estado)
+        Conserva el modo test y sortea el bloqueo de archivos ocultos de Windows.
         """
-        # === Paso 1: Crear y guardar archivo de configuración ===
         self.is_first_run_session = False
-        settings_data = {"onboarding_completed": True}
         
-        # Escribir el archivo de configuración a disco
-        with open(self.settings_path, 'w') as f:
-            json.dump(settings_data, f, indent=4)
+        # 1. Preparamos los datos preservando el estado de test_mode
+        settings_data = {
+            "onboarding_completed": True,
+            "test_mode": getattr(self, 'test_mode', False)
+        }
+        
+        import os
+        import ctypes
+        
+        # 2. ANTI-CRASHEO: Si el archivo existe, le quitamos el estado de "Oculto"
+        # temporalmente usando el código de Windows FILE_ATTRIBUTE_NORMAL (0x80)
+        if os.path.exists(self.settings_path):
+            try:
+                ctypes.windll.kernel32.SetFileAttributesW(self.settings_path, 0x80)
+            except Exception:
+                pass
+                
+        # 3. Ahora Windows sí nos permite escribir y sobreescribir sin dar PermissionError
+        try:
+            with open(self.settings_path, 'w', encoding='utf-8') as f:
+                json.dump(settings_data, f, indent=4)
+        except Exception as e:
+            print(f"Error menor al guardar ajustes: {e}")
             
-        # === Paso 2: Establecer atributo de "Oculto" en Windows ===
-        # Esto hace que el archivo sea menos prominente para el usuario (código 0x02 de Windows)
+        # 4. Volvemos a ocultar el archivo (Código 0x02)
         try:
             ctypes.windll.kernel32.SetFileAttributesW(self.settings_path, 0x02)
         except Exception:
-            # Si falla por permisos o cualquier otro motivo, continuar sin error
-            # El archivo se guardó exitosamente; solo no se ocultará
             pass
 
     
@@ -729,3 +752,73 @@ class AppModel:
             "mouthShrug": "Encoger Labios",
             "browDown": "Cejas Fruncidas"
         }
+    
+
+    # === MÉTODOS DE TELEMETRÍA ===
+    
+    def log_telemetry(self, key):
+        """Suma 1 a la métrica indicada si el modo test está activo."""
+        if self.test_mode and key in self.telemetry:
+            self.telemetry[key] += 1
+
+    def set_tutorial_time(self, seconds):
+        """Registra el tiempo exacto que tardó el usuario en superar el tutorial."""
+        if self.test_mode:
+            self.telemetry["tutorial_time_seconds"] = round(seconds, 2)
+
+    def export_telemetry_csv(self):
+        """Añade la sesión actual a un archivo CSV global al cerrar la aplicación."""
+        if not self.test_mode:
+            return
+            
+        import os
+        import csv
+        from datetime import datetime
+            
+        # 1. Usar un nombre de archivo fijo para acumular todas las sesiones de prueba
+        filename = "UX_telemetry_results.csv"
+        csv_path = get_save_path(filename)
+        
+        headers = [
+            "Fecha y Hora de la Sesion", # Crucial para distinguir usuarios en un archivo único
+            "Tiempo Tutorial (s)",
+            "Volver (Menu Gestos)",
+            "Acciones Guardar/Cargar",
+            "Volver (Asignacion Boton)",
+            "Entrar (Asignacion Boton)",
+            "Volver (Explorador)",
+            "Entrar (Explorador)"
+        ]
+        
+        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        row = [
+            current_time,
+            self.telemetry["tutorial_time_seconds"],
+            self.telemetry["back_from_gestures_count"],
+            self.telemetry["save_load_actions_count"],
+            self.telemetry["back_from_actions_count"],
+            self.telemetry["enter_actions_count"],
+            self.telemetry["back_from_explorer_count"],
+            self.telemetry["enter_explorer_count"]
+        ]
+        
+        # 2. Comprobar si el archivo ya existe ANTES de abrirlo
+        # Esto nos dirá si necesitamos escribir la fila de títulos o no
+        file_exists = os.path.exists(csv_path)
+        
+        try:
+            # 3. Modo 'a' (append). Esto inserta datos en la siguiente línea vacía sin borrar lo anterior.
+            with open(csv_path, mode='a', newline='', encoding='utf-8-sig') as f:
+                writer = csv.writer(f, delimiter=';') 
+                
+                # Solo escribimos las cabeceras si el archivo es totalmente nuevo
+                if not file_exists:
+                    writer.writerow(headers)
+                    
+                # Escribimos los datos del usuario actual
+                writer.writerow(row)
+                
+            print(f"📊 Datos de la sesión guardados correctamente en el registro global: {csv_path}")
+        except Exception as e:
+            print(f"Error crítico al guardar la telemetría del usuario: {e}")

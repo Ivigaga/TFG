@@ -141,6 +141,9 @@ class MainView(QMainWindow):
     # ==================== SEÑALES DE TUTORIAL ====================
     tutorial_step_clicked = Signal(str)  # Paso del tutorial presionado (UP, DOWN, LEFT, RIGHT)
 
+    # ==================== SEÑALES DE TELEMETRÍA ====================
+    mapping_canceled = Signal()
+
     def __init__(self):
         """Inicializa la ventana principal y configura todos los componentes."""
         super().__init__()
@@ -245,6 +248,7 @@ class MainView(QMainWindow):
         self.ui.controlsCleanButton.clicked.connect(self.clear_selection)
 
         # Botón Cancelar Mapeo (Restaura vistas y detiene lectura)
+        self.ui.controlsCancelButton.clicked.connect(self.mapping_canceled.emit)
         self.ui.controlsCancelButton.clicked.connect(lambda: self.navigation_requested.emit(1))
         self.ui.controlsCancelButton.clicked.connect(lambda: self.ui.stackedWidgetAcciones.setCurrentIndex(0))
         self.ui.controlsCancelButton.clicked.connect(self.stop_reading_score.emit)

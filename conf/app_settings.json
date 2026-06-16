@@ -1,3 +1,4 @@
 {
-    "onboarding_completed": true
+    "onboarding_completed": true,
+    "test_mode": true
 }

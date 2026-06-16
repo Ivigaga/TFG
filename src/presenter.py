@@ -143,6 +143,8 @@ class MainPresenter(QObject):
 
         # === Inicialización de Primera Ejecución ===
         if self.model.is_first_run_session:
+            # --- TELEMETRÍA: Iniciar cronómetro del tutorial ---
+            self.tutorial_start_time = time.time()
             # 1. Ocultar botones de navegación durante tutorial
             self.view.set_onboarding_mode(True)
             
@@ -235,6 +237,10 @@ class MainPresenter(QObject):
         # Preparar pantalla de plataformas al iniciar
         self.handle_platforms_screen_requested()
 
+        # --- TELEMETRÍA: Conectar la nueva señal de la vista ---
+        self.view.mapping_canceled.connect(self.handle_mapping_canceled)
+        
+
     # ===========================
     # MÉTODOS DE CONTROL DE VÍDEO
     # ===========================
@@ -291,6 +297,7 @@ class MainPresenter(QObject):
         Llama a model.save_inputs() para persistir configuración en memoria a JSON.
         """
         self.model.save_inputs()  # Guardar configuración JSON
+        self.model.log_telemetry("save_load_actions_count") # <-- TELEMETRÍA
 
     def handle_gesture_selection(self, gesture_button):
         """
@@ -326,9 +333,12 @@ class MainPresenter(QObject):
         gesture_data = self.model.input_structure.get(gesture_code, {})
         current_threshold = int(gesture_data.get("threshold", 0.5) * 100)
         self.view.set_slider_threshold(current_threshold)
-            
+        self.model.log_telemetry("enter_actions_count") # <-- TELEMETRÍA   
         self.view.show_page(2)  # Navegar a página de mapeo de control
 
+    def handle_mapping_canceled(self):
+        """El usuario abortó la configuración saliendo con el botón Volver."""
+        self.model.log_telemetry("back_from_actions_count") # <-- TELEMETRÍA
     # ===========================
     # BUCLE PRINCIPAL - PROCESAMIENTO DE FOTOGRAMAS
     # ===========================
@@ -607,29 +617,10 @@ class MainPresenter(QObject):
 
     def shutdown(self):
         # Ya no hay timer que detener, solo liberamos la cámara y el mando
+        self.model.export_telemetry_csv() # <-- TELEMETRÍA: Exportar al disco antes de morir
         self.vision.release_resources()
         self.gamepad.reset()
         self.gamepad.update()
-    
-    def handle_gesture_selection(self, gesture_button):
-        """Fired when user clicks 'Smile', 'Blink', etc."""
-        gesture_name = gesture_button.text()
-        gesture_code = gesture_button.property("gesture")
-        
-        self.current_mapped_gesture = gesture_code
-        self.view.set_mapping_label(gesture_code, gesture_name)
-        self.is_reading_score = True
-        
-        # 1. Leemos el tipo de categoría guardada en el JSON y la iluminamos
-        gesture_type = self.model.get_type_from_gesture(gesture_code)
-        self.view.highlight_category(gesture_type)
-        
-        # 2. Hacemos clic automático en la opción de la sub-pestaña si la hay
-        gesture_input = self.model.get_input_from_gesture(gesture_code)
-        if gesture_input:
-            self.view.click_input_button(gesture_input)
-            
-        self.view.show_page(2)
 
     def save_control_mapping(self, gesture_code, input_code, threshold):
         """Recibe la señal del botón Guardar en la UI, actualiza la memoria y vuelve al menú."""
@@ -645,30 +636,6 @@ class MainPresenter(QObject):
         # 3. Ordenamos a la Vista que vuelva a la página 1 (El catálogo de gestos)
         self.view.show_page(1)
 
-    def handle_gesture_selection(self, gesture_button):
-        """Fired when user clicks 'Smile', 'Blink', etc."""
-        gesture_name = gesture_button.text()
-        gesture_code = gesture_button.property("gesture")
-        
-        self.current_mapped_gesture = gesture_code
-        self.view.set_mapping_label(gesture_code, gesture_name)
-        self.is_reading_score = True
-        
-        # 1. Leemos el tipo de categoría guardada en el JSON y la iluminamos
-        gesture_type = self.model.get_type_from_gesture(gesture_code)
-        self.view.highlight_category(gesture_type)
-        
-        # 2. Hacemos clic automático en la opción de la sub-pestaña si la hay
-        gesture_input = self.model.get_input_from_gesture(gesture_code)
-        if gesture_input:
-            self.view.click_input_button(gesture_input)
-            
-        # 3. Sincronizamos el Slider con el umbral actual guardado en el modelo
-        gesture_data = self.model.input_structure.get(gesture_code, {})
-        current_threshold = int(gesture_data.get("threshold", 0.5) * 100)
-        self.view.set_slider_threshold(current_threshold)
-            
-        self.view.show_page(2)
 
     def handle_load_profiles_requested(self):
         """El usuario ha pulsado 'Cargar Archivo'."""
@@ -699,21 +666,23 @@ class MainPresenter(QObject):
         # 4. OPCIONAL: Actualizar los botones de la UI para que reflejen el modo cargado
         # Esto es vital para que el usuario sepa visualmente qué modo se ha cargado
         
-        
+        self.model.log_telemetry("save_load_actions_count") # <-- TELEMETRÍA
         # 5. Volver al catálogo de gestos (Página 1)
         self.view.show_page(1)
 
-   # En presenter.py, dentro de handle_save_as_requested
     def handle_save_as_requested(self, filename):
         """Guarda la configuración actual en un nuevo archivo."""
         self.model.save_as_profile(filename)
-        
+        self.model.log_telemetry("save_load_actions_count") # <-- TELEMETRÍA
         # Si estábamos en el tutorial, este es el verdadero final
         if self.model.is_first_run_session:
             self.model.complete_onboarding()
             self.view.set_onboarding_mode(False)
-            self.view.show_tutorial_message("¡Hecho!", "Perfil guardado. Ahora ya puedes navegar libremente por los menús.")
             self.view.show_page(0)
+            self.view.show_tutorial_message("¡Hecho!", "Perfil guardado. Ahora ya puedes navegar libremente por los menús.")
+            duration = time.time() - self.tutorial_start_time
+            self.model.set_tutorial_time(duration) # <-- TELEMETRÍA
+            
         else:
             # Comportamiento normal si no es la primera ejecución
             self.view.show_page(self.view.ui.stackedWidget.indexOf(self.view.ui.gesturesPage))
@@ -791,7 +760,7 @@ class MainPresenter(QObject):
     def handle_explorer_opened(self):
         self.explorer_mode = "FOLDER"
         rutas_guardadas = self.model.get_rom_folders()
-        
+        self.model.log_telemetry("enter_explorer_count") # <-- TELEMETRÍA
         # NUEVO: Validamos proactivamente que la última ruta guardada siga existiendo físicamente
         if rutas_guardadas and os.path.exists(rutas_guardadas[-1]):
             self.current_explorer_path = rutas_guardadas[-1]
@@ -877,6 +846,7 @@ class MainPresenter(QObject):
 
     def handle_explorer_cancel(self):
         """Returns to the correct page depending on where the explorer was launched from."""
+        self.model.log_telemetry("back_from_explorer_count") # <-- TELEMETRÍA
         if self.explorer_mode == "FOLDER":
             # Si estábamos eligiendo carpeta de juegos, volvemos según la plataforma
             if self.current_platform != None:
@@ -1222,7 +1192,7 @@ class MainPresenter(QObject):
 
     def handle_controls_closed(self):
         """Se ejecuta al pulsar 'Volver' en la pantalla de Gestos."""
-        
+        self.model.log_telemetry("back_from_gestures_count") # <-- TELEMETRÍA
         # 1. Ocultamos la imagen para que no moleste en el resto de la app
         self.view.hide_controller_image()
         
