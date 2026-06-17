@@ -177,7 +177,7 @@
              </sizepolicy>
             </property>
             <property name="currentIndex">
-             <number>9</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="platformsPage">
              <property name="sizePolicy">
@@ -264,8 +264,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>100</width>
-                   <height>30</height>
+                   <width>783</width>
+                   <height>374</height>
                   </rect>
                  </property>
                  <layout class="QGridLayout" name="layoutPlatforms"/>
@@ -1464,8 +1464,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>100</width>
-                   <height>30</height>
+                   <width>783</width>
+                   <height>374</height>
                   </rect>
                  </property>
                  <layout class="QGridLayout" name="layoutGames"/>
@@ -1569,8 +1569,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>100</width>
-                   <height>30</height>
+                   <width>783</width>
+                   <height>423</height>
                   </rect>
                  </property>
                  <layout class="QGridLayout" name="layoutExplorer"/>
@@ -1733,8 +1733,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>100</width>
-                   <height>30</height>
+                   <width>783</width>
+                   <height>457</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="layoutDynamicEmulators"/>
@@ -2262,7 +2262,7 @@
  <connections/>
  <buttongroups>
   <buttongroup name="gestureButtons"/>
-  <buttongroup name="navigationButtons"/>
   <buttongroup name="controlButtons"/>
+  <buttongroup name="navigationButtons"/>
  </buttongroups>
 </ui>

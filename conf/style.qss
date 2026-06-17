@@ -1,16 +1,19 @@
-/* Estilo base para todas las ventanas y contenedores */
+/* =====================================================================
+   ESTILO BASE PARA VENTANAS Y ETIQUETAS
+===================================================================== */
 QWidget {
     background-color: #2b2b2b;
     color: #ffffff;
     font-family: "Arial";
 }
 
-/* Estilo para etiquetas informativas principales */
 QLabel {
     font-size: 14px;
 }
 
-/* --- BOTONES DE ACCIÓN GIGANTES (Interactuables con la cara) --- */
+/* =====================================================================
+   BOTONES DE ACCIÓN GIGANTES (A, B, X, Y, Start, etc.)
+===================================================================== */
 QPushButton {
     background-color: #3d3d3d;
     border: 2px solid #555555;
@@ -24,13 +27,16 @@ QPushButton:hover {
     border: 2px solid #0078D7;
 }
 
-QPushButton:checked {
+QPushButton:checked,
+QPushButton[active_category="true"] {
     background-color: #FF5722;
     border: 2px solid #ffffff;
     color: #ffffff;
 }
 
-/* --- BOTONES DE NAVEGACIÓN ANIDADA (Estilo discontinuo gris) --- */
+/* =====================================================================
+   BOTONES SECUNDARIOS (Navegación Anidada - Gris discontinuo)
+===================================================================== */
 QPushButton[type="secondary"] {
     background-color: #444444;
     border: 2px dashed #777777;
@@ -43,7 +49,9 @@ QPushButton[type="secondary"]:hover {
     color: #ffffff;
 }
 
-/* --- BOTÓN PRINCIPAL DE GUARDADO (Destacado en azul) --- */
+/* =====================================================================
+   BOTONES PRINCIPALES (Guardar / Cargar / Tutorial - Azul)
+===================================================================== */
 QPushButton[type="primary"] {
     background-color: #0078D7;
     color: #ffffff;
@@ -55,7 +63,9 @@ QPushButton[type="primary"]:hover {
     border: 2px solid #0078D7;
 }
 
-/* --- BARRA DE PROGRESO DE SENSIBILIDAD --- */
+/* =====================================================================
+   BARRA DE PROGRESO DE SENSIBILIDAD
+===================================================================== */
 QProgressBar {
     border: 2px solid #555555;
     border-radius: 10px;
@@ -73,207 +83,41 @@ QProgressBar[is_above_threshold="true"]::chunk {
     background-color: #FF5722;
 }
 
-/* --- SLIDER DE UMBRAL (MARCADOR FLOTANTE) --- */
-
-/* 1. Fondo general transparente */
+/* =====================================================================
+   SLIDERS DE UMBRAL (Marcador Flotante)
+===================================================================== */
 QSlider {
     background: transparent;
 }
 
-/* 2. Riel invisible (sin color, sin bordes, altura 0) */
 QSlider::groove:horizontal {
     background: transparent;
     border: none;
     height: 0px; 
 }
 
-/* 3. Ocultar el relleno de progreso nativo del slider a izquierda y derecha */
 QSlider::sub-page:horizontal, 
 QSlider::add-page:horizontal {
     background: transparent;
     border: none;
 }
 
-/* 4. El "Thumb" (Tirador) */
 QSlider::handle:horizontal {
-    background-color: #FFEB3B; /* Amarillo brillante para contrastar con azul y naranja */
-    border: 2px solid #1e1e1e; /* Borde muy oscuro para darle relieve */
-    width: 12px;               /* Fino (más estrecho que alto) */
-    height: 60px;              /* Muy alto (para que parezca que cruza la barra) */
-    margin: -30px 0;           /* Centrado vertical matemático (la mitad de la altura) */
-    border-radius: 5px;        /* Ligeramente redondeado en las puntas */
+    background-color: #FFEB3B; /* Amarillo brillante */
+    border: 2px solid #1e1e1e;
+    width: 12px;
+    height: 60px;
+    margin: -30px 0;
+    border-radius: 5px;
 }
 
-/* Efecto visual opcional para saber que es interactivo al pasar el ratón */
 QSlider::handle:horizontal:hover {
-    background-color: #FFFFFF; /* Se ilumina en blanco al apuntarlo */
+    background-color: #FFFFFF;
 }
 
-QPushButton[active_category="true"] {
-    border: 3px solid #ff9100;
-    
-}
-
-#scrollAreaWidgetContents QToolButton {
-    background-color: #2b2b2b; /* Fondo oscuro integrado en la app */
-    color: #ffffff;           /* Texto blanco */
-    border: 2px solid #555555; /* Borde gris suave por defecto */
-    border-radius: 20px;      /* Bordes muy redondeados como el dibujo */
-    padding: 20px;            /* Espaciado interno generoso para el icono y texto */
-    font-weight: bold;
-    text-align: center;
-}
-
-/* Efecto al pasar el ratón */
-#scrollAreaWidgetContents QToolButton:hover {
-    background-color: #4d4d4d;
-    border: 2px solid #0078D7;
-}
-
-/* Efecto cuando está seleccionado (El "Radio Button" activo) */
-#scrollAreaWidgetContents QToolButton:checked {
-    background-color: #FF5722;
-    border: 2px solid #ffffff;
-    color: #ffffff;
-}
-
-/* --- ESTILO DE TARJETAS (TIPO DIBUJO) PARA FICHEROS Y JUEGOS --- */
-
-/* --- ESTILO DE TARJETAS CUADRADAS Y COMPACTAS --- */
-
-#scrollAreaWidgetContents QToolButton,
-#scrollAreaGamesContents QToolButton {
-    background-color: #2b2b2b;
-    color: #ffffff;
-    border: 2px solid #555555;
-    border-radius: 15px;       /* Reducido proporcionalmente al nuevo tamaño */
-    
-    /* EL SECRETO: Forzar tamaño fijo y cuadrado */
-    min-width: 130px;
-    max-width: 130px;
-    min-height: 130px;
-    max-height: 130px;
-    
-    padding: 10px;
-    margin: 8px;               /* Un poco más de margen para que la cuadrícula respire */
-    font-weight: bold;
-    font-size: 12px;           /* Fuente ajustada al tamaño del botón */
-}
-
-/* Efecto al mirar/pasar por encima */
-#scrollAreaWidgetContents QToolButton:hover,
-#scrollAreaGamesContents QToolButton:hover {
-    background-color: #3d3d3d;
-    border-color: #777777;
-}
-
-/* Efecto al hacer la pulsación facial */
-#scrollAreaWidgetContents QToolButton:pressed,
-#scrollAreaGamesContents QToolButton:pressed {
-    background-color: #1e1e1e;
-    border-color: #444444;
-}
-
-/* Estado de perfil seleccionado */
-#scrollAreaWidgetContents QToolButton:checked {
-    background-color: #3d3d3d;
-    border-color: #0078D7; 
-}
-
-/* Espaciado del icono interno */
-#scrollAreaWidgetContents QToolButton::icon,
-#scrollAreaGamesContents QToolButton::icon {
-    padding-bottom: 5px;
-}
-
-/* --- ESTILO DE TARJETAS CUADRADAS Y COMPACTAS --- */
-
-#scrollAreaWidgetContents QToolButton:hover,
-#scrollAreaGamesContents QToolButton:hover,
-#scrollAreaExplorerContents QToolButton:hover,
-#scrollAreaPlatformsContents QToolButton:hover {
-    background-color: #3d3d3d;
-    border-color: #777777;
-}
-
-#scrollAreaWidgetContents QToolButton:pressed,
-#scrollAreaGamesContents QToolButton:pressed,
-#scrollAreaExplorerContents QToolButton:pressed,
-#scrollAreaPlatformsContents QToolButton:pressed {
-    background-color: #1e1e1e;
-    border-color: #444444;
-}
-
-/* El estado checked solo aplica a la pantalla de perfiles, así que lo dejamos igual */
-#scrollAreaWidgetContents QToolButton:checked {
-    background-color: #3d3d3d;
-    border-color: #0078D7; 
-}
-
-/* Espaciado del icono interno (Solo para las pantallas que sí tienen iconos) */
-#scrollAreaWidgetContents QToolButton::icon,
-#scrollAreaGamesContents QToolButton::icon {
-    padding-bottom: 5px;
-}
-
-/* --- INDICADOR DE NAVEGACIÓN ESPACIAL --- */
-QPushButton:focus, QToolButton:focus {
-    /* Un borde grueso y de color llamativo para saber dónde estamos */
-    border: 3px solid #00FF00; 
-    background-color: #3d3d3d;
-    
-    /* Opcional: Levantar un poco el botón */
-    margin: 5px; 
-}
-
-
-#scrollAreaWidgetContents QToolButton:focus,
-#scrollAreaGamesContents QToolButton:focus,
-#scrollAreaExplorerContents QToolButton:focus,
-#scrollAreaPlatformsContents QToolButton:focus {
-    border: 3px solid #00FF00; 
-    background-color: #4a4a4a;
-    
-    /* outline: none elimina la fea línea de puntos por defecto de Windows */
-    outline: none; 
-}
-
-/* Y mantenemos el foco para los botones normales del menú */
-QPushButton:focus {
-    border: 3px solid #00FF00;
-    outline: none;
-}
-
-QToolButton:focus {
-    border: 3px solid #00FF00;
-    outline: none;
-}
-
-
-
-/* --- ESTILO DE TARJETAS CUADRADAS Y COMPACTAS --- */
-#scrollAreaWidgetContents QToolButton,
-#scrollAreaGamesContents QToolButton,
-#scrollAreaExplorerContents QToolButton,
-#scrollAreaPlatformsContents QToolButton {    
-    background-color: #2b2b2b;
-    color: #ffffff;
-    border: 2px solid #555555;
-    border-radius: 15px;       
-    
-    /* Bajamos el mínimo a 90px para que puedan comprimirse más */
-    min-width: 90px;
-    max-width: 160px;
-    min-height: 90px;
-    max-height: 160px;
-    
-    padding: 5px;
-    margin: 5px;
-    font-weight: bold;
-    font-size: 11px;           
-}
-
-
+/* =====================================================================
+   BOTONES DE LOS CATÁLOGOS (Gestos)
+===================================================================== */
 QToolButton[gesture] {
     background-color: #3d3d3d;
     border: 2px solid #555555;
@@ -289,13 +133,105 @@ QToolButton[gesture]:hover {
     border: 2px solid #0078D7;
 }
 
-QToolButton[gesture]:focus {
-    border: 3px solid #00FF00;
-    outline: none;
-}
-
 QToolButton[gesture]:checked {
     background-color: #FF5722;
     border: 2px solid #ffffff;
     color: #ffffff;
+}
+
+/* =====================================================================
+   TARJETAS CUADRADAS (Juegos, Explorador, Plataformas, Perfiles)
+===================================================================== */
+#scrollAreaWidgetContents QToolButton,
+#scrollAreaGamesContents QToolButton,
+#scrollAreaExplorerContents QToolButton,
+#scrollAreaPlatformsContents QToolButton {    
+    background-color: #2b2b2b;
+    color: #ffffff;
+    border: 2px solid #555555;
+    border-radius: 15px;       
+    
+    min-width: 90px;
+    max-width: 160px;
+    min-height: 90px;
+    max-height: 160px;
+    
+    padding: 5px;
+    margin: 5px;
+    font-weight: bold;
+    font-size: 11px;
+    text-align: center;
+}
+
+/* Efecto al mirar/pasar por encima */
+#scrollAreaWidgetContents QToolButton:hover,
+#scrollAreaGamesContents QToolButton:hover,
+#scrollAreaExplorerContents QToolButton:hover,
+#scrollAreaPlatformsContents QToolButton:hover {
+    background-color: #3d3d3d;
+    border-color: #777777;
+}
+
+/* Efecto al hacer la pulsación facial */
+#scrollAreaWidgetContents QToolButton:pressed,
+#scrollAreaGamesContents QToolButton:pressed,
+#scrollAreaExplorerContents QToolButton:pressed,
+#scrollAreaPlatformsContents QToolButton:pressed {
+    background-color: #1e1e1e;
+    border-color: #444444;
+}
+
+/* Estado de perfil seleccionado (solo aplica a la pantalla de perfiles) */
+#scrollAreaWidgetContents QToolButton:checked {
+    background-color: #FF5722;
+    border: 2px solid #ffffff;
+    color: #ffffff;
+}
+
+/* Espaciado del icono interno */
+#scrollAreaWidgetContents QToolButton::icon,
+#scrollAreaGamesContents QToolButton::icon,
+#scrollAreaExplorerContents QToolButton::icon,
+#scrollAreaPlatformsContents QToolButton::icon {
+    padding-bottom: 5px;
+}
+
+/* =====================================================================
+   INDICADOR DE NAVEGACIÓN ESPACIAL (FOCO DE LA NARIZ)
+===================================================================== */
+/* 1. Foco verde general (Botones estándar) */
+QPushButton:focus, 
+QToolButton:focus {
+    border: 3px solid #00FF00;
+    background-color: #3d3d3d;
+    margin: 5px;
+    outline: none; /* Elimina la línea de puntos por defecto de Windows */
+}
+
+/* 2. Foco verde para Tarjetas de Juegos/Archivos */
+#scrollAreaWidgetContents QToolButton:focus,
+#scrollAreaGamesContents QToolButton:focus,
+#scrollAreaExplorerContents QToolButton:focus,
+#scrollAreaPlatformsContents QToolButton:focus {
+    border: 3px solid #00FF00; 
+    background-color: #4a4a4a;
+    outline: none; 
+}
+
+/* 3. Foco sobre botones Azules Principales (Mantiene el fondo azul) */
+QPushButton[type="primary"]:focus {
+    background-color: #0078D7;
+    border: 3px solid #00FF00;
+    outline: none;
+}
+
+/* 4. Foco sobre botones Naranjas Seleccionados (Mantiene el fondo naranja) */
+QPushButton:checked:focus,
+QPushButton[active_category="true"]:focus,
+#scrollAreaWidgetContents QToolButton:checked:focus,
+QToolButton[gesture]:checked:focus {
+    background-color: #FF5722;
+    border: 3px solid #00FF00;
+    color: #ffffff;
+    outline: none;
 }

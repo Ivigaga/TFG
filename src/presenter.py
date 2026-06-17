@@ -116,6 +116,7 @@ class MainPresenter(QObject):
         
         # === Control de Vídeo ===
         self.is_video_playing = False  # Bandera: si el procesamiento de vídeo está activo (puede pausarse por usuario) 
+        self.ignore_gestures_temporary = False  # Bandera para ignorar inputs del usuario brevemente
         
         # Conectar señales y iniciar el motor de visión
         self._connect_view_signals()
@@ -302,23 +303,15 @@ class MainPresenter(QObject):
     def handle_gesture_selection(self, gesture_button):
         """
         Manejar usuario haciendo clic en botón de gesto (Sonrisa, Parpadeo, etc.).
-        
-        Args:
-            gesture_button: QToolButton - el botón de gesto hizo clic
-        
-        Actualiza:
-            - current_mapped_gesture: Almacenar código de gesto para monitoreo de umbral
-            - is_reading_score: Habilitar actualizaciones de barra de puntuación durante mapeo
-            - Resaltado de tipo de gesto de Vista
-            - Selección automática de botón de entrada
-            - Slider sincronizado con umbral actual
-            - Navegación a página de mapeo de control (página 2)
         """
         gesture_name = gesture_button.text()
         gesture_code = gesture_button.property("gesture")
         self.current_mapped_gesture = gesture_code
         self.view.set_mapping_label(gesture_code, gesture_name)
         self.is_reading_score = True
+        
+        # --- FIX: Limpiar cualquier botón (naranja) o categoría iluminada del gesto anterior ---
+        self.view.clear_selection()
         
         # 1. Resaltar la categoría de gesto en la UI
         gesture_type = self.model.get_type_from_gesture(gesture_code)
@@ -333,6 +326,7 @@ class MainPresenter(QObject):
         gesture_data = self.model.input_structure.get(gesture_code, {})
         current_threshold = int(gesture_data.get("threshold", 0.5) * 100)
         self.view.set_slider_threshold(current_threshold)
+        
         self.model.log_telemetry("enter_actions_count") # <-- TELEMETRÍA   
         self.view.show_page(2)  # Navegar a página de mapeo de control
 
@@ -387,8 +381,11 @@ class MainPresenter(QObject):
             if (time.perf_counter() - self.app_start_time) >= 4.0:
                 # Actualizar puntuaciones de gestos en el modelo
                 self.model.update_gesture_scores(blendshapes)
-                # Procesar lógica de mando virtual (evaluar umbrales, emitir botones)
-                self._process_gamepad_logic(landmarks)
+                
+                # --- Ignorar comandos si estamos en cooldown ---
+                if not getattr(self, 'ignore_gestures_temporary', False):
+                    # Procesar lógica de mando virtual (evaluar umbrales, emitir botones)
+                    self._process_gamepad_logic(landmarks)
 
             # Contar fotograma para cálculo de FPS
             self.fps_counter += 1
@@ -674,11 +671,25 @@ class MainPresenter(QObject):
         """Guarda la configuración actual en un nuevo archivo."""
         self.model.save_as_profile(filename)
         self.model.log_telemetry("save_load_actions_count") # <-- TELEMETRÍA
+        
         # Si estábamos en el tutorial, este es el verdadero final
         if self.model.is_first_run_session:
             self.model.complete_onboarding()
             self.view.set_onboarding_mode(False)
-            self.view.show_page(0)
+            self.view.show_page(self.view.ui.stackedWidget.indexOf(self.view.ui.platformsPage))
+            
+            # --- NUEVO: Activar bloqueo temporal de 0.5 segundos ---
+            self.ignore_gestures_temporary = True
+            
+            # Usar una función local para liberar el bloqueo
+            def reactivar_gestos():
+                self.ignore_gestures_temporary = False
+                
+            # Programar la liberación para dentro de 500ms
+            QTimer.singleShot(500, reactivar_gestos)
+            
+            # --- FIN NUEVO ---
+            
             self.view.show_tutorial_message("¡Hecho!", "Perfil guardado. Ahora ya puedes navegar libremente por los menús.")
             duration = time.time() - self.tutorial_start_time
             self.model.set_tutorial_time(duration) # <-- TELEMETRÍA
@@ -1195,7 +1206,7 @@ class MainPresenter(QObject):
         self.model.log_telemetry("back_from_gestures_count") # <-- TELEMETRÍA
         # 1. Ocultamos la imagen para que no moleste en el resto de la app
         self.view.hide_controller_image()
-        
+        self.model.load_inputs()  # <-- Recargamos los valores del modelo para que la vista vuelva a la normalidad
         # 2. Volvemos al menú principal / catálogo (Sustituye el 0 por el índice que necesites)
         self.view.show_page(0)
 

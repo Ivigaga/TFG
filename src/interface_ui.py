@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'prueba.ui'
+## Form generated from reading UI file 'interface.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.11.0
 ##
@@ -176,7 +176,7 @@ class Ui_MainWindow(object):
         self.scrollAreaPlaforms.setWidgetResizable(True)
         self.scrollAreaPlatformsContents = QWidget()
         self.scrollAreaPlatformsContents.setObjectName(u"scrollAreaPlatformsContents")
-        self.scrollAreaPlatformsContents.setGeometry(QRect(0, 0, 100, 30))
+        self.scrollAreaPlatformsContents.setGeometry(QRect(0, 0, 783, 374))
         self.layoutPlatforms = QGridLayout(self.scrollAreaPlatformsContents)
         self.layoutPlatforms.setObjectName(u"layoutPlatforms")
         self.scrollAreaPlaforms.setWidget(self.scrollAreaPlatformsContents)
@@ -811,7 +811,7 @@ class Ui_MainWindow(object):
         self.scrollAreaGame.setWidgetResizable(True)
         self.scrollAreaGamesContents = QWidget()
         self.scrollAreaGamesContents.setObjectName(u"scrollAreaGamesContents")
-        self.scrollAreaGamesContents.setGeometry(QRect(0, 0, 100, 30))
+        self.scrollAreaGamesContents.setGeometry(QRect(0, 0, 783, 374))
         self.layoutGames = QGridLayout(self.scrollAreaGamesContents)
         self.layoutGames.setObjectName(u"layoutGames")
         self.scrollAreaGame.setWidget(self.scrollAreaGamesContents)
@@ -871,7 +871,7 @@ class Ui_MainWindow(object):
         self.scrollAreaExplorer.setWidgetResizable(True)
         self.scrollAreaExplorerContents = QWidget()
         self.scrollAreaExplorerContents.setObjectName(u"scrollAreaExplorerContents")
-        self.scrollAreaExplorerContents.setGeometry(QRect(0, 0, 100, 30))
+        self.scrollAreaExplorerContents.setGeometry(QRect(0, 0, 783, 423))
         self.layoutExplorer = QGridLayout(self.scrollAreaExplorerContents)
         self.layoutExplorer.setObjectName(u"layoutExplorer")
         self.scrollAreaExplorer.setWidget(self.scrollAreaExplorerContents)
@@ -967,7 +967,7 @@ class Ui_MainWindow(object):
         self.scrollAreaEmulators.setWidgetResizable(True)
         self.scrollAreaEmulatorsContents = QWidget()
         self.scrollAreaEmulatorsContents.setObjectName(u"scrollAreaEmulatorsContents")
-        self.scrollAreaEmulatorsContents.setGeometry(QRect(0, 0, 100, 30))
+        self.scrollAreaEmulatorsContents.setGeometry(QRect(0, 0, 783, 457))
         self.layoutDynamicEmulators = QVBoxLayout(self.scrollAreaEmulatorsContents)
         self.layoutDynamicEmulators.setObjectName(u"layoutDynamicEmulators")
         self.scrollAreaEmulators.setWidget(self.scrollAreaEmulatorsContents)
@@ -1263,7 +1263,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.stackedWidget.setCurrentIndex(9)
+        self.stackedWidget.setCurrentIndex(0)
         self.stackedWidgetAcciones.setCurrentIndex(0)
 
 

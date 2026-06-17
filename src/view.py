@@ -25,7 +25,7 @@ from PySide6.QtGui import QColor, QFont, QIcon, QImage, QKeySequence, QPainter, 
 from PySide6.QtCore import QEvent, QPoint, Signal, Qt, QSize
 
 from model import get_asset_path
-from prueba_ui import Ui_MainWindow
+from interface_ui import Ui_MainWindow
 import textwrap
 
 class PipWindow(QWidget):
@@ -176,7 +176,8 @@ class MainView(QMainWindow):
 
         # Variable para controlar la ventana PiP
         self.pip_window = None
-        
+        self.ui.scoreSlider.setFocusPolicy(Qt.NoFocus)
+        self.ui.scoreBar.setFocusPolicy(Qt.NoFocus)
         # Conectar todas las señales de UI con los métodos correspondientes
         self._connect_signals()
         
@@ -922,14 +923,7 @@ class MainView(QMainWindow):
 
     def populate_explorer(self, current_path, items_list, mode="FOLDER", page_index_return=None):
         """
-        Genera botones interactivos para el explorador de archivos.
-        
-        Args:
-            current_path: str - Ruta actual del directorio
-            items_list: list[tuple(str, str)] - Lista de items (nombre, tipo)
-                        Tipos: "folder" o "exe"
-            mode: str - Modo del explorador: "FOLDER" o "EMULATOR"
-            page_index_return: int - Página a la que volver después
+        Genera botones interactivos para el explorador de archivos y gestiona el foco.
         """
         # Mostrar la ruta actual en el UI
         self.ui.label_explorer_path.setText(f"Ruta actual: {current_path}")
@@ -958,6 +952,9 @@ class MainView(QMainWindow):
         folder_icon = QIcon(get_asset_path('images/folder_icon.png'))
         emulator_icon = QIcon(get_asset_path('images/emulator_icon.png'))
         
+        # --- NUEVO: Variable para rastrear el primer botón generado ---
+        primer_boton_generado = None 
+        
         # items_list contiene tuplas: (nombre_archivo, tipo_archivo)
         for item_name, item_type in items_list:
             btn = QToolButton()
@@ -982,19 +979,33 @@ class MainView(QMainWindow):
             
             self.ui.layoutExplorer.addWidget(btn, row, col)
             
+            # --- NUEVO: Capturar el primer botón de la lista para darle el foco ---
+            if primer_boton_generado is None:
+                primer_boton_generado = btn
+            
             col += 1
             if col >= ideal_columns:
                 col = 0
                 row += 1
 
+        # --- NUEVO: Lógica de recuperación de Foco Segura ---
+        from PySide6.QtCore import QTimer
+        
+        def recuperar_foco():
+            if primer_boton_generado:
+                # Si hay carpetas/archivos, enfocar el primero
+                primer_boton_generado.setFocus()
+            else:
+                # Si la carpeta está vacía, enfocar el botón de "Subir nivel" para no atrapar al usuario
+                self.ui.explorerUpButton.setFocus()
+                
+        # Ejecutar la recuperación de foco exactamente después de que Qt termine de renderizar
+        QTimer.singleShot(0, recuperar_foco)
+
 
     def populate_emulator_settings(self, emulators_dict):
         """
         Genera filas dinámicas con la configuración de cada emulador.
-        Cada fila: [Nombre Consola] [Botón Para Elegir Emulador]
-        
-        Args:
-            emulators_dict: dict[str, str] - {"Consola": "ruta_ejecutable_o_Default", ...}
         """
         layout = self.ui.layoutDynamicEmulators
         
@@ -1005,16 +1016,15 @@ class MainView(QMainWindow):
             if widget:
                 widget.deleteLater()  # Destruir widget
             elif item.layout():
-                # Si es un sublayout (fila), destruir sus componentes primero
                 sub_layout = item.layout()
                 while sub_layout.count():
                     sub_item = sub_layout.takeAt(0)
                     sub_widget = sub_item.widget()
                     if sub_widget:
                         sub_widget.deleteLater()
-                sub_layout.deleteLater()  # Destruir el sublayout vacío
+                sub_layout.deleteLater()
             elif item.spacerItem():
-                layout.removeItem(item)  # Remover espaciadores
+                layout.removeItem(item)
 
         # Título de la sección
         title_lbl = QLabel("CONFIGURACIÓN DE EMULADORES")
@@ -1025,23 +1035,22 @@ class MainView(QMainWindow):
         title_lbl.setAlignment(Qt.AlignCenter)
         layout.addWidget(title_lbl)
 
+        # --- NUEVO: Variable para rastrear el primer botón generado ---
+        primer_boton_generado = None
+
         # Crear filas dinámicas para cada consola
         for console, current_emu in emulators_dict.items():
             row_layout = QHBoxLayout()
             
-            # Columna 1: Nombre de la consola
             console_lbl = QLabel(console)
             console_lbl.setMinimumWidth(150)
             font_lbl = QFont()
             font_lbl.setPointSize(12)
             console_lbl.setFont(font_lbl)
             
-            # Columna 2: Botón para seleccionar/cambiar emulador
             btn = QPushButton()
             btn.setMinimumHeight(50)
             
-            # Si el emulador es una ruta válida, mostrar sólo el nombre del archivo
-            # Si es "Default" o ruta inválida, mostrar el texto tal cual
             if current_emu != "Default" and os.path.exists(current_emu):
                 display_text = os.path.basename(current_emu)
             elif current_emu == "Default":
@@ -1050,16 +1059,29 @@ class MainView(QMainWindow):
                 display_text = current_emu
                 
             btn.setText(display_text)
-            # Conectar con el presentador para que el usuario pueda cambiar el emulador
             btn.clicked.connect(lambda checked=False, c=console: self.emulator_setup_requested.emit(c, 8))
             
-            # Añadir ambas columnas a la fila
+            # --- NUEVO: Capturamos el primer botón ---
+            if primer_boton_generado is None:
+                primer_boton_generado = btn
+
             row_layout.addWidget(console_lbl)
             row_layout.addWidget(btn)
             layout.addLayout(row_layout)
             
-        # Añadir espacio al final para empujar todo hacia arriba
         layout.addStretch()
+
+        # --- NUEVO: Lógica de recuperación de Foco Segura ---
+        from PySide6.QtCore import QTimer
+        
+        def recuperar_foco_ajustes():
+            if primer_boton_generado:
+                primer_boton_generado.setFocus()
+            else:
+                # Fallback al botón de volver si no hay emuladores
+                self.ui.emulatorSettingsBackButton.setFocus()
+                
+        QTimer.singleShot(0, recuperar_foco_ajustes)
 
 
     def populate_platforms_catalog(self, platforms_list):
