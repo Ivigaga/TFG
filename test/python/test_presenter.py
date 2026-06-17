@@ -493,7 +493,8 @@ def test_tutorial_cross_sends_to_gestures(mock_controls_opened, setup_presenter)
     mock_model.complete_onboarding.assert_not_called()
 
 
-def test_handle_save_as_requested_completes_tutorial(setup_presenter):
+@patch("presenter.QTimer.singleShot")
+def test_handle_save_as_requested_completes_tutorial(mock_timer, setup_presenter):
     """Verifica que guardar el perfil tras jugar a la cruz es lo que realmente finaliza el tutorial."""
     presenter, mock_view, mock_model = setup_presenter
     
@@ -503,6 +504,9 @@ def test_handle_save_as_requested_completes_tutorial(setup_presenter):
     mock_view.set_onboarding_mode.reset_mock()
     mock_view.show_tutorial_message.reset_mock()
     
+    # --- FIX: Engañamos a la vista falsa para que devuelva la página 0 ---
+    mock_view.ui.stackedWidget.indexOf.return_value = 0
+    
     # Simulamos que el usuario guarda su perfil con el nombre "mi_perfil"
     presenter.handle_save_as_requested("mi_perfil")
     
@@ -511,7 +515,9 @@ def test_handle_save_as_requested_completes_tutorial(setup_presenter):
     mock_model.complete_onboarding.assert_called_once() # Aquí se guarda en el JSON general
     mock_view.set_onboarding_mode.assert_called_once_with(False) # Se liberan los botones
     mock_view.show_tutorial_message.assert_called_once() # Sale el pop-up de felicidades
-    mock_view.show_page.assert_called_with(0) # Se manda al menú principal
+    
+    # Ahora la aserción funcionará correctamente
+    mock_view.show_page.assert_called_with(0)
 
 
 @patch("presenter.time.perf_counter")
