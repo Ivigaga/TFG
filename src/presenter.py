@@ -1074,6 +1074,7 @@ class MainPresenter(QObject):
         self.explorer_page_return_index = page_index_return
 
         self.current_explorer_path = os.path.expanduser('~')
+        self.model.log_telemetry("enter_explorer_count")
         self.refresh_explorer() # Ya no pasamos el parámetro por aquí
         self.view.show_page(6)
 
