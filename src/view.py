@@ -532,12 +532,27 @@ class MainView(QMainWindow):
             value: int - Nuevo valor del slider
         """
         self.ui.info_calib.setText(f"Umbral actual: {value}%")
+
     def toggle_pip(self):
         """
         Alterna la ventana flotante de video (Picture-in-Picture).
         
         Returns:
             bool - True si se activó, False si se desactivó
+        """
+        if not self.pip_window:
+            # Lanzar la ventana PiP si no está abierta
+            self.launch_pip()
+            return True
+        else:
+            # Cerrar la ventana existente
+            self.pip_window.close()
+            return False
+        
+    def launch_pip(self):
+        """
+        Lanza la ventana PiP si no está abierta.
+        Si ya está abierta, no hace nada.
         """
         if not self.pip_window:
             # Crear nueva ventana PiP
@@ -548,11 +563,6 @@ class MainView(QMainWindow):
             # Actualizar UI principal
             self.ui.videoLabel.setText("Cámara en ventana flotante")
             self.ui.pipButton.setText("Unir Cámara")
-            return True
-        else:
-            # Cerrar la ventana existente
-            self.pip_window.close()
-            return False
 
     def _on_pip_closed_externally(self):
         """
