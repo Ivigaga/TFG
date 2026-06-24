@@ -1464,6 +1464,24 @@ class MainView(QMainWindow):
         msg.setStyleSheet("QLabel{ min-width: 400px; font-size: 14px; }")
         msg.exec()  # Bloquear hasta que el usuario haga clic en OK
 
+    def show_error_message(self, title, message):
+        """
+        Muestra un cuadro de diálogo informativo que bloquea la aplicación hasta que se lea.
+        
+        Args:
+            title: str - Título del diálogo
+            message: str - Mensaje a mostrar
+        """
+        from PySide6.QtWidgets import QMessageBox
+        msg = QMessageBox(self)
+        msg.setWindowTitle(title)
+        msg.setText(message)
+        msg.setIcon(QMessageBox.Warning)
+        msg.setStandardButtons(QMessageBox.Ok)
+        # Estilo para que se adapte al tema oscuro
+        msg.setStyleSheet("QLabel{ min-width: 400px; font-size: 14px; }")
+        msg.exec()  # Bloquear hasta que el usuario haga clic en OK
+
     def setup_tutorial_step(self, target_direction):
         """
         Configura visualmente el paso del tutorial.

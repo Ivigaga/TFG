@@ -23,6 +23,7 @@ Características principales:
   - Control de enfriamiento para prevenir navegación rápida repetida
 """
 
+import ctypes
 import os
 import subprocess
 import string
@@ -765,12 +766,20 @@ class MainPresenter(QObject):
         try:
             # If set to Default, or the manually chosen .exe was deleted from the hard drive
             if emulator_path == "Default" or not os.path.exists(emulator_path):
-                os.startfile(exe_path)
-                print(f"Launching ROM with Windows Default: {exe_path}")
-                # --- NEW: Minimize window after successful launch ---
-                self.view.launch_pip()
-                self.view.showMinimized()
-                self.model.change_movement_mode(True)  # Switch to continuous mode for gameplay
+                if self.has_windows_default_app(exe_path):
+                    os.startfile(exe_path)
+                    print(f"Launching ROM with Windows Default: {exe_path}")
+                    
+                    # --- NEW: Minimize window after successful launch ---
+                    self.view.launch_pip()
+                    self.view.showMinimized()
+                    self.model.change_movement_mode(True)  # Switch to continuous mode for gameplay
+                else:
+                    print(f"Error: No hay aplicación predeterminada en Windows para abrir la extensión de {exe_path}")
+                    self.view.show_tutorial_message(
+                    "Error",
+                    f"¡No hay aplicación predeterminada en Windows para abrir la extensión de {exe_path}!\n\nPor favor, asigna una aplicación por defecto para este archivo o configura uno pulsando en el botón de \"Emulador\" situado encima."
+                    )
             else:
                 # Launch the custom emulator, passing the ROM path as the main argument
                 subprocess.Popen([emulator_path, exe_path])
@@ -1350,4 +1359,23 @@ class MainPresenter(QObject):
     def handle_application_restored(self):
         """Se ejecuta cuando la ventana vuelve a primer plano. Cambia el modo de movimiento."""
         self.model.change_movement_mode(False)  # Switch to discrete mode when the app is restored to foreground
+
+
+    def has_windows_default_app(self,filepath):
+        """
+        Consulta a la API de Windows si existe un programa predeterminado 
+        asociado a la extensión de este archivo.
+        """
+        if not os.path.exists(filepath):
+            return False
+            
+        # Buffer para almacenar la ruta del ejecutable asociado si se encuentra
+        executable = ctypes.create_unicode_buffer(1024)
+        
+        # Llamada a la API nativa de Windows
+        result = ctypes.windll.shell32.FindExecutableW(filepath, None, executable)
+        
+        # FindExecutableW devuelve un valor > 32 si encuentra una asociación válida.
+        # Valores <= 32 indican errores (archivo no encontrado, sin asociación, etc.)
+        return result > 32
         
