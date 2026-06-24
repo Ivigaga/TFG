@@ -241,6 +241,8 @@ class MainPresenter(QObject):
 
         # --- TELEMETRÍA: Conectar la nueva señal de la vista ---
         self.view.mapping_canceled.connect(self.handle_mapping_canceled)
+
+        self.view.application_restored.connect(self.handle_application_restored)
         
 
     # ===========================
@@ -300,6 +302,7 @@ class MainPresenter(QObject):
         """
         self.model.save_inputs()  # Guardar configuración JSON
         self.model.log_telemetry("save_load_actions_count") # <-- TELEMETRÍA
+        self.view.set_save_button_state(False)
 
     def handle_gesture_selection(self, gesture_button):
         """
@@ -630,6 +633,8 @@ class MainPresenter(QObject):
         """Recibe la señal del botón Guardar en la UI, actualiza la memoria y vuelve al menú."""
         # 1. Ejecutamos la actualización en memoria
         self.model.save_control_mapping(gesture_code, input_code, threshold)
+
+        self.view.set_save_button_state(True)
         
         # 2. Detenemos la actualización rápida de la barra de progreso
         self.is_reading_score = False
@@ -656,7 +661,7 @@ class MainPresenter(QObject):
         """El usuario ha seleccionado un perfil y pulsado 'Aceptar'."""
         # 1. Cambiar el archivo en el modelo y recargar la RAM
         self.model.load_profile(filename)
-        
+        self.view.set_save_button_state(False)
         # 2. EXTRAER EL VALOR DEL D-PAD:
         # Asumimos que todos los gestos de nariz tienen el mismo ajuste de D-Pad.
         # Leemos el primer gesto de nariz que encontremos.
@@ -678,7 +683,7 @@ class MainPresenter(QObject):
         """Guarda la configuración actual en un nuevo archivo."""
         self.model.save_as_profile(filename)
         self.model.log_telemetry("save_load_actions_count") # <-- TELEMETRÍA
-        
+        self.view.set_save_button_state(False)
         # Si estábamos en el tutorial, este es el verdadero final
         if self.model.is_first_run_session:
             self.model.complete_onboarding()
@@ -744,6 +749,7 @@ class MainPresenter(QObject):
                 # --- NEW: Minimize window after successful launch ---
                 self.view.launch_pip()
                 self.view.showMinimized()
+                self.model.change_movement_mode(True)  # Switch to continuous mode for gameplay
             except Exception as e:
                 print(f"Critical error trying to open the game at '{exe_path}': {e}")
             return
@@ -764,6 +770,7 @@ class MainPresenter(QObject):
                 # --- NEW: Minimize window after successful launch ---
                 self.view.launch_pip()
                 self.view.showMinimized()
+                self.model.change_movement_mode(True)  # Switch to continuous mode for gameplay
             else:
                 # Launch the custom emulator, passing the ROM path as the main argument
                 subprocess.Popen([emulator_path, exe_path])
@@ -771,6 +778,7 @@ class MainPresenter(QObject):
                 # --- NEW: Minimize window after successful launch ---
                 self.view.launch_pip()
                 self.view.showMinimized()
+                self.model.change_movement_mode(True)  # Switch to continuous mode for gameplay
                 
         except Exception as e:
             print(f"Critical error launching the ROM: {e}")
@@ -1214,6 +1222,7 @@ class MainPresenter(QObject):
         self.model.log_telemetry("back_from_gestures_count") # <-- TELEMETRÍA
         # 1. Ocultamos la imagen para que no moleste en el resto de la app
         self.view.hide_controller_image()
+        self.view.set_save_button_state(False)
         self.model.load_inputs()  # <-- Recargamos los valores del modelo para que la vista vuelva a la normalidad
         # 2. Volvemos al menú principal / catálogo (Sustituye el 0 por el índice que necesites)
         self.view.show_page(0)
@@ -1336,3 +1345,9 @@ class MainPresenter(QObject):
                     "¡Has completado el primer paso!\n\nVamos a configurar tus controles para que puedas manejar el ordenador con la cara.\n\nMuevete hacia el botón con el gesto que quieras configurar y SONRIE para continuar.\n\nCuando hayas terminado, pulsa el botón de 'Guardar Como'."
                 ))
                 self.first_time_mapping=True
+
+
+    def handle_application_restored(self):
+        """Se ejecuta cuando la ventana vuelve a primer plano. Cambia el modo de movimiento."""
+        self.model.change_movement_mode(False)  # Switch to discrete mode when the app is restored to foreground
+        

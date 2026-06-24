@@ -92,6 +92,7 @@ class MainView(QMainWindow):
     # ==================== SEÑALES DE CONTROL DE VIDEO ====================
     pip_toggled = Signal()  # PiP activado/desactivado
     video_control_toggled = Signal()  # Parar/reanudar video
+    application_restored = Signal()  # Aplicación restaurada desde minimizado
     
     # ==================== SEÑALES DE NAVEGACIÓN ====================
     navigation_requested = Signal(int)  # Cambiar de pantalla (índice de página)
@@ -1385,6 +1386,7 @@ class MainView(QMainWindow):
                     self.pip_window.close()
                     # Nota: Al hacer .close(), saltara automáticamente el método
                     # _on_pip_closed_externally, que se encargara de la limpieza
+                self.application_restored.emit()
                     
         # Siempre llamar al método original para no romper Qt
         super().changeEvent(event)
@@ -1544,3 +1546,17 @@ class MainView(QMainWindow):
         # Escalar el icono a 120x120 píxeles
         pixmap = QPixmap(icon_path).scaled(120, 120, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         self.ui.icon_tut_info.setPixmap(pixmap)
+
+    def set_save_button_state(self, has_changes):
+        """
+        Cambia el color del botón 'Guardar'.
+        Azul (primary) si hay cambios, Gris (por defecto) si está guardado.
+        """
+        if has_changes:
+            self.ui.gesturesSaveLocalButton.setProperty("type", "primary")
+        else:
+            self.ui.gesturesSaveLocalButton.setProperty("type", "")
+            
+        # Forzamos a Qt a que reevalúe el style.qss con la nueva propiedad
+        self.ui.gesturesSaveLocalButton.style().unpolish(self.ui.gesturesSaveLocalButton)
+        self.ui.gesturesSaveLocalButton.style().polish(self.ui.gesturesSaveLocalButton)

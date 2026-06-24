@@ -114,7 +114,7 @@ class AppModel:
         # === Estado de la Aplicación ===
         self.is_first_run_session = True  # Bandera de tutorial (cargada desde app_settings.json)
         self.input_structure = {}  # Estructura principal: {"gesture_name": {"input": "XUSB_*", ...}}
-        self.is_continuous_mode = True  # Modo navegación: continuo (libre) vs pasos (discreto)
+        self.is_continuous_mode = False  # Modo navegación: continuo (libre) vs pasos (discreto)
         self.target_fps = 60  # FPS objetivo del motor de visión
         
         # === Rutas de Archivos ===
@@ -822,3 +822,8 @@ class AppModel:
             print(f"📊 Datos de la sesión guardados correctamente en el registro global: {csv_path}")
         except Exception as e:
             print(f"Error crítico al guardar la telemetría del usuario: {e}")
+
+
+    def change_movement_mode(self, mode):
+        """Cambia el modo de movimiento entre 'discreto' y 'continuo' según la acción del usuario."""
+        self.is_continuous_mode = mode

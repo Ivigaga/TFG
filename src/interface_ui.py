@@ -1288,7 +1288,6 @@ class Ui_MainWindow(object):
         self.gesturesBackButton.setText(QCoreApplication.translate("MainWindow", u"\u25c0 Volver  sin guardar", None))
         self.gesturesBackButton.setProperty(u"type", "")
         self.gesturesSaveLocalButton.setText(QCoreApplication.translate("MainWindow", u"Guardar", None))
-        self.gesturesSaveLocalButton.setProperty(u"type", QCoreApplication.translate("MainWindow", u"primary", None))
         self.gesturesSaveExternalButton.setText(QCoreApplication.translate("MainWindow", u"Guardar Como", None))
         self.gesturesLoadButton.setText(QCoreApplication.translate("MainWindow", u"Cargar archivo", None))
         self.pushButton_21.setText(QCoreApplication.translate("MainWindow", u"Morritos", None))
