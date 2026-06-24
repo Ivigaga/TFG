@@ -22,7 +22,7 @@ import os
 
 from PySide6.QtWidgets import QHBoxLayout, QMainWindow, QPushButton, QWidget, QVBoxLayout, QLabel, QButtonGroup, QToolButton, QSizePolicy
 from PySide6.QtGui import QColor, QFont, QIcon, QImage, QKeySequence, QPainter, QPixmap, QShortcut
-from PySide6.QtCore import QEvent, QPoint, Signal, Qt, QSize
+from PySide6.QtCore import QEvent, QPoint, QTimer, Signal, Qt, QSize
 
 from model import get_asset_path
 from interface_ui import Ui_MainWindow
@@ -350,6 +350,16 @@ class MainView(QMainWindow):
 
     def show_page(self, index):
         self.ui.stackedWidget.setCurrentIndex(index)
+        # 1. Activar el bloqueo de gestos al cambiar de página
+        self.ignore_gestures = True 
+        
+        # 2. Programar la reactivación asíncrona pasados 330 ms (0.33 segundos)
+        QTimer.singleShot(330, self.resume_gestures)
+
+    def resume_gestures(self):
+        """Método auxiliar llamado por el QTimer para volver a admitir gestos"""
+        self.ignore_gestures = False
+
 
     def set_mapping_label(self, gesture_code, gesture_name):
         self.ui.gestureLabel.setProperty("gesture", gesture_code)

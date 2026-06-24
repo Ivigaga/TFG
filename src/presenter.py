@@ -141,6 +141,7 @@ class MainPresenter(QObject):
         # === Variables de Tutorial ===
         self.tutorial_sequence = ["RIGHT", "DOWN", "LEFT", "UP"]  # Orden de botones de cruz a presionar
         self.current_tutorial_step = 0  # Progreso a través del tutorial (0-3)
+        self.first_time_mapping = False  # Bandera: si es la primera vez que el usuario mapea controles (para mostrar tutorial)
 
         # === Inicialización de Primera Ejecución ===
         if self.model.is_first_run_session:
@@ -329,6 +330,12 @@ class MainPresenter(QObject):
         
         self.model.log_telemetry("enter_actions_count") # <-- TELEMETRÍA   
         self.view.show_page(2)  # Navegar a página de mapeo de control
+        if self.first_time_mapping:
+            self.first_time_mapping = False
+            self.view.show_tutorial_message(
+                "Asignación y Calibración", 
+                f"Ahora vamos a configurar {gesture_name}.\n\nElige \"Botón del Mando\" para asignar un botón del mando de consola\nElige \"Acción del Sistema\" para asignar acciones como hacer Click o cambiar el modo de movimiento.\n\nLa parte de abajo te permite calibrar el gesto.\nPulsa el botón \"-\" para que sea más fácil de detectar y \"+\" para hacerlo más difícil.\n\nCuando hayas terminado, pulsa el botón de 'Guardar y Volver'."
+            )
 
     def handle_mapping_canceled(self):
         """El usuario abortó la configuración saliendo con el botón Volver."""
@@ -383,7 +390,7 @@ class MainPresenter(QObject):
                 self.model.update_gesture_scores(blendshapes)
                 
                 # --- Ignorar comandos si estamos en cooldown ---
-                if not getattr(self, 'ignore_gestures_temporary', False):
+                if not self.view.ignore_gestures and not getattr(self, 'ignore_gestures_temporary', False):
                     # Procesar lógica de mando virtual (evaluar umbrales, emitir botones)
                     self._process_gamepad_logic(landmarks)
 
@@ -1323,3 +1330,9 @@ class MainPresenter(QObject):
                 # Le mandamos a la página de gestos para que cree su perfil obligatoriamente.
                 self.view.ui.label_tut_info.setText("¡Prueba superada!\n\nCargando configuración...")
                 self.handle_controls_opened()
+                # Mostrar diálogo de gestos con retraso de 300ms para permitir que UI se renderice primero
+                QTimer.singleShot(300, lambda: self.view.show_tutorial_message(
+                    "Configuración de Controles",
+                    "¡Has completado el primer paso!\n\nVamos a configurar tus controles para que puedas manejar el ordenador con la cara.\n\nMuevete hacia el botón con el gesto que quieras configurar y SONRIE para continuar.\n\nCuando hayas terminado, pulsa el botón de 'Guardar Como'."
+                ))
+                self.first_time_mapping=True
