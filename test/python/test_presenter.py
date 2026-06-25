@@ -127,6 +127,7 @@ def test_on_frame_processed_new_data(mock_pixmap, mock_image, mock_cvtcolor, moc
     presenter, mock_view, mock_model = setup_presenter
     presenter.is_video_playing = True
     mock_view.pip_window = False
+    mock_view.ignore_gestures = False
     
     # FIJAMOS EL RELOJ: El programa empezó en el segundo 0.0, y ahora estamos en el 5.0
     # Esto garantiza matemáticamente que siempre será mayor que los 4.0s de bloqueo.
