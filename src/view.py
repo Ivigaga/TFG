@@ -181,7 +181,7 @@ class MainView(QMainWindow):
         self.ui.scoreBar.setFocusPolicy(Qt.NoFocus)
         # Conectar todas las señales de UI con los métodos correspondientes
         self._connect_signals()
-        
+        self.ignore_gestures = False  # Controla si se ignoran gestos temporalmente
         # Establecer icono del botón de navegación (nariz)
         self.ui.noseButton.setIcon(QIcon(get_asset_path("images/gestures/movement.png")))
         
