@@ -31,7 +31,7 @@ import cv2
 import time
 import vgamepad as vg
 from PySide6.QtCore import QObject, QTimer, Qt, QCoreApplication, QEvent
-from PySide6.QtGui import QImage, QPixmap,QKeyEvent
+from PySide6.QtGui import QImage, QPixmap, QKeyEvent
 from PySide6.QtWidgets import QApplication, QWidget, QScrollArea
 import math
 
@@ -71,7 +71,7 @@ class MainPresenter(QObject):
         self.model = model
         self.vision = vision_engine
         
-        # Mando virtual Xbox 360 - emula un controlador real para compatibilidad con juegos legacy
+        # Mando virtual Xbox 360 - emula un controlador real para compatibilidad con juegos clásicos
         self.gamepad = vg.VX360Gamepad()
         
         # Mapeo de códigos de botones desde nombres de gestos (XUSB_GAMEPAD_*) a constantes de vgamepad
@@ -103,7 +103,7 @@ class MainPresenter(QObject):
         # === Variables de Seguimiento de Estado ===
         self.is_reading_score = False  # Bandera: monitoreando puntuación de gesto para mapeo de control
         self.current_mapped_gesture = None  # Gesto actual siendo configurado (ej: "smile", "blink")
-        self.last_ui_update_time = 0  # Timestamp de última actualización UI (limita frecuencia refresco)
+        self.last_ui_update_time = 0  # Timestamp de última actualización UI (limita frecuencia de refresco)
 
         self.app_start_time = time.perf_counter()  # Momento de inicio de aplicación - usado para retraso de precalentamiento
         
@@ -203,13 +203,11 @@ class MainPresenter(QObject):
         self.view.save_as_requested.connect(self.handle_save_as_requested)
 
         # Señales del catálogo de juegos
-
         self.view.games_catalog_requested.connect(self.handle_games_catalog_requested)
         self.view.scan_games_requested.connect(self.handle_scan_games)
         # Conexión para el lanzamiento de videojuegos
         self.view.game_launch_requested.connect(self.handle_game_launch)
         
-
         # Explorador
         self.view.explorer_opened.connect(self.handle_explorer_opened)
         self.view.explorer_folder_clicked.connect(self.handle_explorer_folder_clicked)
@@ -255,7 +253,7 @@ class MainPresenter(QObject):
         Iniciar procesamiento de vídeo desde la cámara.
         
         Establece la bandera is_video_playing y lanza el hilo del motor de visión.
-        Actualiza el texto del botón a \"Parar Vídeo\".
+        Actualiza el texto del botón a "Parar Vídeo".
         """
         self.is_video_playing = True
         
@@ -270,7 +268,7 @@ class MainPresenter(QObject):
         Pausar procesamiento de vídeo (fotogramas se ignoran).
         
         Establece is_video_playing a False, haciendo que _on_frame_processed salte procesamiento.
-        Actualiza el texto del botón a \"Reanudar Vídeo\".
+        Actualiza el texto del botón a "Reanudar Vídeo".
         Nota: No detiene el hilo del motor de visión; solo ignora su salida.
         """
         self.is_video_playing = False
@@ -315,7 +313,7 @@ class MainPresenter(QObject):
         self.view.set_mapping_label(gesture_code, gesture_name)
         self.is_reading_score = True
         
-        # --- FIX: Limpiar cualquier botón (naranja) o categoría iluminada del gesto anterior ---
+        # --- CORRECCIÓN: Limpiar cualquier botón (naranja) o categoría iluminada del gesto anterior ---
         self.view.clear_selection()
         
         # 1. Resaltar la categoría de gesto en la UI
@@ -344,6 +342,7 @@ class MainPresenter(QObject):
     def handle_mapping_canceled(self):
         """El usuario abortó la configuración saliendo con el botón Volver."""
         self.model.log_telemetry("back_from_actions_count") # <-- TELEMETRÍA
+
     # ===========================
     # BUCLE PRINCIPAL - PROCESAMIENTO DE FOTOGRAMAS
     # ===========================
@@ -365,7 +364,7 @@ class MainPresenter(QObject):
           - Actualizar icono de tutorial en página de tutorial
           - Actualizar barra de puntuación durante mapeo de control
         
-        BLOQUE 3: Preparación de datos HUD (Heads-Up Display)
+        BLOQUE 3: Preparación de datos HUD (Visor Frontal)
           - Determinar qué botones del mando están activos
           - Calcular dirección de movimiento de la cabeza
         
@@ -375,7 +374,7 @@ class MainPresenter(QObject):
         
         Args:
             frame: numpy.ndarray - fotograma RGB de la cámara (H x W x 3)
-            blendshapes: dict - puntuaciones de BlendShapes MediaPipe (ej: {\"smile\": 0.85, ...})
+            blendshapes: dict - puntuaciones de BlendShapes MediaPipe (ej: {"smile": 0.85, ...})
             landmarks: list - landmarks faciales 468 puntos de MediaPipe
             is_new_processing: bool - True si es un nuevo fotograma procesado, False si es frame interpolado
         """
@@ -393,7 +392,7 @@ class MainPresenter(QObject):
                 # Actualizar puntuaciones de gestos en el modelo
                 self.model.update_gesture_scores(blendshapes)
                 
-                # --- Ignorar comandos si estamos en cooldown ---
+                # --- Ignorar comandos si estamos en enfriamiento (cooldown) ---
                 if not self.view.ignore_gestures and not getattr(self, 'ignore_gestures_temporary', False):
                     # Procesar lógica de mando virtual (evaluar umbrales, emitir botones)
                     self._process_gamepad_logic(landmarks)
@@ -412,7 +411,7 @@ class MainPresenter(QObject):
         # ==========================================
         # BLOQUE 2: LÓGICA DE UI (Velocidad máxima)
         # ==========================================
-        # Esta sección se ejecuta para cada fotograma (incluso interpolados) pero se throttlea por página
+        # Esta sección se ejecuta para cada fotograma (incluso interpolados) pero se limita su frecuencia por página
         current_time = time.perf_counter()
 
         # --- Actualización de sliders de navegación en página de calibración ---
@@ -466,7 +465,7 @@ class MainPresenter(QObject):
         # 2. Iterar a través de gestos para ver si algún botón mapeado está activo actualmente
         for gesture_name, gesture_data in self.model.input_structure.items():
             btn_code = gesture_data.get("input")
-        # 2. Si el botón mapeado pertenece a la plataforma actual
+            # Si el botón mapeado pertenece a la plataforma actual
             if btn_code in input_states:
                 # Usar 'or' para que si múltiples gestos mapean al mismo botón,
                 # permanezca True si al menos uno está activo
@@ -485,7 +484,7 @@ class MainPresenter(QObject):
         """
         Evaluar umbrales de gestos, disparar eventos de mando virtual, y mover joysticks analógicos.
         
-        Esta función implementa la lógica core de mapeo de gestos a entrada de mando.
+        Esta función implementa la lógica central de mapeo de gestos a entrada de mando.
         Se ejecuta una vez por fotograma procesado (no interpolado).
         
         Realiza dos operaciones principales:
@@ -493,7 +492,7 @@ class MainPresenter(QObject):
         2. GESTOS DE JOYSTICK: Posición de nariz controla joystick analógico izquierdo
         
         Args:
-            landmarks: list - 468 landmarks faciales de MediaPipe (nose en índice 1)
+            landmarks: list - 468 landmarks faciales de MediaPipe (la nariz en el índice 1)
         """
         inputs = self.model.input_structure
 
@@ -512,7 +511,7 @@ class MainPresenter(QObject):
             funcion_asignada = data.get("function")
             action_code = data.get("input")
 
-            # Lógica de detección de cambio de estado (transition detection)
+            # Lógica de detección de cambio de estado (transición)
             if score >= threshold:
                 if not is_currently_active:
                     # EL USUARIO ACABA DE SUPERAR EL UMBRAL - transición INACTIVO -> ACTIVO
@@ -715,7 +714,7 @@ class MainPresenter(QObject):
     def handle_games_catalog_requested(self):
         """Solicita los juegos al modelo, ordena pintarlos y cambia a la pantalla de catálogo."""
         lista_juegos = self.obtain_current_platfor_games(self.current_platform)
-        self.view.populate_games_catalog(lista_juegos, self.current_platform,self.model.emulators_config.get(self.current_platform))
+        self.view.populate_games_catalog(lista_juegos, self.current_platform, self.model.emulators_config.get(self.current_platform))
         self.view.show_page(5) # Muestra la nueva gamesPage
 
     def handle_scan_games(self):
@@ -734,28 +733,28 @@ class MainPresenter(QObject):
         # 4. Si ha encontrado juegos, repintamos la cuadrícula
         if nuevos_encontrados:
             lista_actualizada = self.obtain_current_platfor_games(self.current_platform)
-            self.view.populate_games_catalog(lista_actualizada, self.current_platform,self.model.emulators_config.get(self.current_platform))
+            self.view.populate_games_catalog(lista_actualizada, self.current_platform, self.model.emulators_config.get(self.current_platform))
 
     def handle_game_launch(self, exe_path):
-        """Asynchronously launches the game executable, Steam URI, or ROM with its assigned emulator."""
+        """Lanza asíncronamente el ejecutable del juego, URI de Steam o ROM con su emulador asignado."""
         if not exe_path:
-            print("Warning: This game does not have a valid execution path configured.")
+            print("Advertencia: Este juego no tiene configurada una ruta de ejecución válida.")
             return
 
-        # 1. Native executables or Steam shortcuts
+        # 1. Ejecutables nativos o accesos directos de Steam
         if exe_path.startswith("steam://") or exe_path.lower().endswith(".exe"):
             try:
                 os.startfile(exe_path)
-                print(f"Successfully launched: {exe_path}")
-                # --- NEW: Minimize window after successful launch ---
+                print(f"Lanzado con éxito: {exe_path}")
+                # --- NUEVO: Minimizar ventana tras un lanzamiento exitoso ---
                 self.view.launch_pip()
                 self.view.showMinimized()
-                self.model.change_movement_mode(True)  # Switch to continuous mode for gameplay
+                self.model.change_movement_mode(True)  # Cambiar a modo continuo para jugar
             except Exception as e:
-                print(f"Critical error trying to open the game at '{exe_path}': {e}")
+                print(f"Error crítico al intentar abrir el juego en '{exe_path}': {e}")
             return
 
-        # 2. It's a ROM. Find its console and emulator.
+        # 2. Es una ROM. Buscar su consola y emulador.
         _, extension = os.path.splitext(exe_path)
         console_name = self.model.get_console_from_extension(extension)
 
@@ -764,16 +763,16 @@ class MainPresenter(QObject):
             emulator_path = self.model.emulators_config.get(console_name, "Default")
 
         try:
-            # If set to Default, or the manually chosen .exe was deleted from the hard drive
+            # Si está configurado en Predeterminado, o si el .exe elegido manualmente fue borrado del disco duro
             if emulator_path == "Default" or not os.path.exists(emulator_path):
                 if self.has_windows_default_app(exe_path):
                     os.startfile(exe_path)
-                    print(f"Launching ROM with Windows Default: {exe_path}")
+                    print(f"Lanzando ROM con la aplicación predeterminada de Windows: {exe_path}")
                     
-                    # --- NEW: Minimize window after successful launch ---
+                    # --- NUEVO: Minimizar ventana tras un lanzamiento exitoso ---
                     self.view.launch_pip()
                     self.view.showMinimized()
-                    self.model.change_movement_mode(True)  # Switch to continuous mode for gameplay
+                    self.model.change_movement_mode(True)  # Cambiar a modo continuo para jugar
                 else:
                     print(f"Error: No hay aplicación predeterminada en Windows para abrir la extensión de {exe_path}")
                     self.view.show_tutorial_message(
@@ -781,16 +780,16 @@ class MainPresenter(QObject):
                     f"¡No hay aplicación predeterminada en Windows para abrir la extensión de {exe_path}!\n\nPor favor, asigna una aplicación por defecto para este archivo o configura uno pulsando en el botón de \"Emulador\" situado encima."
                     )
             else:
-                # Launch the custom emulator, passing the ROM path as the main argument
+                # Lanzar el emulador personalizado, pasando la ruta de la ROM como argumento principal
                 subprocess.Popen([emulator_path, exe_path])
-                print(f"Launching ROM with custom emulator ({console_name}): {emulator_path} -> {exe_path}")
-                # --- NEW: Minimize window after successful launch ---
+                print(f"Lanzando ROM con emulador personalizado ({console_name}): {emulator_path} -> {exe_path}")
+                # --- NUEVO: Minimizar ventana tras un lanzamiento exitoso ---
                 self.view.launch_pip()
                 self.view.showMinimized()
-                self.model.change_movement_mode(True)  # Switch to continuous mode for gameplay
+                self.model.change_movement_mode(True)  # Cambiar a modo continuo para jugar
                 
         except Exception as e:
-            print(f"Critical error launching the ROM: {e}")
+            print(f"Error crítico al lanzar la ROM: {e}")
 
     def handle_explorer_opened(self):
         self.explorer_mode = "FOLDER"
@@ -800,13 +799,13 @@ class MainPresenter(QObject):
         if rutas_guardadas and os.path.exists(rutas_guardadas[-1]):
             self.current_explorer_path = rutas_guardadas[-1]
         else:
-            # Fallback seguro si la lista está vacía o la carpeta fue eliminada
+            # Alternativa segura si la lista está vacía o la carpeta fue eliminada
             self.current_explorer_path = os.path.expanduser('~')
             
         self.refresh_explorer()
         self.view.show_page(6)
 
-    def refresh_explorer(self): # Hemos quitado el parámetro de aquí
+    def refresh_explorer(self): 
         if self.current_explorer_path == "DRIVES":
             drives = [(f"{d}:\\", "folder") for d in string.ascii_uppercase if os.path.exists(f"{d}:\\")]
             self.view.populate_explorer("Este Equipo (Discos Duros)", drives, mode=self.explorer_mode)
@@ -815,12 +814,12 @@ class MainPresenter(QObject):
         try:
             items = os.listdir(self.current_explorer_path)
             
-            # Always get folders
+            # Obtener siempre las carpetas
             folders = [f for f in items if os.path.isdir(os.path.join(self.current_explorer_path, f))]
             folders.sort(key=str.lower)
             content_list = [(f, "folder") for f in folders]
             
-            # Inject .exe files ONLY if we are looking for an emulator
+            # Inyectar archivos .exe SOLAMENTE si estamos buscando un emulador
             if self.explorer_mode == "EMULATOR":
                 exes = [f for f in items if f.lower().endswith('.exe')]
                 exes.sort(key=str.lower)
@@ -838,7 +837,7 @@ class MainPresenter(QObject):
             self.refresh_explorer()
 
     def handle_explorer_select(self):
-        """Action depends on the current explorer mode."""
+        """La acción depende del modo actual del explorador."""
         if self.explorer_mode == "FOLDER":
             self.view.ui.explorerSelectButton.setText("⏳ AÑADIENDO CARPETA...")
             self.view.ui.explorerSelectButton.setEnabled(False)
@@ -856,7 +855,7 @@ class MainPresenter(QObject):
                 self.view.show_page(0)
             
         elif self.explorer_mode == "EMULATOR":
-            # User clicked "PREDETERMINADO DE WINDOWS"
+            # El usuario hizo clic en "PREDETERMINADO DE WINDOWS"
             if self.current_setup_console:
                 self.model.emulators_config[self.current_setup_console] = "Default"
                 self.model.save_emulators_config()
@@ -864,7 +863,7 @@ class MainPresenter(QObject):
                 # Refrescamos la pantalla de ajustes
                 self.view.populate_emulator_settings(self.model.emulators_config)
                 
-                # --- FIX: Refrescar el botón del emulador si volvemos al catálogo ---
+                # --- CORRECCIÓN: Refrescar el botón del emulador si volvemos al catálogo ---
                 if hasattr(self, 'explorer_page_return_index') and self.explorer_page_return_index == 5:
                     lista_juegos = self.obtain_current_platfor_games(self.current_platform)
                     self.view.populate_games_catalog(
@@ -880,7 +879,7 @@ class MainPresenter(QObject):
                     self.view.show_page(8)
 
     def handle_explorer_cancel(self):
-        """Returns to the correct page depending on where the explorer was launched from."""
+        """Vuelve a la página correcta dependiendo de desde dónde se lanzó el explorador."""
         self.model.log_telemetry("back_from_explorer_count") # <-- TELEMETRÍA
         if self.explorer_mode == "FOLDER":
             # Si estábamos eligiendo carpeta de juegos, volvemos según la plataforma
@@ -934,20 +933,20 @@ class MainPresenter(QObject):
         if direction in ["UP", "DOWN", "LEFT", "RIGHT"]:
             current_time = time.time()
             if current_time - self.last_nav_time < self.nav_cooldown:
-                return  # Skip if the cooldown hasn't finished
+                return  # Omitir si el tiempo de enfriamiento no ha terminado
             
-            # If enough time has passed, update the timer and proceed to jump
+            # Si ha pasado suficiente tiempo, actualizar el temporizador y proceder al salto
             self.last_nav_time = current_time
 
         # 1. El gesto de "Aceptar" sigue inyectando un Enter normal
         if direction == "ENTER":
             current_widget = QApplication.focusWidget()
             if current_widget:
-                # The most bulletproof way to trigger a button in Qt
+                # La forma más infalible de activar un botón en Qt
                 if hasattr(current_widget, "click"):
                     current_widget.click()
                 else:
-                    # Fallback for non-button widgets (Qt prefers Space over Return)
+                    # Alternativa para widgets que no son botones (Qt prefiere Espacio sobre Intro)
                     press_event = QKeyEvent(QEvent.KeyPress, Qt.Key_Space, Qt.NoModifier)
                     release_event = QKeyEvent(QEvent.KeyRelease, Qt.Key_Space, Qt.NoModifier)
                     QCoreApplication.postEvent(current_widget, press_event)
@@ -966,7 +965,7 @@ class MainPresenter(QObject):
         best_candidate = None
         min_distance = float('inf')
 
-        # 3. Scan ALL components in the current interface
+        # 3. Escanear TODOS los componentes en la interfaz actual
         for candidate in window.findChildren(QWidget):
             if not candidate.isVisible() or not candidate.isEnabled() or candidate == current_widget:
                 continue
@@ -974,27 +973,27 @@ class MainPresenter(QObject):
             if candidate.focusPolicy() == Qt.NoFocus:
                 continue
 
-            # Candidate bounds (Bounding Box instead of just center)
+            # Límites del candidato (Caja delimitadora en lugar de solo el centro)
             candidate_rect = candidate.rect()
             top_left = candidate.mapToGlobal(candidate_rect.topLeft())
             bottom_right = candidate.mapToGlobal(candidate_rect.bottomRight())
             
-            # Centers are still used to determine the general direction (Left/Right/Up/Down)
+            # Los centros todavía se usan para determinar la dirección general (Izquierda/Derecha/Arriba/Abajo)
             center_cand = candidate.mapToGlobal(candidate_rect.center())
             x2, y2 = center_cand.x(), center_cand.y()
             
             dx = x2 - x1
             dy = y2 - y1
 
-            # --- FIX 1: Bounding Box Distance ---
-            # If x1 is within the candidate's width, horizontal distance is 0
+            # --- CORRECCIÓN 1: Distancia de la caja delimitadora ---
+            # Si x1 está dentro del ancho del candidato, la distancia horizontal es 0
             dist_x = 0
             if x1 < top_left.x(): 
                 dist_x = top_left.x() - x1
             elif x1 > bottom_right.x(): 
                 dist_x = x1 - bottom_right.x()
             
-            # If y1 is within the candidate's height, vertical distance is 0
+            # Si y1 está dentro de la altura del candidato, la distancia vertical es 0
             dist_y = 0
             if y1 < top_left.y(): 
                 dist_y = top_left.y() - y1
@@ -1004,7 +1003,7 @@ class MainPresenter(QObject):
             is_valid = False
             distance = float('inf')
 
-            # 4. Directional Filter with Penalty
+            # 4. Filtro direccional con penalización
             if direction == "RIGHT" and dx > 0:
                 is_valid = True
                 distance = math.hypot(dist_x, dist_y * 3) 
@@ -1018,34 +1017,34 @@ class MainPresenter(QObject):
                 is_valid = True
                 distance = math.hypot(dist_x * 3, dist_y)
 
-            # 5. Save if it's the closest candidate
+            # 5. Guardar si es el candidato más cercano
             if is_valid and distance < min_distance:
                 min_distance = distance
                 best_candidate = candidate
 
-        # 6. Execute the focus jump
+        # 6. Ejecutar el salto de foco
         if best_candidate:
             best_candidate.setFocus()
 
-            # --- FIX 2: Auto-Scroll if the button is inside a scroll area ---
+            # --- CORRECCIÓN 2: Desplazamiento automático si el botón está dentro de un área de scroll ---
             
             parent = best_candidate.parentWidget()
             
-            # Walk up the widget tree to see if we are inside a QScrollArea
+            # Recorrer el árbol de widgets hacia arriba para ver si estamos dentro de un QScrollArea
             while parent:
                 if isinstance(parent, QScrollArea):
-                    # Ensure the widget is fully visible, adding a 10px padding for aesthetics
+                    # Asegurar que el widget sea completamente visible, añadiendo un margen de 10px por estética
                     parent.ensureWidgetVisible(best_candidate, 10, 10)
                     break
                 parent = parent.parentWidget()
 
     def _execute_press_action(self, input_data):
-        """Acts as a router when a gesture exceeds the threshold."""
+        """Actúa como enrutador cuando un gesto supera el umbral."""
         action_code = input_data.get("input")
         if not action_code or action_code == "SYS_NONE":
             return
             
-        # 1. Virtual gamepad button / Trigger
+        # 1. Botón de mando virtual / Disparador
         if action_code.startswith("XUSB_"):
             if action_code == "XUSB_GAMEPAD_L2":
                 self.gamepad.left_trigger_float(1.0)  # Presión al 100%
@@ -1055,7 +1054,7 @@ class MainPresenter(QObject):
                 # Botones normales (A, B, L1, Start...)
                 self.gamepad.press_button(button=self.buttons_map[action_code])
             
-        # 2. Internal system action
+        # 2. Acción interna del sistema
         elif action_code.startswith("SYS_"):
             if action_code == "SYS_CHANGE_MODE":
                 self.model.is_continuous_mode = not self.model.is_continuous_mode
@@ -1070,7 +1069,7 @@ class MainPresenter(QObject):
                     self.view.activateWindow()
 
     def _execute_release_action(self, input_data):
-        """Releases the action when the user relaxes the gesture."""
+        """Libera la acción cuando el usuario relaja el gesto."""
         action_code = input_data.get("input")
         if not action_code or action_code == "SYS_NONE":
             return
@@ -1090,7 +1089,7 @@ class MainPresenter(QObject):
         self.view.show_page(8)
 
     def handle_emulator_setup_requested(self, console_name, page_index_return):
-        """Prepares the explorer to pick an executable for a specific console."""
+        """Prepara el explorador para elegir un ejecutable para una consola específica."""
         self.current_setup_console = console_name
         self.explorer_mode = "EMULATOR"
         
@@ -1103,7 +1102,7 @@ class MainPresenter(QObject):
         self.view.show_page(6)
 
     def handle_emulator_exe_chosen(self, filename, page_index_return=None):
-        """Fired when an .exe is clicked in the explorer."""
+        """Se dispara cuando se hace clic en un .exe en el explorador."""
         exe_path = os.path.join(self.current_explorer_path, filename)
         
         if self.current_setup_console:
@@ -1155,7 +1154,7 @@ class MainPresenter(QObject):
         
 
         # 3. Ordenamos a la vista que dibuje SÓLO esta lista recortada
-        self.view.populate_games_catalog(juegos_filtrados, platform_name,self.model.emulators_config.get(self.current_platform))
+        self.view.populate_games_catalog(juegos_filtrados, platform_name, self.model.emulators_config.get(self.current_platform))
         
         # 4. Viajamos a la página 5 del catálogo de juegos
         self.view.show_page(5)
@@ -1237,7 +1236,7 @@ class MainPresenter(QObject):
         self.view.show_page(0)
 
     def _calculate_movement_direction(self):
-        """Returns the current active direction based on nose tracking."""
+        """Devuelve la dirección activa actual basada en el seguimiento de la nariz."""
         inputs = self.model.input_structure
         
         up = inputs.get("noseUp", {}).get("active", False)
@@ -1245,13 +1244,13 @@ class MainPresenter(QObject):
         left = inputs.get("noseLeft", {}).get("active", False)
         right = inputs.get("noseRight", {}).get("active", False)
         
-        # Diagonal movements
+        # Movimientos diagonales
         if up and right: return "NE"
         if up and left: return "NW"
         if down and right: return "SE"
         if down and left: return "SW"
         
-        # Cardinal movements
+        # Movimientos cardinales
         if up: return "N"
         if down: return "S"
         if left: return "W"
@@ -1358,10 +1357,10 @@ class MainPresenter(QObject):
 
     def handle_application_restored(self):
         """Se ejecuta cuando la ventana vuelve a primer plano. Cambia el modo de movimiento."""
-        self.model.change_movement_mode(False)  # Switch to discrete mode when the app is restored to foreground
+        self.model.change_movement_mode(False)  # Cambiar a modo discreto (pasos) cuando la aplicación se restaura a primer plano
 
 
-    def has_windows_default_app(self,filepath):
+    def has_windows_default_app(self, filepath):
         """
         Consulta a la API de Windows si existe un programa predeterminado 
         asociado a la extensión de este archivo.

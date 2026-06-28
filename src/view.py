@@ -82,7 +82,7 @@ class MainView(QMainWindow):
     
     Responsabilidades:
     - Mostrar la interfaz gráfica del usuario
-    - Capturar eventos del usuario (clicks, input)
+    - Capturar eventos del usuario (clicks, entrada)
     - Emitir señales para que el Presentador reaccione
     - Actualizar elementos visuales basado en datos del Modelo
     
@@ -384,13 +384,13 @@ class MainView(QMainWindow):
         self.ui.gestureLabel.setText(rich_text)
 
     def click_gesture_button(self, gesture_name):
-        """Clicks the corresponding UI button if a gesture is already mapped."""
+        """Hace clic en el botón de la interfaz correspondiente si un gesto ya está mapeado."""
         for btn in self.ui.buttonGroup.buttons():
             if btn.property("gesture") == gesture_name:
                 btn.click()
                 break
     def click_input_button(self, input_name):
-        """Clicks the corresponding UI button if an input is already mapped."""
+        """Hace clic en el botón de la interfaz correspondiente si una entrada ya está mapeada."""
         for btn in self.ui.controlButtons.buttons():
             if btn.property("gamepadInput") == input_name:
                 btn.click()
@@ -612,13 +612,13 @@ class MainView(QMainWindow):
             self.pip_window.close()
         event.accept()  # Permitir el cierre
     
-    # --- STATUS BAR LOGIC ---
+    # --- LÓGICA DE LA BARRA DE ESTADO ---
     def update_fps(self, fps):
-        """Displays the current FPS in the window's bottom status bar."""
+        """Muestra los FPS actuales en la barra de estado inferior de la ventana."""
         self.ui.statusbar.showMessage(f"Estabilidad del Sistema: {fps} FPS")
 
     def _on_action_button_clicked(self, button):
-        """Detects which option was clicked and highlights its parent category."""
+        """Detecta qué opción se ha pulsado y resalta su categoría padre."""
         input_code = button.property("gamepadInput")
         if input_code:
             if input_code.startswith("XUSB"):
@@ -627,7 +627,7 @@ class MainView(QMainWindow):
                 self.highlight_category("system")
 
     def highlight_category(self, category_type):
-        """Highlights the correct category button and unhighlights the other."""
+        """Resalta el botón de la categoría correcta y elimina el resaltado de la otra."""
         # Aplicamos la propiedad dinámica booleana
         self.ui.btn_cat_mando.setProperty("active_category", category_type == "gamepad")
         self.ui.btn_cat_sys.setProperty("active_category", category_type == "system")
@@ -638,18 +638,18 @@ class MainView(QMainWindow):
             btn.style().polish(btn)
 
     def get_selected_control(self):
-        """Returns the gamepad input code of the currently selected control button."""
+        """Devuelve el código de entrada del mando correspondiente al botón de control actualmente seleccionado."""
         checked_btn = self.ui.controlButtons.checkedButton()
         if checked_btn:
             return checked_btn.property("gamepadInput")
         return None
     
     def get_selected_gesture(self):
-        """Returns the gesture code of the currently selected gesture"""
+        """Devuelve el código de gesto del gesto actualmente seleccionado."""
         return self.ui.gestureLabel.property("gesture")
 
     def clear_selection(self):
-        """Deselects any selected action and removes category highlights."""
+        """Deselecciona cualquier acción seleccionada y elimina los resaltados de categoría."""
         # 1. Desmarcar cualquier botón de acción (A, B, Start, Cambiar Modo...)
         checked_btn = self.ui.controlButtons.checkedButton()
         if checked_btn:
@@ -1391,7 +1391,6 @@ class MainView(QMainWindow):
         # Siempre llamar al método original para no romper Qt
         super().changeEvent(event)
 
-    # En view.py
     def populate_gesture_catalog(self, gestures_dict):
         """Genera dinámicamente los botones basándose exclusivamente en los datos recibidos."""
         # Vaciamos el layout viejo

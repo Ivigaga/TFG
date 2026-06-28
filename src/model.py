@@ -161,7 +161,7 @@ class AppModel:
         Flujo de carga:
         1. Si archivo de usuario no existe:
            - Intentar copiar desde plantilla default_inputs.json
-           - Si falla, crear estructura de emergencia (vital para tests)
+           - Si falla, crear estructura de emergencia (vital para pruebas)
         2. Si archivo existe:
            - Cargar JSON desde disco
         3. Verificar estado de tutorial:
@@ -171,14 +171,14 @@ class AppModel:
         Nota: Este método se ejecuta automáticamente en __init__()
         """
         # === PARTE 1: CARGAR ESTRUCTURA DE GESTOS ===
-        # Si el archivo de guardado del usuario no existe (ej. primera ejecución o tests)
+        # Si el archivo de guardado del usuario no existe (ej. primera ejecución o pruebas)
         if not os.path.exists(self.json_path):
             # Intentamos copiar la plantilla base si existe
             if hasattr(self, 'default_json_path') and os.path.exists(self.default_json_path):
                 with open(self.default_json_path, 'r', encoding='utf-8') as df:
                     self.input_structure = json.load(df)
             else:
-                # Fallback de emergencia (Vital para que los tests pasen sin dependencias)
+                # Alternativa de emergencia (Vital para que las pruebas pasen sin dependencias)
                 self.input_structure = {
                     "smile": {"category_type": "system", "function": "click", "input": "SYS_NAV_ENTER", "threshold": 0.5, "score": 0.0, "active": False},
                     "mouthPucker": {"category_type": "none", "function": "none", "input": None, "threshold": 0.5, "score": 0.0, "active": False},
@@ -213,7 +213,7 @@ class AppModel:
                     settings = json.load(f)
                     # Obtener estado: True si tutorial completado anteriormente
                     onboarding_completed = settings.get("onboarding_completed", False)
-                    # Detectar si el desarrollador ha activado el modo test
+                    # Detectar si el desarrollador ha activado el modo de pruebas
                     self.test_mode = settings.get("test_mode", False)
             except Exception:
                 # Si archivo corrupto o no legible, asumir que no fue completado
@@ -226,7 +226,7 @@ class AppModel:
     def complete_onboarding(self):
         """
         Marcar tutorial como completado y guardar estado persistente.
-        Conserva el modo test y sortea el bloqueo de archivos ocultos de Windows.
+        Conserva el modo de pruebas y sortea el bloqueo de archivos ocultos de Windows.
         """
         self.is_first_run_session = False
         
@@ -247,7 +247,7 @@ class AppModel:
             except Exception:
                 pass
                 
-        # 3. Ahora Windows sí nos permite escribir y sobreescribir sin dar PermissionError
+        # 3. Ahora Windows sí nos permite escribir y sobreescribir sin dar error de permisos (PermissionError)
         try:
             with open(self.settings_path, 'w', encoding='utf-8') as f:
                 json.dump(settings_data, f, indent=4)
@@ -313,7 +313,7 @@ class AppModel:
         # === PASO 2: CÁLCULO DE SCORES FINALES ===
         # Aplicar lógica de suavizado, filtrado e interferencia entre gestos
         
-        # --- Gestos de Ojos (Eye Gestures) ---
+        # --- Gestos de Ojos ---
         # Detectar ojos abiertos (máximo de ambos lados)
         score_eyes_wide = max(mediapipe_gestures_dict.get("eyeWideLeft", 0), mediapipe_gestures_dict.get("eyeWideRight", 0))
         # Guiño derecho: diferencia entre ojo derecho e izquierdo (si dcho. más cerrado)
@@ -323,8 +323,8 @@ class AppModel:
         # Cejas fruncidas (máximo de ambos lados)
         score_brow_down = max(mediapipe_gestures_dict.get("browDownLeft", 0), mediapipe_gestures_dict.get("browDownRight", 0))
 
-        # --- Gestos de Labios y Sonrisa (Mouth Gestures) ---
-        # Sonrisa: promedio de ambos lados, reducido por encoger labios (interfere)
+        # --- Gestos de Labios y Sonrisa ---
+        # Sonrisa: promedio de ambos lados, reducido por encoger labios (interfiere)
         score_smile = max(base_smile - base_shrug_lower, 0)
         # Morritos: presión para fruncir, reducido por boca abierta (funnel)
         score_mouth_pucker = max(base_pucker - base_funnel, 0)
@@ -333,7 +333,7 @@ class AppModel:
         # Apretar labios: promedio de ambos lados
         score_mouth_press = (mediapipe_gestures_dict.get("mouthPressLeft", 0) + mediapipe_gestures_dict.get("mouthPressRight", 0)) / 2
 
-        # --- Gestos de Mandíbula y Expresión (Jaw & Expression Gestures) ---
+        # --- Gestos de Mandíbula y Expresión ---
         # Abrir boca: valor directo reducido por boca en O (funnel)
         score_jaw_open = max(mediapipe_gestures_dict.get("jawOpen", 0) - base_funnel, 0)
         # Encoger labios: complejo (reduce por pucker, funnel, press)
@@ -344,7 +344,7 @@ class AppModel:
         score_mouth_left = mediapipe_gestures_dict.get("mouthLeft", 0)
         
         # === PASO 3: ASIGNACIÓN AL MODELO ===
-        # Actualizar input_structure con los scores calculados
+        # Actualizar input_structure con las puntuaciones calculadas
         self.set_score("smile", score_smile)
         self.set_score("mouthPucker", score_mouth_pucker)
         self.set_score("mouthFunnel", score_mouth_funnel)
@@ -411,12 +411,12 @@ class AppModel:
         Args:
             gesture_code: str - Código interno del gesto
             input_code: str - Acción o botón a mapear
-            threshold: float - Sensibilidad deseada (0-100 desde la UI)
+            threshold: float - Sensibilidad deseada (0-100 desde la interfaz)
         """
         if gesture_code not in self.input_structure:
             self.input_structure[gesture_code] = {}
 
-        # 1. El slider de la UI va de 0 a 100, pero la IA usa de 0.0 a 1.0
+        # 1. El control deslizante de la interfaz va de 0 a 100, pero la IA usa de 0.0 a 1.0
         self.input_structure[gesture_code]["threshold"] = threshold / 100.0
         
         # 2. Si el usuario selecciona "Ninguna" o desmarca todo
@@ -540,7 +540,7 @@ class AppModel:
                     if name and app_id:
                         app_id = str(app_id).strip()
                         
-                        # Excluir aplicaciones del sistema de Steam (e.g. Steamworks Common Redistributables)
+                        # Excluir aplicaciones del sistema de Steam (ej. Steamworks Common Redistributables)
                         if app_id in ["228980"]: # Lista negra
                             continue
 
@@ -557,7 +557,7 @@ class AppModel:
                                         break
                                 if best_image: break
                             
-                            # Fallback si no hay "logo.png" exacto
+                            # Alternativa si no hay "logo.png" exacto
                             if not best_image:
                                 archivos = os.listdir(app_folder)
                                 imagenes = [f for f in archivos if f.lower().endswith(('.jpg', '.jpeg', '.png', '.ico'))]
@@ -658,7 +658,7 @@ class AppModel:
 
     def get_dynamic_roms(self):
         """Escanea las carpetas sobre la marcha en busca de extensiones válidas. Usa la caché interna si ya se escaneó antes."""
-        # Si ya lo escaneamos en esta sesión, devolvemos la memoria directamente (0% latencia UI)
+        # Si ya lo escaneamos en esta sesión, devolvemos la memoria directamente (0% latencia de interfaz)
         if self._cached_roms is not None:
             return self._cached_roms
             
@@ -737,7 +737,7 @@ class AppModel:
 
 
     def get_available_gestures_metadata(self):
-        """Devuelve el catálogo maestro inmutable de gestos con sus nombres en español legibles por la UI."""
+        """Devuelve el catálogo maestro inmutable de gestos con sus nombres en español legibles por la interfaz de usuario."""
         return {
             "smile": "Sonrisa",
             "mouthPucker": "Morritos",
@@ -757,7 +757,7 @@ class AppModel:
     # === MÉTODOS DE TELEMETRÍA ===
     
     def log_telemetry(self, key):
-        """Suma 1 a la métrica indicada si el modo test está activo."""
+        """Suma 1 a la métrica indicada si el modo de pruebas está activo."""
         if self.test_mode and key in self.telemetry:
             self.telemetry[key] += 1
 
@@ -808,7 +808,7 @@ class AppModel:
         file_exists = os.path.exists(csv_path)
         
         try:
-            # 3. Modo 'a' (append). Esto inserta datos en la siguiente línea vacía sin borrar lo anterior.
+            # 3. Modo 'a' (añadir). Esto inserta datos en la siguiente línea vacía sin borrar lo anterior.
             with open(csv_path, mode='a', newline='', encoding='utf-8-sig') as f:
                 writer = csv.writer(f, delimiter=';') 
                 
