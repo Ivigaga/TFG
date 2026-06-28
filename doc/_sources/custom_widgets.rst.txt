@@ -1,0 +1,7 @@
+custom\_widgets module
+======================
+
+.. automodule:: custom_widgets
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,7 @@
+CameraStream module
+===================
+
+.. automodule:: CameraStream
+   :members:
+   :undoc-members:
+   :show-inheritance:

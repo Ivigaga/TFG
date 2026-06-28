@@ -1,0 +1,193 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="es" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>main &mdash; documentación de FaceDrive - 1.0</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=4936afed"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/translations.js?v=f85f4cfb"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="../genindex.html" />
+    <link rel="search" title="Búsqueda" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            FaceDrive
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Buscar documentos" aria-label="Buscar documentos" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">FaceDrive</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Código de módulo</a></li>
+      <li class="breadcrumb-item active">main</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Código fuente para main</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Punto de Entrada Principal (Main) de la Aplicación</span>
+
+<span class="sd">Este archivo es el responsable de inicializar la aplicación y ensamblar</span>
+<span class="sd">los tres componentes principales de la arquitectura MVP (Modelo-Vista-Presentador),</span>
+<span class="sd">junto con el motor de visión por computador en un hilo separado.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">PySide6.QtWidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">QApplication</span><span class="p">,</span> <span class="n">QMessageBox</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">model</span><span class="w"> </span><span class="kn">import</span> <span class="n">AppModel</span><span class="p">,</span> <span class="n">get_asset_path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">view</span><span class="w"> </span><span class="kn">import</span> <span class="n">MainView</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">vision</span><span class="w"> </span><span class="kn">import</span> <span class="n">VisionEngine</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">presenter</span><span class="w"> </span><span class="kn">import</span> <span class="n">MainPresenter</span>
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../main.html#main.main">[documentos]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="c1"># Inicializamos el motor principal de la interfaz gráfica de Qt</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">QApplication</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span>
+    
+    <span class="c1"># ==========================================</span>
+    <span class="c1"># 0. CARGAR ESTILOS (UI)</span>
+    <span class="c1"># ==========================================</span>
+    <span class="c1"># Cargamos y aplicamos la hoja de estilos externa para toda la aplicación</span>
+    <span class="n">ruta_estilos</span> <span class="o">=</span> <span class="n">get_asset_path</span><span class="p">(</span><span class="s2">&quot;style.qss&quot;</span><span class="p">)</span> 
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">ruta_estilos</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">archivo_estilo</span><span class="p">:</span>
+            <span class="n">app</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="n">archivo_estilo</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Advertencia: No se encontró el archivo de estilos en </span><span class="si">{</span><span class="n">ruta_estilos</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># ==========================================</span>
+    <span class="c1"># 1. INICIALIZAR EL MODELO (Datos y Lógica)</span>
+    <span class="c1"># ==========================================</span>
+    <span class="c1"># Creamos el modelo cargando la configuración base de controles</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">AppModel</span><span class="p">(</span><span class="s2">&quot;controls/default_inputs.json&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># ==========================================</span>
+    <span class="c1"># 2. INICIALIZAR MOTOR DE VISIÓN (Hardware e IA)</span>
+    <span class="c1"># ==========================================</span>
+    <span class="c1"># Intentamos arrancar la cámara y cargar el modelo de MediaPipe</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">vision_engine</span> <span class="o">=</span> <span class="n">VisionEngine</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">model_path</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">target_fps</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1"># Manejo de fallos: Si el equipo no tiene cámara web física o está bloqueada,</span>
+        <span class="c1"># mostramos un mensaje gráfico amigable al usuario en lugar de colapsar la consola.</span>
+        <span class="n">msg_box</span> <span class="o">=</span> <span class="n">QMessageBox</span><span class="p">()</span>
+        <span class="n">msg_box</span><span class="o">.</span><span class="n">setIcon</span><span class="p">(</span><span class="n">QMessageBox</span><span class="o">.</span><span class="n">Critical</span><span class="p">)</span>
+        <span class="n">msg_box</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="s2">&quot;Error Crítico&quot;</span><span class="p">)</span>
+        <span class="n">msg_box</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">&quot;No se ha detectado ninguna cámara web.&quot;</span><span class="p">)</span>
+        <span class="n">msg_box</span><span class="o">.</span><span class="n">setInformativeText</span><span class="p">(</span><span class="s2">&quot;Por favor, conecta una cámara al equipo y vuelve a iniciar la aplicación.&quot;</span><span class="p">)</span>
+        <span class="n">msg_box</span><span class="o">.</span><span class="n">setStandardButtons</span><span class="p">(</span><span class="n">QMessageBox</span><span class="o">.</span><span class="n">Ok</span><span class="p">)</span>
+        <span class="n">msg_box</span><span class="o">.</span><span class="n">exec</span><span class="p">()</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Cierre controlado de la aplicación devolviendo código de error</span>
+    
+    <span class="c1"># ==========================================</span>
+    <span class="c1"># 3. INICIALIZAR LA VISTA (Interfaz Gráfica)</span>
+    <span class="c1"># ==========================================</span>
+    <span class="c1"># Creamos la ventana principal (solo se dibuja, aún no tiene lógica)</span>
+    <span class="n">view</span> <span class="o">=</span> <span class="n">MainView</span><span class="p">()</span>
+    
+    <span class="c1"># ==========================================</span>
+    <span class="c1"># 4. INICIALIZAR EL PRESENTADOR (El Cerebro)</span>
+    <span class="c1"># ==========================================</span>
+    <span class="c1"># Inyectamos el Modelo, la Vista y el Motor de Visión en el Presentador.</span>
+    <span class="c1"># Aquí es donde se conectan todas las señales y la aplicación &quot;cobra vida&quot;.</span>
+    <span class="n">presenter</span> <span class="o">=</span> <span class="n">MainPresenter</span><span class="p">(</span><span class="n">view</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">vision_engine</span><span class="p">)</span>
+    
+    <span class="c1"># ==========================================</span>
+    <span class="c1"># 5. GESTIÓN DEL CIERRE DE LA APLICACIÓN</span>
+    <span class="c1"># ==========================================</span>
+    <span class="c1"># Interceptamos el evento de cierre de la ventana (cuando se pulsa la &#39;X&#39;)</span>
+    <span class="n">original_close_event</span> <span class="o">=</span> <span class="n">view</span><span class="o">.</span><span class="n">closeEvent</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">custom_close</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+        <span class="c1"># Aseguramos que el Presentador libere los recursos limpiamente:</span>
+        <span class="c1"># (Detener la cámara, matar el hilo del QThread y desconectar el mando virtual)</span>
+        <span class="n">presenter</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+        <span class="n">original_close_event</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+        
+    <span class="c1"># Reemplazamos el comportamiento por defecto con nuestra función segura</span>
+    <span class="n">view</span><span class="o">.</span><span class="n">closeEvent</span> <span class="o">=</span> <span class="n">custom_close</span>
+    
+    <span class="c1"># ==========================================</span>
+    <span class="c1"># 6. ARRANQUE DEL BUCLE PRINCIPAL</span>
+    <span class="c1"># ==========================================</span>
+    <span class="c1"># Mostramos la ventana y cedemos el control al bucle de eventos de PySide6</span>
+    <span class="n">view</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">app</span><span class="o">.</span><span class="n">exec</span><span class="p">())</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Derechos de autor 2026, Iván García García.</p>
+  </div>
+
+  Compilado con <a href="https://www.sphinx-doc.org/">Sphinx</a> usando un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    proporcionado por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

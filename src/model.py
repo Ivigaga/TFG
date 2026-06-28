@@ -159,12 +159,18 @@ class AppModel:
         Cargar estructura de mapeo de gestos desde JSON y verificar estado del tutorial.
         
         Flujo de carga:
+
         1. Si archivo de usuario no existe:
+
            - Intentar copiar desde plantilla default_inputs.json
-           - Si falla, crear estructura de emergencia (vital para pruebas)
+           - Si falla, crear estructura de emergencia (vital para tests)
+
         2. Si archivo existe:
+
            - Cargar JSON desde disco
+
         3. Verificar estado de tutorial:
+
            - Leer app_settings.json para onboarding_completed
            - Marcar is_first_run_session según historial
         
@@ -282,18 +288,22 @@ class AppModel:
         con lógica de suavizado, filtrado y combinación de valores.
         
         Args:
-            mediapipe_gestures_dict: dict - BlendShapes crudos de MediaPipe
-                Ejemplo: {"mouthSmileLeft": 0.85, "mouthSmileRight": 0.90, ...}
+            mediapipe_gestures_dict: dict - BlendShapes crudos de MediaPipe.
+                Ejemplo: {"mouthSmileLeft": 0.85, "mouthSmileRight": 0.90}
         
         Flujo de procesamiento:
+
         1. EXTRACCIÓN: Obtener valores crudos de MediaPipe
         2. CÁLCULO: Aplicar lógica de combinación y filtrado
+
            - Suavizar puntuaciones (promedios, máximos)
            - Restar interferencias (ej: pucker reduce funnel)
-           - Mantener solo valores positivos (max(..., 0))
+           - Mantener solo valores positivos
+
         3. ASIGNACIÓN: Actualizar input_structure con nuevos scores
         
         Gestos calculados:
+
         - Ojos: eyesWide, eyeBlinkRight, eyeBlinkLeft, browDown
         - Labios: smile, mouthPucker, mouthFunnel, mouthPress
         - Otros: jawOpen, mouthShrug, mouthLeft, mouthRight

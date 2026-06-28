@@ -1,0 +1,7 @@
+vision module
+=============
+
+.. automodule:: vision
+   :members:
+   :undoc-members:
+   :show-inheritance:

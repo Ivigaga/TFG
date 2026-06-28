@@ -1,0 +1,479 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="es" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>model module &mdash; documentación de FaceDrive - 1.0</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=4936afed"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/translations.js?v=f85f4cfb"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="genindex.html" />
+    <link rel="search" title="Búsqueda" href="search.html" />
+    <link rel="next" title="presenter module" href="presenter.html" />
+    <link rel="prev" title="main module" href="main.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            FaceDrive
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Buscar documentos" aria-label="Buscar documentos" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="CameraStream.html">CameraStream module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom_widgets.html">custom_widgets module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interface_ui.html">interface_ui module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="main.html">main module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">model module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#model.AppModel"><code class="docutils literal notranslate"><span class="pre">AppModel</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#model.AppModel.add_rom_folder"><code class="docutils literal notranslate"><span class="pre">AppModel.add_rom_folder()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model.AppModel.auto_detect_steam_games"><code class="docutils literal notranslate"><span class="pre">AppModel.auto_detect_steam_games()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model.AppModel.change_movement_mode"><code class="docutils literal notranslate"><span class="pre">AppModel.change_movement_mode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model.AppModel.complete_onboarding"><code class="docutils literal notranslate"><span class="pre">AppModel.complete_onboarding()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model.AppModel.export_telemetry_csv"><code class="docutils literal notranslate"><span class="pre">AppModel.export_telemetry_csv()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model.AppModel.get_available_gestures_metadata"><code class="docutils literal notranslate"><span class="pre">AppModel.get_available_gestures_metadata()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model.AppModel.get_available_profiles"><code class="docutils literal notranslate"><span class="pre">AppModel.get_available_profiles()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model.AppModel.get_console_from_extension"><code class="docutils literal notranslate"><span class="pre">AppModel.get_console_from_extension()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model.AppModel.get_dynamic_roms"><code class="docutils literal notranslate"><span class="pre">AppModel.get_dynamic_roms()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model.AppModel.get_input_from_gesture"><code class="docutils literal notranslate"><span class="pre">AppModel.get_input_from_gesture()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model.AppModel.get_installed_games"><code class="docutils literal notranslate"><span class="pre">AppModel.get_installed_games()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model.AppModel.get_rom_folders"><code class="docutils literal notranslate"><span class="pre">AppModel.get_rom_folders()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model.AppModel.get_score"><code class="docutils literal notranslate"><span class="pre">AppModel.get_score()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model.AppModel.get_type_from_gesture"><code class="docutils literal notranslate"><span class="pre">AppModel.get_type_from_gesture()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model.AppModel.load_inputs"><code class="docutils literal notranslate"><span class="pre">AppModel.load_inputs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model.AppModel.load_profile"><code class="docutils literal notranslate"><span class="pre">AppModel.load_profile()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model.AppModel.log_telemetry"><code class="docutils literal notranslate"><span class="pre">AppModel.log_telemetry()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model.AppModel.save_as_profile"><code class="docutils literal notranslate"><span class="pre">AppModel.save_as_profile()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model.AppModel.save_control_mapping"><code class="docutils literal notranslate"><span class="pre">AppModel.save_control_mapping()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model.AppModel.save_emulators_config"><code class="docutils literal notranslate"><span class="pre">AppModel.save_emulators_config()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model.AppModel.save_inputs"><code class="docutils literal notranslate"><span class="pre">AppModel.save_inputs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model.AppModel.set_score"><code class="docutils literal notranslate"><span class="pre">AppModel.set_score()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model.AppModel.set_tutorial_time"><code class="docutils literal notranslate"><span class="pre">AppModel.set_tutorial_time()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model.AppModel.update_gesture_scores"><code class="docutils literal notranslate"><span class="pre">AppModel.update_gesture_scores()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#model.get_asset_path"><code class="docutils literal notranslate"><span class="pre">get_asset_path()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#model.get_save_path"><code class="docutils literal notranslate"><span class="pre">get_save_path()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="presenter.html">presenter module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="view.html">view module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vision.html">vision module</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">FaceDrive</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">src</a></li>
+      <li class="breadcrumb-item active">model module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/model.rst.txt" rel="nofollow"> Ver código fuente de la página</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-model">
+<span id="model-module"></span><h1>model module<a class="headerlink" href="#module-model" title="Link to this heading"></a></h1>
+<p>Módulo Modelo - Capa de Persistencia de Datos de la Arquitectura MVP</p>
+<dl class="simple">
+<dt>Responsabilidades principales:</dt><dd><ul class="simple">
+<li><p>Gestionar estructura de entrada de gestos (input_structure.json)</p></li>
+<li><p>Mantener puntuaciones de gestos en tiempo real desde MediaPipe</p></li>
+<li><p>Manejar mapeo de gestos a entrada de mando (XUSB_GAMEPAD_*)</p></li>
+<li><p>Gestión de perfiles de usuario (guardar/cargar configuraciones)</p></li>
+<li><p>Detección automática de juegos Steam y escaneo de ROMs</p></li>
+<li><p>Configuración de emuladores por consola</p></li>
+<li><p>Estado de sistema (modo tutorial, modo continuo vs pasos)</p></li>
+</ul>
+</dd>
+<dt>Características principales:</dt><dd><ul class="simple">
+<li><p>Estructura de datos de gestos con umbrales configurables</p></li>
+<li><p>Cálculo de puntuaciones de gestos desde BlendShapes de MediaPipe</p></li>
+<li><p>Sistema de caché para ROMs (evita re-escaneo en cada carga)</p></li>
+<li><p>Escaneo inteligente de Steam (lectura de VDF, descarga de logos)</p></li>
+<li><p>Soporte para múltiples librerías de Steam</p></li>
+<li><p>Configuración persistente (JSON)</p></li>
+<li><p>Gestión de tutorial y estado de primer uso</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="model.AppModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.</span></span><span class="sig-name descname"><span class="pre">AppModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'controls/default_inputs.json'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#AppModel"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.AppModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Capa de modelo implementando persistencia de datos y gestión de estado de la aplicación.</p>
+<p>Gestiona:
+- Estructura de mapeo de gestos a entrada de mando
+- Puntuaciones de gestos en tiempo real
+- Perfiles de usuario (guardar/cargar)
+- Configuración de emuladores
+- Catálogo de juegos (Steam + ROMs)
+- Estado de tutorial y primera ejecución</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="model.AppModel.add_rom_folder">
+<span class="sig-name descname"><span class="pre">add_rom_folder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#AppModel.add_rom_folder"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.AppModel.add_rom_folder" title="Link to this definition"></a></dt>
+<dd><p>Añade una nueva ruta a la lista de exploración y limpia la caché para forzar un re-escaneo.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.AppModel.auto_detect_steam_games">
+<span class="sig-name descname"><span class="pre">auto_detect_steam_games</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#AppModel.auto_detect_steam_games"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.AppModel.auto_detect_steam_games" title="Link to this definition"></a></dt>
+<dd><p>Escanea la instalación local de Steam y consolida todos los perfiles de juegos detectados
+en una única base de datos JSON estructurada.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Devuelve<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool - True si hubo cambios (juegos nuevos o actualizaciones), False si todo sigue igual.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.AppModel.change_movement_mode">
+<span class="sig-name descname"><span class="pre">change_movement_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#AppModel.change_movement_mode"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.AppModel.change_movement_mode" title="Link to this definition"></a></dt>
+<dd><p>Cambia el modo de movimiento entre “discreto” y “continuo” según la acción del usuario.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.AppModel.complete_onboarding">
+<span class="sig-name descname"><span class="pre">complete_onboarding</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#AppModel.complete_onboarding"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.AppModel.complete_onboarding" title="Link to this definition"></a></dt>
+<dd><p>Marcar tutorial como completado y guardar estado persistente.
+Conserva el modo de pruebas y sortea el bloqueo de archivos ocultos de Windows.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.AppModel.export_telemetry_csv">
+<span class="sig-name descname"><span class="pre">export_telemetry_csv</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#AppModel.export_telemetry_csv"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.AppModel.export_telemetry_csv" title="Link to this definition"></a></dt>
+<dd><p>Añade la sesión actual a un archivo CSV global al cerrar la aplicación.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.AppModel.get_available_gestures_metadata">
+<span class="sig-name descname"><span class="pre">get_available_gestures_metadata</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#AppModel.get_available_gestures_metadata"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.AppModel.get_available_gestures_metadata" title="Link to this definition"></a></dt>
+<dd><p>Devuelve el catálogo maestro inmutable de gestos con sus nombres en español legibles por la interfaz de usuario.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.AppModel.get_available_profiles">
+<span class="sig-name descname"><span class="pre">get_available_profiles</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#AppModel.get_available_profiles"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.AppModel.get_available_profiles" title="Link to this definition"></a></dt>
+<dd><p>Devuelve una lista con los nombres de los archivos .json en la carpeta de perfiles “controls”.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.AppModel.get_console_from_extension">
+<span class="sig-name descname"><span class="pre">get_console_from_extension</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extension</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#AppModel.get_console_from_extension"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.AppModel.get_console_from_extension" title="Link to this definition"></a></dt>
+<dd><p>Asigna una extensión de archivo detectada (como “.nes”) al nombre real de la consola correspondiente.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.AppModel.get_dynamic_roms">
+<span class="sig-name descname"><span class="pre">get_dynamic_roms</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#AppModel.get_dynamic_roms"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.AppModel.get_dynamic_roms" title="Link to this definition"></a></dt>
+<dd><p>Escanea las carpetas sobre la marcha en busca de extensiones válidas. Usa la caché interna si ya se escaneó antes.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.AppModel.get_input_from_gesture">
+<span class="sig-name descname"><span class="pre">get_input_from_gesture</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gesture</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#AppModel.get_input_from_gesture"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.AppModel.get_input_from_gesture" title="Link to this definition"></a></dt>
+<dd><p>Obtener código de entrada de mando asociado a un gesto.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>gesture</strong> – str - nombre del gesto</p>
+</dd>
+<dt class="field-even">Devuelve<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>«XUSB_GAMEPAD_A»), acción de sistema (ej: «SYS_NAV_ENTER»),</dt><dd><p>o None si no está mapeado</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Tipo del valor devuelto<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str - código de botón (ej</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.AppModel.get_installed_games">
+<span class="sig-name descname"><span class="pre">get_installed_games</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#AppModel.get_installed_games"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.AppModel.get_installed_games" title="Link to this definition"></a></dt>
+<dd><p>Lee la BD unificada de Steam y la fusiona con la caché en tiempo real de las ROMs.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.AppModel.get_rom_folders">
+<span class="sig-name descname"><span class="pre">get_rom_folders</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#AppModel.get_rom_folders"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.AppModel.get_rom_folders" title="Link to this definition"></a></dt>
+<dd><p>Devuelve la lista de rutas en disco guardadas por el usuario como directorios de ROMs.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.AppModel.get_score">
+<span class="sig-name descname"><span class="pre">get_score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gesture</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#AppModel.get_score"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.AppModel.get_score" title="Link to this definition"></a></dt>
+<dd><p>Obtener puntuación actual de un gesto.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>gesture</strong> – str - nombre del gesto (ej: «smile», «eyeBlinkLeft»)</p>
+</dd>
+<dt class="field-even">Devuelve<span class="colon">:</span></dt>
+<dd class="field-even"><p>float - puntuación del gesto (0.0 a 1.0), o 0.0 si gesto no existe</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.AppModel.get_type_from_gesture">
+<span class="sig-name descname"><span class="pre">get_type_from_gesture</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gesture</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#AppModel.get_type_from_gesture"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.AppModel.get_type_from_gesture" title="Link to this definition"></a></dt>
+<dd><p>Devuelve el tipo de categoría (“gamepad”, “system”, “none”) asociada a un gesto.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.AppModel.load_inputs">
+<span class="sig-name descname"><span class="pre">load_inputs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#AppModel.load_inputs"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.AppModel.load_inputs" title="Link to this definition"></a></dt>
+<dd><p>Cargar estructura de mapeo de gestos desde JSON y verificar estado del tutorial.</p>
+<p>Flujo de carga:</p>
+<ol class="arabic simple">
+<li><p>Si archivo de usuario no existe:</p>
+<ul class="simple">
+<li><p>Intentar copiar desde plantilla default_inputs.json</p></li>
+<li><p>Si falla, crear estructura de emergencia (vital para tests)</p></li>
+</ul>
+</li>
+<li><p>Si archivo existe:</p>
+<ul class="simple">
+<li><p>Cargar JSON desde disco</p></li>
+</ul>
+</li>
+<li><p>Verificar estado de tutorial:</p>
+<ul class="simple">
+<li><p>Leer app_settings.json para onboarding_completed</p></li>
+<li><p>Marcar is_first_run_session según historial</p></li>
+</ul>
+</li>
+</ol>
+<p>Nota: Este método se ejecuta automáticamente en __init__()</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.AppModel.load_profile">
+<span class="sig-name descname"><span class="pre">load_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#AppModel.load_profile"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.AppModel.load_profile" title="Link to this definition"></a></dt>
+<dd><p>Cambia el archivo de configuración objetivo y recarga toda la estructura en la memoria RAM.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.AppModel.log_telemetry">
+<span class="sig-name descname"><span class="pre">log_telemetry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#AppModel.log_telemetry"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.AppModel.log_telemetry" title="Link to this definition"></a></dt>
+<dd><p>Suma 1 a la métrica indicada si el modo de pruebas está activo.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.AppModel.save_as_profile">
+<span class="sig-name descname"><span class="pre">save_as_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#AppModel.save_as_profile"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.AppModel.save_as_profile" title="Link to this definition"></a></dt>
+<dd><p>Crea un nuevo archivo JSON, vuelca la configuración actual y lo establece como el perfil activo.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.AppModel.save_control_mapping">
+<span class="sig-name descname"><span class="pre">save_control_mapping</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gesture_code</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_code</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#AppModel.save_control_mapping"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.AppModel.save_control_mapping" title="Link to this definition"></a></dt>
+<dd><p>Actualiza el mapeo de los gestos exclusivamente en memoria RAM (no escribe en disco).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gesture_code</strong> – str - Código interno del gesto</p></li>
+<li><p><strong>input_code</strong> – str - Acción o botón a mapear</p></li>
+<li><p><strong>threshold</strong> – float - Sensibilidad deseada (0-100 desde la interfaz)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.AppModel.save_emulators_config">
+<span class="sig-name descname"><span class="pre">save_emulators_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#AppModel.save_emulators_config"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.AppModel.save_emulators_config" title="Link to this definition"></a></dt>
+<dd><p>Vuelca la configuración actual de rutas de emuladores de la memoria RAM al disco duro.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.AppModel.save_inputs">
+<span class="sig-name descname"><span class="pre">save_inputs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#AppModel.save_inputs"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.AppModel.save_inputs" title="Link to this definition"></a></dt>
+<dd><p>Guardar estructura actual de mapeo de gestos a archivo JSON.</p>
+<p>Persiste el contenido de self.input_structure al archivo en self.json_path.
+Se ejecuta automáticamente después de:
+- Crear nuevo perfil (save_as_profile)
+- Guardar mapeo de control (save_control_mapping)
+- Completar cambios de configuración</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.AppModel.set_score">
+<span class="sig-name descname"><span class="pre">set_score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gesture</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#AppModel.set_score"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.AppModel.set_score" title="Link to this definition"></a></dt>
+<dd><p>Establecer puntuación de un gesto en el modelo.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gesture</strong> – str - nombre del gesto (ej: «smile», «eyeBlinkLeft»)</p></li>
+<li><p><strong>value</strong> – float - puntuación del gesto (0.0 a 1.0)</p></li>
+</ul>
+</dd>
+</dl>
+<p>Si el gesto existe en input_structure, actualiza su campo «score».</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.AppModel.set_tutorial_time">
+<span class="sig-name descname"><span class="pre">set_tutorial_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seconds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#AppModel.set_tutorial_time"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.AppModel.set_tutorial_time" title="Link to this definition"></a></dt>
+<dd><p>Registra el tiempo exacto que tardó el usuario en superar el tutorial.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.AppModel.update_gesture_scores">
+<span class="sig-name descname"><span class="pre">update_gesture_scores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mediapipe_gestures_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#AppModel.update_gesture_scores"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.AppModel.update_gesture_scores" title="Link to this definition"></a></dt>
+<dd><p>Actualizar puntuaciones internas de gestos basadas en datos crudos de MediaPipe.</p>
+<p>Esta función mapea BlendShapes crudos de MediaPipe a gestos de alto nivel
+con lógica de suavizado, filtrado y combinación de valores.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>mediapipe_gestures_dict</strong> – dict - BlendShapes crudos de MediaPipe.
+Ejemplo: {«mouthSmileLeft»: 0.85, «mouthSmileRight»: 0.90}</p>
+</dd>
+</dl>
+<p>Flujo de procesamiento:</p>
+<ol class="arabic simple">
+<li><p>EXTRACCIÓN: Obtener valores crudos de MediaPipe</p></li>
+<li><p>CÁLCULO: Aplicar lógica de combinación y filtrado</p>
+<ul class="simple">
+<li><p>Suavizar puntuaciones (promedios, máximos)</p></li>
+<li><p>Restar interferencias (ej: pucker reduce funnel)</p></li>
+<li><p>Mantener solo valores positivos</p></li>
+</ul>
+</li>
+<li><p>ASIGNACIÓN: Actualizar input_structure con nuevos scores</p></li>
+</ol>
+<p>Gestos calculados:</p>
+<ul class="simple">
+<li><p>Ojos: eyesWide, eyeBlinkRight, eyeBlinkLeft, browDown</p></li>
+<li><p>Labios: smile, mouthPucker, mouthFunnel, mouthPress</p></li>
+<li><p>Otros: jawOpen, mouthShrug, mouthLeft, mouthRight</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="model.get_asset_path">
+<span class="sig-prename descclassname"><span class="pre">model.</span></span><span class="sig-name descname"><span class="pre">get_asset_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">relative_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#get_asset_path"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.get_asset_path" title="Link to this definition"></a></dt>
+<dd><p>Resolver ruta a archivos de solo lectura que vienen empaquetados (IA, estilos, iconos fijos).</p>
+<p>Nota: Usar SOLO para archivos que se distribuyen con la aplicación y NO cambian.
+Para archivos de usuario (perfiles, ROMs), usar get_save_path() en su lugar.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>relative_path</strong> – str - ruta relativa desde /conf (ej: «images/gestures/smile.png»)</p>
+</dd>
+<dt class="field-even">Devuelve<span class="colon">:</span></dt>
+<dd class="field-even"><p>str - ruta absoluta del archivo</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Comportamiento:</dt><dd><ul class="simple">
+<li><p>Si está empaquetado (PyInstaller): usa sys._MEIPASS (carpeta _internal)</p></li>
+<li><p>En desarrollo: sube un nivel desde /src y entra en /conf</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="model.get_save_path">
+<span class="sig-prename descclassname"><span class="pre">model.</span></span><span class="sig-name descname"><span class="pre">get_save_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">relative_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model.html#get_save_path"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#model.get_save_path" title="Link to this definition"></a></dt>
+<dd><p>Resolver ruta a archivos de escritura/usuario (JSONs, perfiles, portadas descargadas).</p>
+<p>Nota: Usar SOLO para archivos que el usuario modifica o que la app genera.
+Para archivos estáticos (modelos IA), usar get_asset_path() en su lugar.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>relative_path</strong> – str - ruta relativa desde /conf (ej: «controls/perfil_usuario.json»)</p>
+</dd>
+<dt class="field-even">Devuelve<span class="colon">:</span></dt>
+<dd class="field-even"><p>str - ruta absoluta del archivo</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Comportamiento:</dt><dd><ul class="simple">
+<li><p>Si está empaquetado (PyInstaller): usa directorio del .exe (fácil acceso para datos)</p></li>
+<li><p>En desarrollo: sube un nivel desde /src y entra en /conf (mismo que get_asset_path)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Pie de página">
+        <a href="main.html" class="btn btn-neutral float-left" title="main module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Anterior</a>
+        <a href="presenter.html" class="btn btn-neutral float-right" title="presenter module" accesskey="n" rel="next">Siguiente <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Derechos de autor 2026, Iván García García.</p>
+  </div>
+
+  Compilado con <a href="https://www.sphinx-doc.org/">Sphinx</a> usando un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    proporcionado por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

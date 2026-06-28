@@ -1,0 +1,263 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="es" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vision &mdash; documentación de FaceDrive - 1.0</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=4936afed"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/translations.js?v=f85f4cfb"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="../genindex.html" />
+    <link rel="search" title="Búsqueda" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            FaceDrive
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Buscar documentos" aria-label="Buscar documentos" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">FaceDrive</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Código de módulo</a></li>
+      <li class="breadcrumb-item active">vision</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Código fuente para vision</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">MÓDULO vision.py</span>
+<span class="sd">---------------------------------------------------------</span>
+<span class="sd">Contiene el Motor de Visión, encargado de procesar la Inteligencia Artificial (MediaPipe).</span>
+<span class="sd">Al heredar de QThread, este código se ejecuta en un núcleo paralelo del procesador,</span>
+<span class="sd">asegurando que la interfaz de la aplicación nunca se congele.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mediapipe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mediapipe.tasks</span><span class="w"> </span><span class="kn">import</span> <span class="n">python</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mediapipe.tasks.python</span><span class="w"> </span><span class="kn">import</span> <span class="n">vision</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">PySide6.QtCore</span><span class="w"> </span><span class="kn">import</span> <span class="n">QThread</span><span class="p">,</span> <span class="n">Signal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">CameraStream</span><span class="w"> </span><span class="kn">import</span> <span class="n">CameraStream</span>
+
+<div class="viewcode-block" id="VisionEngine">
+<a class="viewcode-back" href="../vision.html#vision.VisionEngine">[documentos]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">VisionEngine</span><span class="p">(</span><span class="n">QThread</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Motor asíncrono para captura facial. </span>
+<span class="sd">    Interconecta el hilo secundario de la cámara (Hardware) con el hilo </span>
+<span class="sd">    secundario de la IA y escupe los resultados al hilo principal de la UI.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Definimos la señal que escupirá los datos al Presentador en el formato:</span>
+    <span class="c1"># (frame_imagen, diccionario_blendshapes, coordenadas_puntos_faciales, es_nuevo_dato_IA)</span>
+    <span class="n">frame_processed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">object</span><span class="p">,</span> <span class="nb">object</span><span class="p">,</span> <span class="nb">object</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">target_fps</span><span class="o">=</span><span class="mi">60</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span> <span class="c1"># Obligatorio al heredar de QThread</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_fps</span> <span class="o">=</span> <span class="n">target_fps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_inference_time</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timestamp_ms</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_running</span> <span class="o">=</span> <span class="kc">True</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_result</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cam</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_camera</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_detector</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_camera</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Escanea los puertos USB en busca de una cámara disponible y la arranca.</span>
+<span class="sd">        </span>
+<span class="sd">        Raises:</span>
+<span class="sd">            Exception: Si falla al leer los puertos tras 5 intentos.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+            <span class="n">cap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">cap</span><span class="o">.</span><span class="n">isOpened</span><span class="p">():</span>
+                <span class="n">ret</span><span class="p">,</span> <span class="n">frame</span> <span class="o">=</span> <span class="n">cap</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">ret</span> <span class="ow">and</span> <span class="n">frame</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># Encontramos cámara válida. Liberamos OpenCV básico y arrancamos</span>
+                    <span class="c1"># nuestro hilo optimizado CameraStream</span>
+                    <span class="n">cap</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+                    <span class="k">return</span> <span class="n">CameraStream</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">target_fps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">target_fps</span><span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="n">cap</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+            
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;CRITICAL ERROR: No camera detected.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_result_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">output_image</span><span class="p">,</span> <span class="n">timestamp_ms</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Función &#39;Callback&#39; invocada asíncronamente por MediaPipe desde C++ </span>
+<span class="sd">        cuando termina de procesar un fotograma de red neuronal.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_result</span> <span class="o">=</span> <span class="n">result</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_detector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Carga y configura el modelo de Machine Learning (FaceLandmarker).&quot;&quot;&quot;</span>
+        <span class="n">base_options</span> <span class="o">=</span> <span class="n">python</span><span class="o">.</span><span class="n">BaseOptions</span><span class="p">(</span><span class="n">model_asset_path</span><span class="o">=</span><span class="n">model_path</span><span class="p">)</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="n">vision</span><span class="o">.</span><span class="n">FaceLandmarkerOptions</span><span class="p">(</span>
+            <span class="n">base_options</span><span class="o">=</span><span class="n">base_options</span><span class="p">,</span>
+            <span class="n">running_mode</span><span class="o">=</span><span class="n">vision</span><span class="o">.</span><span class="n">RunningMode</span><span class="o">.</span><span class="n">LIVE_STREAM</span><span class="p">,</span> <span class="c1"># Modo vídeo continuo para baja latencia</span>
+            <span class="n">result_callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_result_callback</span><span class="p">,</span>
+            <span class="n">output_face_blendshapes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="c1"># Requerimos la extracción de gestos expresivos (score 0-1)</span>
+            <span class="n">num_faces</span><span class="o">=</span><span class="mi">1</span>                   <span class="c1"># Limitado a 1 cara para ahorrar recursos</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">vision</span><span class="o">.</span><span class="n">FaceLandmarker</span><span class="o">.</span><span class="n">create_from_options</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+
+    <span class="c1"># El método run() es el corazón del QThread. Todo lo que esté aquí dentro </span>
+    <span class="c1"># se procesa fuera del hilo principal de la aplicación.</span>
+<div class="viewcode-block" id="VisionEngine.run">
+<a class="viewcode-back" href="../vision.html#vision.VisionEngine.run">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_running</span><span class="p">:</span>
+            <span class="n">loop_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="c1"># 1. Marcamos cronómetro: inicio del frame</span>
+            
+            <span class="c1"># Obtenemos el último frame del hilo optimizado de cámara</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cam</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">frame</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span> <span class="c1"># Si la cámara falla/tarda, dormimos 10ms para no quemar la CPU</span>
+                <span class="k">continue</span>
+
+            <span class="n">is_new_processing</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">current_now</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+            
+            <span class="c1"># --- CONTROL DE FPS DE LA INTELIGENCIA ARTIFICIAL ---</span>
+            <span class="c1"># Aunque la cámara vaya a 100 FPS, limitamos la carga matemática a los target_fps (60)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">current_now</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_inference_time</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_fps</span><span class="p">):</span>
+                <span class="c1"># Convertimos BGR (OpenCV) a RGB (MediaPipe)</span>
+                <span class="n">rgb_small</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2RGB</span><span class="p">)</span>
+                <span class="n">mp_image</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">Image</span><span class="p">(</span><span class="n">image_format</span><span class="o">=</span><span class="n">mp</span><span class="o">.</span><span class="n">ImageFormat</span><span class="o">.</span><span class="n">SRGB</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">rgb_small</span><span class="p">)</span>
+                
+                <span class="c1"># Inyección asíncrona a la red neuronal</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">timestamp_ms</span> <span class="o">+=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">1000</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_fps</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">detect_async</span><span class="p">(</span><span class="n">mp_image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestamp_ms</span><span class="p">)</span>
+                
+                <span class="bp">self</span><span class="o">.</span><span class="n">last_inference_time</span> <span class="o">=</span> <span class="n">current_now</span>
+                <span class="n">is_new_processing</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="c1"># Efecto espejo (es más intuitivo para el usuario moverse viéndose al revés)</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            
+            <span class="n">blendshapes</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">landmarks</span> <span class="o">=</span> <span class="kc">None</span>
+            
+            <span class="c1"># Extraer resultados devueltos por el Callback</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_result</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_result</span><span class="o">.</span><span class="n">face_blendshapes</span><span class="p">:</span>
+                    <span class="c1"># Convertimos la estructura compleja a un diccionario plano simple {&quot;smile&quot;: 0.8}</span>
+                    <span class="n">blendshapes</span> <span class="o">=</span> <span class="p">{</span><span class="n">cat</span><span class="o">.</span><span class="n">category_name</span><span class="p">:</span> <span class="n">cat</span><span class="o">.</span><span class="n">score</span> <span class="k">for</span> <span class="n">cat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_result</span><span class="o">.</span><span class="n">face_blendshapes</span><span class="p">[</span><span class="mi">0</span><span class="p">]}</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_result</span><span class="o">.</span><span class="n">face_landmarks</span><span class="p">:</span>
+                    <span class="n">landmarks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_result</span><span class="o">.</span><span class="n">face_landmarks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="c1"># Emitimos el &quot;Paquete&quot; de vuelta al Hilo Principal (al Presentador)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">frame_processed</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">blendshapes</span><span class="p">,</span> <span class="n">landmarks</span><span class="p">,</span> <span class="n">is_new_processing</span><span class="p">)</span>
+            
+            <span class="c1"># --- EL ACELERADOR Y FRENO (THROTTLING) ---</span>
+            <span class="c1"># Calculamos cuánto tiempo sobró de este frame.</span>
+            <span class="c1"># Dormimos el hilo exactamente los milisegundos restantes para asegurar 60 FPS estables.</span>
+            <span class="n">elapsed_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">loop_start</span>
+            <span class="n">time_left_to_sleep</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_fps</span><span class="p">)</span> <span class="o">-</span> <span class="n">elapsed_time</span>
+            
+            <span class="k">if</span> <span class="n">time_left_to_sleep</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">time_left_to_sleep</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="VisionEngine.release_resources">
+<a class="viewcode-back" href="../vision.html#vision.VisionEngine.release_resources">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">release_resources</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ejecuta un apagado ordenado y seguro previniendo fugas de memoria </span>
+<span class="sd">        (Memory Leaks) al cerrar la aplicación.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_running</span> <span class="o">=</span> <span class="kc">False</span>
+        
+        <span class="c1"># 1. Avisamos a la cámara que pare ANTES de bloquear este hilo</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;cam&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cam</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cam</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>  <span class="c1"># Dar tiempo a que el bucle interno del Stream se cierre</span>
+            
+        <span class="c1"># 2. Esperamos limpiamente a que este QThread termine su bucle run()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="mi">2000</span><span class="p">)</span>  <span class="c1"># Esperar un máximo de 2 segundos (timeout)</span>
+        
+        <span class="c1"># 3. Forzar quit() brusco si aún sigue atascado</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isRunning</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">quit</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+        
+        <span class="c1"># 4. CRÍTICO: Apagar el motor de MediaPipe (Libera objetos y memoria asignados en C++)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;detector&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">detector</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Derechos de autor 2026, Iván García García.</p>
+  </div>
+
+  Compilado con <a href="https://www.sphinx-doc.org/">Sphinx</a> usando un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    proporcionado por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

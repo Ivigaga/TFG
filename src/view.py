@@ -1,21 +1,23 @@
-"""=============================================================================
+"""
 MÓDULO view.py - INTERFAZ GRÁFICA DE USUARIO (GUI)
-=============================================================================
-Responsable de toda la presentación visual y interacción del usuario.
+==================================================
+
+Responsable de toda la presentación visual y la interacción del usuario.
 Implementa el patrón MVP (Model-View-Presenter).
 
 Componentes principales:
-  - PipWindow: Ventana flotante para video Picture-in-Picture
-  - MainView: Ventana principal con todos los controles y pantallas
+
+* PipWindow: Ventana flotante para video Picture-in-Picture
+* MainView: Ventana principal con todos los controles y pantallas
 
 Características:
-  - Teclado virtual personalizado
-  - Explorador de archivos interactivo
-  - Configuración dinámica de emuladores
-  - Catálogo de juegos y plataformas
-  - Sistema de perfiles de control
-  - Tutorial interactivo integrado
-=============================================================================
+
+* Teclado virtual personalizado
+* Explorador de archivos interactivo
+* Configuración dinámica de emuladores
+* Catálogo de juegos y plataformas
+* Sistema de perfiles de control
+* Tutorial interactivo integrado
 """
 
 import os

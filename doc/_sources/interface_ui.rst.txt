@@ -1,0 +1,7 @@
+interface\_ui module
+====================
+
+.. automodule:: interface_ui
+   :members:
+   :undoc-members:
+   :show-inheritance:

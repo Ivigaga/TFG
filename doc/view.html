@@ -1,0 +1,799 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="es" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>view module &mdash; documentación de FaceDrive - 1.0</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=4936afed"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/translations.js?v=f85f4cfb"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="genindex.html" />
+    <link rel="search" title="Búsqueda" href="search.html" />
+    <link rel="next" title="vision module" href="vision.html" />
+    <link rel="prev" title="presenter module" href="presenter.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            FaceDrive
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Buscar documentos" aria-label="Buscar documentos" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="CameraStream.html">CameraStream module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom_widgets.html">custom_widgets module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interface_ui.html">interface_ui module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="main.html">main module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model.html">model module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="presenter.html">presenter module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">view module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#modulo-view-py-interfaz-grafica-de-usuario-gui">MÓDULO view.py - INTERFAZ GRÁFICA DE USUARIO (GUI)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#view.MainView"><code class="docutils literal notranslate"><span class="pre">MainView</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.application_restored"><code class="docutils literal notranslate"><span class="pre">MainView.application_restored</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.build_virtual_keyboard"><code class="docutils literal notranslate"><span class="pre">MainView.build_virtual_keyboard()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.changeEvent"><code class="docutils literal notranslate"><span class="pre">MainView.changeEvent()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.clear_selection"><code class="docutils literal notranslate"><span class="pre">MainView.clear_selection()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.click_gesture_button"><code class="docutils literal notranslate"><span class="pre">MainView.click_gesture_button()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.click_input_button"><code class="docutils literal notranslate"><span class="pre">MainView.click_input_button()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.closeEvent"><code class="docutils literal notranslate"><span class="pre">MainView.closeEvent()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.controls_closed"><code class="docutils literal notranslate"><span class="pre">MainView.controls_closed</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.controls_opened"><code class="docutils literal notranslate"><span class="pre">MainView.controls_opened</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.emulator_exe_chosen"><code class="docutils literal notranslate"><span class="pre">MainView.emulator_exe_chosen</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.emulator_settings_opened"><code class="docutils literal notranslate"><span class="pre">MainView.emulator_settings_opened</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.emulator_setup_requested"><code class="docutils literal notranslate"><span class="pre">MainView.emulator_setup_requested</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.explorer_cancel_clicked"><code class="docutils literal notranslate"><span class="pre">MainView.explorer_cancel_clicked</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.explorer_folder_clicked"><code class="docutils literal notranslate"><span class="pre">MainView.explorer_folder_clicked</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.explorer_opened"><code class="docutils literal notranslate"><span class="pre">MainView.explorer_opened</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.explorer_select_clicked"><code class="docutils literal notranslate"><span class="pre">MainView.explorer_select_clicked</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.explorer_up_clicked"><code class="docutils literal notranslate"><span class="pre">MainView.explorer_up_clicked</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.game_launch_requested"><code class="docutils literal notranslate"><span class="pre">MainView.game_launch_requested</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.games_catalog_requested"><code class="docutils literal notranslate"><span class="pre">MainView.games_catalog_requested</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.gesture_selected"><code class="docutils literal notranslate"><span class="pre">MainView.gesture_selected</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.get_selected_control"><code class="docutils literal notranslate"><span class="pre">MainView.get_selected_control()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.get_selected_gesture"><code class="docutils literal notranslate"><span class="pre">MainView.get_selected_gesture()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.get_slider_threshold"><code class="docutils literal notranslate"><span class="pre">MainView.get_slider_threshold()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.hide_controller_image"><code class="docutils literal notranslate"><span class="pre">MainView.hide_controller_image()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.highlight_category"><code class="docutils literal notranslate"><span class="pre">MainView.highlight_category()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.launch_pip"><code class="docutils literal notranslate"><span class="pre">MainView.launch_pip()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.load_profiles_requested"><code class="docutils literal notranslate"><span class="pre">MainView.load_profiles_requested</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.mapping_canceled"><code class="docutils literal notranslate"><span class="pre">MainView.mapping_canceled</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.navigation_requested"><code class="docutils literal notranslate"><span class="pre">MainView.navigation_requested</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.navigation_settings_opened"><code class="docutils literal notranslate"><span class="pre">MainView.navigation_settings_opened</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.open_save_as_requested"><code class="docutils literal notranslate"><span class="pre">MainView.open_save_as_requested</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.open_virtual_keyboard"><code class="docutils literal notranslate"><span class="pre">MainView.open_virtual_keyboard()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.pip_toggled"><code class="docutils literal notranslate"><span class="pre">MainView.pip_toggled</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.platform_selected"><code class="docutils literal notranslate"><span class="pre">MainView.platform_selected</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.populate_emulator_settings"><code class="docutils literal notranslate"><span class="pre">MainView.populate_emulator_settings()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.populate_explorer"><code class="docutils literal notranslate"><span class="pre">MainView.populate_explorer()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.populate_games_catalog"><code class="docutils literal notranslate"><span class="pre">MainView.populate_games_catalog()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.populate_gesture_catalog"><code class="docutils literal notranslate"><span class="pre">MainView.populate_gesture_catalog()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.populate_platforms_catalog"><code class="docutils literal notranslate"><span class="pre">MainView.populate_platforms_catalog()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.populate_profiles"><code class="docutils literal notranslate"><span class="pre">MainView.populate_profiles()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.profile_accepted"><code class="docutils literal notranslate"><span class="pre">MainView.profile_accepted</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.remove_platform"><code class="docutils literal notranslate"><span class="pre">MainView.remove_platform</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.resizeEvent"><code class="docutils literal notranslate"><span class="pre">MainView.resizeEvent()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.resume_gestures"><code class="docutils literal notranslate"><span class="pre">MainView.resume_gestures()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.save_as_requested"><code class="docutils literal notranslate"><span class="pre">MainView.save_as_requested</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.save_controls"><code class="docutils literal notranslate"><span class="pre">MainView.save_controls</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.save_mapping_current"><code class="docutils literal notranslate"><span class="pre">MainView.save_mapping_current</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.save_navigation_requested"><code class="docutils literal notranslate"><span class="pre">MainView.save_navigation_requested</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.scan_games_requested"><code class="docutils literal notranslate"><span class="pre">MainView.scan_games_requested</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.selectedNavigationMode"><code class="docutils literal notranslate"><span class="pre">MainView.selectedNavigationMode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.set_mapping_label"><code class="docutils literal notranslate"><span class="pre">MainView.set_mapping_label()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.set_navigation_thumbs"><code class="docutils literal notranslate"><span class="pre">MainView.set_navigation_thumbs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.set_onboarding_mode"><code class="docutils literal notranslate"><span class="pre">MainView.set_onboarding_mode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.set_save_button_state"><code class="docutils literal notranslate"><span class="pre">MainView.set_save_button_state()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.set_slider_threshold"><code class="docutils literal notranslate"><span class="pre">MainView.set_slider_threshold()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.setup_tutorial_step"><code class="docutils literal notranslate"><span class="pre">MainView.setup_tutorial_step()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.showEvent"><code class="docutils literal notranslate"><span class="pre">MainView.showEvent()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.show_controller_image"><code class="docutils literal notranslate"><span class="pre">MainView.show_controller_image()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.show_error_message"><code class="docutils literal notranslate"><span class="pre">MainView.show_error_message()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.show_page"><code class="docutils literal notranslate"><span class="pre">MainView.show_page()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.show_tutorial_message"><code class="docutils literal notranslate"><span class="pre">MainView.show_tutorial_message()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.staticMetaObject"><code class="docutils literal notranslate"><span class="pre">MainView.staticMetaObject</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.stop_reading_score"><code class="docutils literal notranslate"><span class="pre">MainView.stop_reading_score</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.toggle_pip"><code class="docutils literal notranslate"><span class="pre">MainView.toggle_pip()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.tutorial_step_clicked"><code class="docutils literal notranslate"><span class="pre">MainView.tutorial_step_clicked</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.uncheck_all_gestures"><code class="docutils literal notranslate"><span class="pre">MainView.uncheck_all_gestures()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.update_fps"><code class="docutils literal notranslate"><span class="pre">MainView.update_fps()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.update_main_video"><code class="docutils literal notranslate"><span class="pre">MainView.update_main_video()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.update_navigation_sliders"><code class="docutils literal notranslate"><span class="pre">MainView.update_navigation_sliders()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.update_score_bar"><code class="docutils literal notranslate"><span class="pre">MainView.update_score_bar()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.update_tutorial_icon"><code class="docutils literal notranslate"><span class="pre">MainView.update_tutorial_icon()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.MainView.video_control_toggled"><code class="docutils literal notranslate"><span class="pre">MainView.video_control_toggled</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#view.PipWindow"><code class="docutils literal notranslate"><span class="pre">PipWindow</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#view.PipWindow.closeEvent"><code class="docutils literal notranslate"><span class="pre">PipWindow.closeEvent()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.PipWindow.staticMetaObject"><code class="docutils literal notranslate"><span class="pre">PipWindow.staticMetaObject</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.PipWindow.update_image"><code class="docutils literal notranslate"><span class="pre">PipWindow.update_image()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#view.PipWindow.window_closed"><code class="docutils literal notranslate"><span class="pre">PipWindow.window_closed</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vision.html">vision module</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">FaceDrive</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">src</a></li>
+      <li class="breadcrumb-item active">view module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/view.rst.txt" rel="nofollow"> Ver código fuente de la página</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-view">
+<span id="view-module"></span><h1>view module<a class="headerlink" href="#module-view" title="Link to this heading"></a></h1>
+<section id="modulo-view-py-interfaz-grafica-de-usuario-gui">
+<h2>MÓDULO view.py - INTERFAZ GRÁFICA DE USUARIO (GUI)<a class="headerlink" href="#modulo-view-py-interfaz-grafica-de-usuario-gui" title="Link to this heading"></a></h2>
+<p>Responsable de toda la presentación visual y la interacción del usuario.
+Implementa el patrón MVP (Model-View-Presenter).</p>
+<p>Componentes principales:</p>
+<ul class="simple">
+<li><p>PipWindow: Ventana flotante para video Picture-in-Picture</p></li>
+<li><p>MainView: Ventana principal con todos los controles y pantallas</p></li>
+</ul>
+<p>Características:</p>
+<ul class="simple">
+<li><p>Teclado virtual personalizado</p></li>
+<li><p>Explorador de archivos interactivo</p></li>
+<li><p>Configuración dinámica de emuladores</p></li>
+<li><p>Catálogo de juegos y plataformas</p></li>
+<li><p>Sistema de perfiles de control</p></li>
+<li><p>Tutorial interactivo integrado</p></li>
+</ul>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="view.MainView">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">view.</span></span><span class="sig-name descname"><span class="pre">MainView</span></span><a class="reference internal" href="_modules/view.html#MainView"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QMainWindow</span></code></p>
+<p>Ventana principal de la aplicación.</p>
+<p>Responsabilidades:
+- Mostrar la interfaz gráfica del usuario
+- Capturar eventos del usuario (clicks, entrada)
+- Emitir señales para que el Presentador reaccione
+- Actualizar elementos visuales basado en datos del Modelo</p>
+<p>El flujo es: Usuario actúa -&gt; View emite Signal -&gt; Presenter reacciona</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.application_restored">
+<span class="sig-name descname"><span class="pre">application_restored</span></span><a class="headerlink" href="#view.MainView.application_restored" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.build_virtual_keyboard">
+<span class="sig-name descname"><span class="pre">build_virtual_keyboard</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.build_virtual_keyboard"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.build_virtual_keyboard" title="Link to this definition"></a></dt>
+<dd><p>Construye un teclado virtual personalizado en una distribución de cuadrícula.
+Diseño: 13 columnas por fila para distribución uniforme.
+Soporta mayúsculas, shift y caracteres especiales.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.changeEvent">
+<span class="sig-name descname"><span class="pre">changeEvent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.changeEvent"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.changeEvent" title="Link to this definition"></a></dt>
+<dd><p>Detecta cambios en el estado de la ventana (minimizar, restaurar, etc.).
+Cierra la ventana PiP si la ventana principal se restaura (de minimizado).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>event</strong> – QEvent - Evento de cambio de estado</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.clear_selection">
+<span class="sig-name descname"><span class="pre">clear_selection</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.clear_selection"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.clear_selection" title="Link to this definition"></a></dt>
+<dd><p>Deselecciona cualquier acción seleccionada y elimina los resaltados de categoría.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.click_gesture_button">
+<span class="sig-name descname"><span class="pre">click_gesture_button</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gesture_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.click_gesture_button"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.click_gesture_button" title="Link to this definition"></a></dt>
+<dd><p>Hace clic en el botón de la interfaz correspondiente si un gesto ya está mapeado.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.click_input_button">
+<span class="sig-name descname"><span class="pre">click_input_button</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.click_input_button"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.click_input_button" title="Link to this definition"></a></dt>
+<dd><p>Hace clic en el botón de la interfaz correspondiente si una entrada ya está mapeada.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.closeEvent">
+<span class="sig-name descname"><span class="pre">closeEvent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.closeEvent"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.closeEvent" title="Link to this definition"></a></dt>
+<dd><p>Maneja el evento de cierre de la ventana principal.
+Limpia recursos antes de cerrar.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.controls_closed">
+<span class="sig-name descname"><span class="pre">controls_closed</span></span><a class="headerlink" href="#view.MainView.controls_closed" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.controls_opened">
+<span class="sig-name descname"><span class="pre">controls_opened</span></span><a class="headerlink" href="#view.MainView.controls_opened" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.emulator_exe_chosen">
+<span class="sig-name descname"><span class="pre">emulator_exe_chosen</span></span><a class="headerlink" href="#view.MainView.emulator_exe_chosen" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.emulator_settings_opened">
+<span class="sig-name descname"><span class="pre">emulator_settings_opened</span></span><a class="headerlink" href="#view.MainView.emulator_settings_opened" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.emulator_setup_requested">
+<span class="sig-name descname"><span class="pre">emulator_setup_requested</span></span><a class="headerlink" href="#view.MainView.emulator_setup_requested" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.explorer_cancel_clicked">
+<span class="sig-name descname"><span class="pre">explorer_cancel_clicked</span></span><a class="headerlink" href="#view.MainView.explorer_cancel_clicked" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.explorer_folder_clicked">
+<span class="sig-name descname"><span class="pre">explorer_folder_clicked</span></span><a class="headerlink" href="#view.MainView.explorer_folder_clicked" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.explorer_opened">
+<span class="sig-name descname"><span class="pre">explorer_opened</span></span><a class="headerlink" href="#view.MainView.explorer_opened" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.explorer_select_clicked">
+<span class="sig-name descname"><span class="pre">explorer_select_clicked</span></span><a class="headerlink" href="#view.MainView.explorer_select_clicked" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.explorer_up_clicked">
+<span class="sig-name descname"><span class="pre">explorer_up_clicked</span></span><a class="headerlink" href="#view.MainView.explorer_up_clicked" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.game_launch_requested">
+<span class="sig-name descname"><span class="pre">game_launch_requested</span></span><a class="headerlink" href="#view.MainView.game_launch_requested" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.games_catalog_requested">
+<span class="sig-name descname"><span class="pre">games_catalog_requested</span></span><a class="headerlink" href="#view.MainView.games_catalog_requested" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.gesture_selected">
+<span class="sig-name descname"><span class="pre">gesture_selected</span></span><a class="headerlink" href="#view.MainView.gesture_selected" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.get_selected_control">
+<span class="sig-name descname"><span class="pre">get_selected_control</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.get_selected_control"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.get_selected_control" title="Link to this definition"></a></dt>
+<dd><p>Devuelve el código de entrada del mando correspondiente al botón de control actualmente seleccionado.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.get_selected_gesture">
+<span class="sig-name descname"><span class="pre">get_selected_gesture</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.get_selected_gesture"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.get_selected_gesture" title="Link to this definition"></a></dt>
+<dd><p>Devuelve el código de gesto del gesto actualmente seleccionado.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.get_slider_threshold">
+<span class="sig-name descname"><span class="pre">get_slider_threshold</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.get_slider_threshold"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.get_slider_threshold" title="Link to this definition"></a></dt>
+<dd><p>Devuelve el valor actual del slider de umbral (0-100).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.hide_controller_image">
+<span class="sig-name descname"><span class="pre">hide_controller_image</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.hide_controller_image"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.hide_controller_image" title="Link to this definition"></a></dt>
+<dd><p>Oculta la imagen del controlador del UI.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.highlight_category">
+<span class="sig-name descname"><span class="pre">highlight_category</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.highlight_category"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.highlight_category" title="Link to this definition"></a></dt>
+<dd><p>Resalta el botón de la categoría correcta y elimina el resaltado de la otra.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.launch_pip">
+<span class="sig-name descname"><span class="pre">launch_pip</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.launch_pip"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.launch_pip" title="Link to this definition"></a></dt>
+<dd><p>Lanza la ventana PiP si no está abierta.
+Si ya está abierta, no hace nada.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.load_profiles_requested">
+<span class="sig-name descname"><span class="pre">load_profiles_requested</span></span><a class="headerlink" href="#view.MainView.load_profiles_requested" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.mapping_canceled">
+<span class="sig-name descname"><span class="pre">mapping_canceled</span></span><a class="headerlink" href="#view.MainView.mapping_canceled" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.navigation_requested">
+<span class="sig-name descname"><span class="pre">navigation_requested</span></span><a class="headerlink" href="#view.MainView.navigation_requested" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.navigation_settings_opened">
+<span class="sig-name descname"><span class="pre">navigation_settings_opened</span></span><a class="headerlink" href="#view.MainView.navigation_settings_opened" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.open_save_as_requested">
+<span class="sig-name descname"><span class="pre">open_save_as_requested</span></span><a class="headerlink" href="#view.MainView.open_save_as_requested" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.open_virtual_keyboard">
+<span class="sig-name descname"><span class="pre">open_virtual_keyboard</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_text</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.open_virtual_keyboard"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.open_virtual_keyboard" title="Link to this definition"></a></dt>
+<dd><p>Abre el teclado virtual con un texto por defecto sugerido.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>default_text</strong> – str - Texto sugerido (p. ej., nombre auto-generado para perfil)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.pip_toggled">
+<span class="sig-name descname"><span class="pre">pip_toggled</span></span><a class="headerlink" href="#view.MainView.pip_toggled" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.platform_selected">
+<span class="sig-name descname"><span class="pre">platform_selected</span></span><a class="headerlink" href="#view.MainView.platform_selected" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.populate_emulator_settings">
+<span class="sig-name descname"><span class="pre">populate_emulator_settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">emulators_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.populate_emulator_settings"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.populate_emulator_settings" title="Link to this definition"></a></dt>
+<dd><p>Genera filas dinámicas con la configuración de cada emulador.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.populate_explorer">
+<span class="sig-name descname"><span class="pre">populate_explorer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">items_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'FOLDER'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_index_return</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.populate_explorer"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.populate_explorer" title="Link to this definition"></a></dt>
+<dd><p>Genera botones interactivos para el explorador de archivos y gestiona el foco.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.populate_games_catalog">
+<span class="sig-name descname"><span class="pre">populate_games_catalog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">games_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">platform_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">emulator_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.populate_games_catalog"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.populate_games_catalog" title="Link to this definition"></a></dt>
+<dd><p>Genera botones dinámicos para los juegos de una plataforma.
+Cada botón contiene título e icono (portada) del juego.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>games_list</strong> – list[dict] - Lista de juegos con keys: “title”, “exe_path”, “icon”</p></li>
+<li><p><strong>platform_name</strong> – str - Nombre de la plataforma (para el UI y conexiones)</p></li>
+<li><p><strong>emulator_name</strong> – str - Ruta del emulador (opcional, usado para algunas plataformas)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.populate_gesture_catalog">
+<span class="sig-name descname"><span class="pre">populate_gesture_catalog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gestures_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.populate_gesture_catalog"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.populate_gesture_catalog" title="Link to this definition"></a></dt>
+<dd><p>Genera dinámicamente los botones basándose exclusivamente en los datos recibidos.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.populate_platforms_catalog">
+<span class="sig-name descname"><span class="pre">populate_platforms_catalog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">platforms_list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.populate_platforms_catalog"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.populate_platforms_catalog" title="Link to this definition"></a></dt>
+<dd><p>Genera botones dinámicos para cada plataforma de juegos.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>platforms_list</strong> – list[str] - Nombres de plataformas («Steam», «NES», «SNES», etc.)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.populate_profiles">
+<span class="sig-name descname"><span class="pre">populate_profiles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">profiles_list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.populate_profiles"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.populate_profiles" title="Link to this definition"></a></dt>
+<dd><p>Genera botones dinámicos para cada perfil de control guardado.
+Utiliza una distribución en grid con icono sobre texto.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>profiles_list</strong> – list[str] - Lista de nombres de archivos .json de perfiles</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.profile_accepted">
+<span class="sig-name descname"><span class="pre">profile_accepted</span></span><a class="headerlink" href="#view.MainView.profile_accepted" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.remove_platform">
+<span class="sig-name descname"><span class="pre">remove_platform</span></span><a class="headerlink" href="#view.MainView.remove_platform" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.resizeEvent">
+<span class="sig-name descname"><span class="pre">resizeEvent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.resizeEvent"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.resizeEvent" title="Link to this definition"></a></dt>
+<dd><p>Maneja el evento de redimensionado de la ventana principal.
+Recalcula el escalado de la imagen si está visible.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.resume_gestures">
+<span class="sig-name descname"><span class="pre">resume_gestures</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.resume_gestures"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.resume_gestures" title="Link to this definition"></a></dt>
+<dd><p>Método auxiliar llamado por el QTimer para volver a admitir gestos</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.save_as_requested">
+<span class="sig-name descname"><span class="pre">save_as_requested</span></span><a class="headerlink" href="#view.MainView.save_as_requested" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.save_controls">
+<span class="sig-name descname"><span class="pre">save_controls</span></span><a class="headerlink" href="#view.MainView.save_controls" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.save_mapping_current">
+<span class="sig-name descname"><span class="pre">save_mapping_current</span></span><a class="headerlink" href="#view.MainView.save_mapping_current" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.save_navigation_requested">
+<span class="sig-name descname"><span class="pre">save_navigation_requested</span></span><a class="headerlink" href="#view.MainView.save_navigation_requested" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.scan_games_requested">
+<span class="sig-name descname"><span class="pre">scan_games_requested</span></span><a class="headerlink" href="#view.MainView.scan_games_requested" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.selectedNavigationMode">
+<span class="sig-name descname"><span class="pre">selectedNavigationMode</span></span><a class="headerlink" href="#view.MainView.selectedNavigationMode" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.set_mapping_label">
+<span class="sig-name descname"><span class="pre">set_mapping_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gesture_code</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gesture_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.set_mapping_label"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.set_mapping_label" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.set_navigation_thumbs">
+<span class="sig-name descname"><span class="pre">set_navigation_thumbs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high_y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.set_navigation_thumbs"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.set_navigation_thumbs" title="Link to this definition"></a></dt>
+<dd><p>Posiciona los «thumbs» (controles deslizantes) al abrir la pantalla de calibración.
+Estos definen los límites de navegación.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>low_x</strong> – Umbrales mínimo y máximo del eje X</p></li>
+<li><p><strong>high_x</strong> – Umbrales mínimo y máximo del eje X</p></li>
+<li><p><strong>low_y</strong> – Umbrales mínimo y máximo del eje Y</p></li>
+<li><p><strong>high_y</strong> – Umbrales mínimo y máximo del eje Y</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.set_onboarding_mode">
+<span class="sig-name descname"><span class="pre">set_onboarding_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enabled</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.set_onboarding_mode"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.set_onboarding_mode" title="Link to this definition"></a></dt>
+<dd><p>Activa/desactiva el modo tutorial mostrando/ocultando ciertos botones.
+Durante el tutorial, se ocultan los botones que distraen al usuario.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>enabled</strong> – bool - True para activar modo tutorial, False para desactivarlo</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.set_save_button_state">
+<span class="sig-name descname"><span class="pre">set_save_button_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">has_changes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.set_save_button_state"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.set_save_button_state" title="Link to this definition"></a></dt>
+<dd><p>Cambia el color del botón “Guardar”.
+Azul (primary) si hay cambios, Gris (por defecto) si está guardado.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.set_slider_threshold">
+<span class="sig-name descname"><span class="pre">set_slider_threshold</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.set_slider_threshold"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.set_slider_threshold" title="Link to this definition"></a></dt>
+<dd><p>Establece el valor numérico del slider al cargar la pantalla.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.setup_tutorial_step">
+<span class="sig-name descname"><span class="pre">setup_tutorial_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_direction</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.setup_tutorial_step"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.setup_tutorial_step" title="Link to this definition"></a></dt>
+<dd><p>Configura visualmente el paso del tutorial.
+Destaca el botón objetivo y opaca los demás.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>target_direction</strong> – str - Dirección objetivo («UP», «DOWN», «LEFT», «RIGHT»)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.showEvent">
+<span class="sig-name descname"><span class="pre">showEvent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.showEvent"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.showEvent" title="Link to this definition"></a></dt>
+<dd><p>Interviene justo en el momento en que la ventana se dibuja por primera vez.
+Fuerza al sistema operativo a poner la aplicación en primer plano.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.show_controller_image">
+<span class="sig-name descname"><span class="pre">show_controller_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.show_controller_image"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.show_controller_image" title="Link to this definition"></a></dt>
+<dd><p>Carga y muestra una imagen de controlador (p. ej., diagrama de botones).
+Usa técnica de escalado inteligente para adaptarse al tamaño real del widget.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>image_path</strong> – str - Ruta relativa a la imagen (ej: «images/nes_controller.png»)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.show_error_message">
+<span class="sig-name descname"><span class="pre">show_error_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.show_error_message"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.show_error_message" title="Link to this definition"></a></dt>
+<dd><p>Muestra un cuadro de diálogo informativo que bloquea la aplicación hasta que se lea.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>title</strong> – str - Título del diálogo</p></li>
+<li><p><strong>message</strong> – str - Mensaje a mostrar</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.show_page">
+<span class="sig-name descname"><span class="pre">show_page</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.show_page"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.show_page" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.show_tutorial_message">
+<span class="sig-name descname"><span class="pre">show_tutorial_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.show_tutorial_message"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.show_tutorial_message" title="Link to this definition"></a></dt>
+<dd><p>Muestra un cuadro de diálogo informativo que bloquea la aplicación hasta que se lea.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>title</strong> – str - Título del diálogo</p></li>
+<li><p><strong>message</strong> – str - Mensaje a mostrar</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.staticMetaObject">
+<span class="sig-name descname"><span class="pre">staticMetaObject</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">PySide6.QtCore.QMetaObject(&quot;MainView&quot;</span> <span class="pre">inherits</span> <span class="pre">&quot;QMainWindow&quot;:</span> <span class="pre">Methods:</span>&#160;&#160; <span class="pre">#39</span> <span class="pre">type=Signal,</span> <span class="pre">signature=pip_toggled()</span>&#160;&#160; <span class="pre">#40</span> <span class="pre">type=Signal,</span> <span class="pre">signature=video_control_toggled()</span>&#160;&#160; <span class="pre">#41</span> <span class="pre">type=Signal,</span> <span class="pre">signature=application_restored()</span>&#160;&#160; <span class="pre">#42</span> <span class="pre">type=Signal,</span> <span class="pre">signature=navigation_requested(int),</span> <span class="pre">parameters=int</span>&#160;&#160; <span class="pre">#43</span> <span class="pre">type=Signal,</span> <span class="pre">signature=gesture_selected(PyObject),</span> <span class="pre">parameters=PyObject</span>&#160;&#160; <span class="pre">#44</span> <span class="pre">type=Signal,</span> <span class="pre">signature=stop_reading_score()</span>&#160;&#160; <span class="pre">#45</span> <span class="pre">type=Signal,</span> <span class="pre">signature=save_controls(QString,QString,int),</span> <span class="pre">parameters=QString,</span> <span class="pre">QString,</span> <span class="pre">int</span>&#160;&#160; <span class="pre">#46</span> <span class="pre">type=Signal,</span> <span class="pre">signature=save_mapping_current()</span>&#160;&#160; <span class="pre">#47</span> <span class="pre">type=Signal,</span> <span class="pre">signature=load_profiles_requested()</span>&#160;&#160; <span class="pre">#48</span> <span class="pre">type=Signal,</span> <span class="pre">signature=profile_accepted(QString),</span> <span class="pre">parameters=QString</span>&#160;&#160; <span class="pre">#49</span> <span class="pre">type=Signal,</span> <span class="pre">signature=save_as_requested(QString),</span> <span class="pre">parameters=QString</span>&#160;&#160; <span class="pre">#50</span> <span class="pre">type=Signal,</span> <span class="pre">signature=open_save_as_requested()</span>&#160;&#160; <span class="pre">#51</span> <span class="pre">type=Signal,</span> <span class="pre">signature=games_catalog_requested()</span>&#160;&#160; <span class="pre">#52</span> <span class="pre">type=Signal,</span> <span class="pre">signature=scan_games_requested()</span>&#160;&#160; <span class="pre">#53</span> <span class="pre">type=Signal,</span> <span class="pre">signature=game_launch_requested(QString),</span> <span class="pre">parameters=QString</span>&#160;&#160; <span class="pre">#54</span> <span class="pre">type=Signal,</span> <span class="pre">signature=explorer_opened()</span>&#160;&#160; <span class="pre">#55</span> <span class="pre">type=Signal,</span> <span class="pre">signature=explorer_folder_clicked(QString),</span> <span class="pre">parameters=QString</span>&#160;&#160; <span class="pre">#56</span> <span class="pre">type=Signal,</span> <span class="pre">signature=explorer_up_clicked()</span>&#160;&#160; <span class="pre">#57</span> <span class="pre">type=Signal,</span> <span class="pre">signature=explorer_select_clicked()</span>&#160;&#160; <span class="pre">#58</span> <span class="pre">type=Signal,</span> <span class="pre">signature=explorer_cancel_clicked()</span>&#160;&#160; <span class="pre">#59</span> <span class="pre">type=Signal,</span> <span class="pre">signature=emulator_settings_opened()</span>&#160;&#160; <span class="pre">#60</span> <span class="pre">type=Signal,</span> <span class="pre">signature=emulator_setup_requested(QString,int),</span> <span class="pre">parameters=QString,</span> <span class="pre">int</span>&#160;&#160; <span class="pre">#61</span> <span class="pre">type=Signal,</span> <span class="pre">signature=emulator_exe_chosen(QString,int),</span> <span class="pre">parameters=QString,</span> <span class="pre">int</span>&#160;&#160; <span class="pre">#62</span> <span class="pre">type=Signal,</span> <span class="pre">signature=platform_selected(QString),</span> <span class="pre">parameters=QString</span>&#160;&#160; <span class="pre">#63</span> <span class="pre">type=Signal,</span> <span class="pre">signature=remove_platform()</span>&#160;&#160; <span class="pre">#64</span> <span class="pre">type=Signal,</span> <span class="pre">signature=controls_opened()</span>&#160;&#160; <span class="pre">#65</span> <span class="pre">type=Signal,</span> <span class="pre">signature=controls_closed()</span>&#160;&#160; <span class="pre">#66</span> <span class="pre">type=Signal,</span> <span class="pre">signature=navigation_settings_opened()</span>&#160;&#160; <span class="pre">#67</span> <span class="pre">type=Signal,</span> <span class="pre">signature=save_navigation_requested(int,int,int,int),</span> <span class="pre">parameters=int,</span> <span class="pre">int,</span> <span class="pre">int,</span> <span class="pre">int</span>&#160;&#160; <span class="pre">#68</span> <span class="pre">type=Signal,</span> <span class="pre">signature=selectedNavigationMode(bool),</span> <span class="pre">parameters=bool</span>&#160;&#160; <span class="pre">#69</span> <span class="pre">type=Signal,</span> <span class="pre">signature=tutorial_step_clicked(QString),</span> <span class="pre">parameters=QString</span>&#160;&#160; <span class="pre">#70</span> <span class="pre">type=Signal,</span> <span class="pre">signature=mapping_canceled()</span> <span class="pre">)</span></em><a class="headerlink" href="#view.MainView.staticMetaObject" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.stop_reading_score">
+<span class="sig-name descname"><span class="pre">stop_reading_score</span></span><a class="headerlink" href="#view.MainView.stop_reading_score" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.toggle_pip">
+<span class="sig-name descname"><span class="pre">toggle_pip</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.toggle_pip"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.toggle_pip" title="Link to this definition"></a></dt>
+<dd><p>Alterna la ventana flotante de video (Picture-in-Picture).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Devuelve<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool - True si se activó, False si se desactivó</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.tutorial_step_clicked">
+<span class="sig-name descname"><span class="pre">tutorial_step_clicked</span></span><a class="headerlink" href="#view.MainView.tutorial_step_clicked" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.uncheck_all_gestures">
+<span class="sig-name descname"><span class="pre">uncheck_all_gestures</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.uncheck_all_gestures"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.uncheck_all_gestures" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.update_fps">
+<span class="sig-name descname"><span class="pre">update_fps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.update_fps"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.update_fps" title="Link to this definition"></a></dt>
+<dd><p>Muestra los FPS actuales en la barra de estado inferior de la ventana.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.update_main_video">
+<span class="sig-name descname"><span class="pre">update_main_video</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pixmap</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">movement_direction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">platform_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpad_mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.update_main_video"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.update_main_video" title="Link to this definition"></a></dt>
+<dd><p>Dibuja un HUD (Head-Up Display) sobre el video en tiempo real.</p>
+<p>El HUD muestra:
+- Estado del joystick/D-Pad (icono de movimiento actual)
+- Botones activos del gamepad (A, B, X, Y, etc.)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pixmap</strong> – QPixmap del video actual</p></li>
+<li><p><strong>active_inputs</strong> – Dict[str, bool] con botones activos {“XUSB_GAMEPAD_A”: True, …}</p></li>
+<li><p><strong>movement_direction</strong> – str - “UP”, “DOWN”, “LEFT”, “RIGHT”, “IDLE”</p></li>
+<li><p><strong>platform_name</strong> – str - nombre de la plataforma (para el registro de video)</p></li>
+<li><p><strong>dpad_mode</strong> – bool - True si está en modo D-Pad, False si Joystick</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.update_navigation_sliders">
+<span class="sig-name descname"><span class="pre">update_navigation_sliders</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.update_navigation_sliders"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.update_navigation_sliders" title="Link to this definition"></a></dt>
+<dd><p>Actualiza los sliders de calibración de navegación en tiempo real.
+Muestra donde está el cursor actual del usuario.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>val_x</strong> – float - Valor X del cursor (0.0 a 1.0)</p></li>
+<li><p><strong>val_y</strong> – float - Valor Y del cursor (0.0 a 1.0)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.update_score_bar">
+<span class="sig-name descname"><span class="pre">update_score_bar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">score_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_above_threshold</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.update_score_bar"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.update_score_bar" title="Link to this definition"></a></dt>
+<dd><p>Actualiza la barra de progreso del gesto actual.
+Cambia de color dependiendo si se alcanzó el umbral de activación.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>score_value</strong> – int - Valor de confianza del gesto (0-100)</p></li>
+<li><p><strong>is_above_threshold</strong> – bool - True si se alcanzó el umbral de activación</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.MainView.update_tutorial_icon">
+<span class="sig-name descname"><span class="pre">update_tutorial_icon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_direction</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#MainView.update_tutorial_icon"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.MainView.update_tutorial_icon" title="Link to this definition"></a></dt>
+<dd><p>Actualiza el icono central del tutorial cuando el usuario mueve el foco.
+Cambia de icono cuando el foco está en el botón objetivo.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>target_direction</strong> – str - Dirección objetivo para este paso</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.MainView.video_control_toggled">
+<span class="sig-name descname"><span class="pre">video_control_toggled</span></span><a class="headerlink" href="#view.MainView.video_control_toggled" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="view.PipWindow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">view.</span></span><span class="sig-name descname"><span class="pre">PipWindow</span></span><a class="reference internal" href="_modules/view.html#PipWindow"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.PipWindow" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QWidget</span></code></p>
+<p>Ventana flotante (Picture-in-Picture) para mostrar el video de cámara.
+Se mantiene siempre visible sobre otras ventanas y permite al usuario
+ver el feed de video mientras configura otros ajustes.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="view.PipWindow.closeEvent">
+<span class="sig-name descname"><span class="pre">closeEvent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#PipWindow.closeEvent"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.PipWindow.closeEvent" title="Link to this definition"></a></dt>
+<dd><p>Captura el evento de cierre de la ventana por parte del usuario.</p>
+<p>Emite la señal window_closed para que el presentador pueda actualizar
+el estado de la interfaz principal.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.PipWindow.staticMetaObject">
+<span class="sig-name descname"><span class="pre">staticMetaObject</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">PySide6.QtCore.QMetaObject(&quot;PipWindow&quot;</span> <span class="pre">inherits</span> <span class="pre">&quot;QWidget&quot;:</span> <span class="pre">Methods:</span>&#160;&#160; <span class="pre">#33</span> <span class="pre">type=Signal,</span> <span class="pre">signature=window_closed()</span> <span class="pre">)</span></em><a class="headerlink" href="#view.PipWindow.staticMetaObject" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="view.PipWindow.update_image">
+<span class="sig-name descname"><span class="pre">update_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pixmap</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/view.html#PipWindow.update_image"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#view.PipWindow.update_image" title="Link to this definition"></a></dt>
+<dd><p>Actualiza la imagen mostrada en la ventana PiP.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pixmap</strong> – QPixmap con el frame del video actual</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="view.PipWindow.window_closed">
+<span class="sig-name descname"><span class="pre">window_closed</span></span><a class="headerlink" href="#view.PipWindow.window_closed" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Pie de página">
+        <a href="presenter.html" class="btn btn-neutral float-left" title="presenter module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Anterior</a>
+        <a href="vision.html" class="btn btn-neutral float-right" title="vision module" accesskey="n" rel="next">Siguiente <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Derechos de autor 2026, Iván García García.</p>
+  </div>
+
+  Compilado con <a href="https://www.sphinx-doc.org/">Sphinx</a> usando un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    proporcionado por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

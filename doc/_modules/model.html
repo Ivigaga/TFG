@@ -1,0 +1,1022 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="es" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>model &mdash; documentación de FaceDrive - 1.0</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=4936afed"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/translations.js?v=f85f4cfb"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="../genindex.html" />
+    <link rel="search" title="Búsqueda" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            FaceDrive
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Buscar documentos" aria-label="Buscar documentos" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">src</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">FaceDrive</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Código de módulo</a></li>
+      <li class="breadcrumb-item active">model</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Código fuente para model</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Módulo Modelo - Capa de Persistencia de Datos de la Arquitectura MVP</span>
+
+<span class="sd">Responsabilidades principales:</span>
+<span class="sd">  - Gestionar estructura de entrada de gestos (input_structure.json)</span>
+<span class="sd">  - Mantener puntuaciones de gestos en tiempo real desde MediaPipe</span>
+<span class="sd">  - Manejar mapeo de gestos a entrada de mando (XUSB_GAMEPAD_*)</span>
+<span class="sd">  - Gestión de perfiles de usuario (guardar/cargar configuraciones)</span>
+<span class="sd">  - Detección automática de juegos Steam y escaneo de ROMs</span>
+<span class="sd">  - Configuración de emuladores por consola</span>
+<span class="sd">  - Estado de sistema (modo tutorial, modo continuo vs pasos)</span>
+
+<span class="sd">Características principales:</span>
+<span class="sd">  - Estructura de datos de gestos con umbrales configurables</span>
+<span class="sd">  - Cálculo de puntuaciones de gestos desde BlendShapes de MediaPipe</span>
+<span class="sd">  - Sistema de caché para ROMs (evita re-escaneo en cada carga)</span>
+<span class="sd">  - Escaneo inteligente de Steam (lectura de VDF, descarga de logos)</span>
+<span class="sd">  - Soporte para múltiples librerías de Steam</span>
+<span class="sd">  - Configuración persistente (JSON)</span>
+<span class="sd">  - Gestión de tutorial y estado de primer uso</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">csv</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ctypes</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+
+<div class="viewcode-block" id="get_asset_path">
+<a class="viewcode-back" href="../model.html#model.get_asset_path">[documentos]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_asset_path</span><span class="p">(</span><span class="n">relative_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Resolver ruta a archivos de solo lectura que vienen empaquetados (IA, estilos, iconos fijos).</span>
+<span class="sd">    </span>
+<span class="sd">    Nota: Usar SOLO para archivos que se distribuyen con la aplicación y NO cambian.</span>
+<span class="sd">    Para archivos de usuario (perfiles, ROMs), usar get_save_path() en su lugar.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        relative_path: str - ruta relativa desde /conf (ej: &quot;images/gestures/smile.png&quot;)</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        str - ruta absoluta del archivo</span>
+<span class="sd">    </span>
+<span class="sd">    Comportamiento:</span>
+<span class="sd">        - Si está empaquetado (PyInstaller): usa sys._MEIPASS (carpeta _internal)</span>
+<span class="sd">        - En desarrollo: sube un nivel desde /src y entra en /conf</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sys</span><span class="p">,</span> <span class="s1">&#39;frozen&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="c1"># sys._MEIPASS apunta directamente a la carpeta _internal de PyInstaller</span>
+        <span class="n">base_path</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">_MEIPASS</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># En desarrollo, subimos un nivel desde /src y entramos en /conf</span>
+        <span class="n">base_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s1">&#39;..&#39;</span><span class="p">,</span> <span class="s1">&#39;conf&#39;</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_path</span><span class="p">,</span> <span class="n">relative_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_save_path">
+<a class="viewcode-back" href="../model.html#model.get_save_path">[documentos]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_save_path</span><span class="p">(</span><span class="n">relative_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Resolver ruta a archivos de escritura/usuario (JSONs, perfiles, portadas descargadas).</span>
+<span class="sd">    </span>
+<span class="sd">    Nota: Usar SOLO para archivos que el usuario modifica o que la app genera.</span>
+<span class="sd">    Para archivos estáticos (modelos IA), usar get_asset_path() en su lugar.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        relative_path: str - ruta relativa desde /conf (ej: &quot;controls/perfil_usuario.json&quot;)</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        str - ruta absoluta del archivo</span>
+<span class="sd">    </span>
+<span class="sd">    Comportamiento:</span>
+<span class="sd">        - Si está empaquetado (PyInstaller): usa directorio del .exe (fácil acceso para datos)</span>
+<span class="sd">        - En desarrollo: sube un nivel desde /src y entra en /conf (mismo que get_asset_path)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sys</span><span class="p">,</span> <span class="s1">&#39;frozen&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="c1"># sys.executable apunta a la raíz donde está el .exe, ideal para guardar datos</span>
+        <span class="n">base_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># En desarrollo, subimos un nivel desde /src y entramos en /conf</span>
+        <span class="n">base_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s1">&#39;..&#39;</span><span class="p">,</span> <span class="s1">&#39;conf&#39;</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_path</span><span class="p">,</span> <span class="n">relative_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AppModel">
+<a class="viewcode-back" href="../model.html#model.AppModel">[documentos]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AppModel</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Capa de modelo implementando persistencia de datos y gestión de estado de la aplicación.</span>
+<span class="sd">    </span>
+<span class="sd">    Gestiona:</span>
+<span class="sd">    - Estructura de mapeo de gestos a entrada de mando</span>
+<span class="sd">    - Puntuaciones de gestos en tiempo real</span>
+<span class="sd">    - Perfiles de usuario (guardar/cargar)</span>
+<span class="sd">    - Configuración de emuladores</span>
+<span class="sd">    - Catálogo de juegos (Steam + ROMs)</span>
+<span class="sd">    - Estado de tutorial y primera ejecución</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_path</span><span class="o">=</span><span class="s2">&quot;controls/default_inputs.json&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Inicializar el modelo con rutas de archivo y cargar configuración.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            json_path: str - archivo de configuración de gestos (relativo a /conf)</span>
+<span class="sd">        </span>
+<span class="sd">        Inicializa:</span>
+<span class="sd">            - Rutas de archivos (configuración, perfiles, juegos, emuladores)</span>
+<span class="sd">            - Estructura de entrada de gestos desde JSON</span>
+<span class="sd">            - Variables de estado (modo continuo, FPS objetivo, etc.)</span>
+<span class="sd">            - Rutas de modelos IA (MediaPipe face_landmarker.task)</span>
+<span class="sd">            - Directorios de usuario (controls, games)</span>
+<span class="sd">            - Caché de ROMs para evitar re-escaneo</span>
+<span class="sd">            - Estado de tutorial desde app_settings.json</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># === Rutas de Configuración ===</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">json_path</span> <span class="o">=</span> <span class="n">get_save_path</span><span class="p">(</span><span class="n">json_path</span><span class="p">)</span>  <span class="c1"># Archivo actual de mapeo de gestos</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default_json_path</span> <span class="o">=</span> <span class="n">get_save_path</span><span class="p">(</span><span class="s2">&quot;controls/default_inputs.json&quot;</span><span class="p">)</span>  <span class="c1"># Plantilla de defecto</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings_path</span> <span class="o">=</span> <span class="n">get_save_path</span><span class="p">(</span><span class="s2">&quot;app_settings.json&quot;</span><span class="p">)</span>  <span class="c1"># Estado global (tutorial, etc.)</span>
+        
+        <span class="c1"># === Estado de la Aplicación ===</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_first_run_session</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Bandera de tutorial (cargada desde app_settings.json)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_structure</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># Estructura principal: {&quot;gesture_name&quot;: {&quot;input&quot;: &quot;XUSB_*&quot;, ...}}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_continuous_mode</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># Modo navegación: continuo (libre) vs pasos (discreto)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_fps</span> <span class="o">=</span> <span class="mi">60</span>  <span class="c1"># FPS objetivo del motor de visión</span>
+        
+        <span class="c1"># === Rutas de Archivos ===</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_path</span> <span class="o">=</span> <span class="n">get_asset_path</span><span class="p">(</span><span class="s1">&#39;face_landmarker.task&#39;</span><span class="p">)</span>  <span class="c1"># Modelo MediaPipe (solo lectura)</span>
+        
+        <span class="c1"># === Directorios de Usuario ===</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">controls_dir</span> <span class="o">=</span> <span class="n">get_save_path</span><span class="p">(</span><span class="s1">&#39;controls&#39;</span><span class="p">)</span>  <span class="c1"># Perfiles de usuario (JSON)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">controls_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">games_dir</span> <span class="o">=</span> <span class="n">get_save_path</span><span class="p">(</span><span class="s1">&#39;games&#39;</span><span class="p">)</span>  <span class="c1"># Base de datos de juegos</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">games_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        
+        <span class="c1"># === Archivos de Juegos ===</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rom_folders_file</span> <span class="o">=</span> <span class="n">get_save_path</span><span class="p">(</span><span class="s1">&#39;games/rom_folders.json&#39;</span><span class="p">)</span>  <span class="c1"># Carpetas donde buscar ROMs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">steam_games_file</span> <span class="o">=</span> <span class="n">get_save_path</span><span class="p">(</span><span class="s1">&#39;games/steam_games.json&#39;</span><span class="p">)</span>  <span class="c1"># BD consolidada de juegos Steam</span>
+        
+        <span class="c1"># === Configuración de Emuladores ===</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">emulators_file</span> <span class="o">=</span> <span class="n">get_save_path</span><span class="p">(</span><span class="s1">&#39;games/emulators.json&#39;</span><span class="p">)</span>  <span class="c1"># Ruta de ejecutables por consola</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">emulators_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_emulators_config</span><span class="p">()</span>  <span class="c1"># Cargar configuración desde disco</span>
+        
+        <span class="c1"># === Caché ===</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cached_roms</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Almacenamiento en memoria de ROMs escaneadas (evita re-escaneo)</span>
+
+        <span class="c1"># === SISTEMA DE TELEMETRÍA (NUEVO) ===</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_mode</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">telemetry</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;tutorial_time_seconds&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s2">&quot;back_from_gestures_count&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;save_load_actions_count&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;back_from_actions_count&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;enter_actions_count&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;back_from_explorer_count&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;enter_explorer_count&quot;</span><span class="p">:</span> <span class="mi">0</span>
+        <span class="p">}</span>
+        
+        <span class="c1"># Cargar configuración de mapeo de gestos desde archivo JSON</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_inputs</span><span class="p">()</span>
+
+
+
+<div class="viewcode-block" id="AppModel.load_inputs">
+<a class="viewcode-back" href="../model.html#model.AppModel.load_inputs">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Cargar estructura de mapeo de gestos desde JSON y verificar estado del tutorial.</span>
+<span class="sd">        </span>
+<span class="sd">        Flujo de carga:</span>
+
+<span class="sd">        1. Si archivo de usuario no existe:</span>
+
+<span class="sd">           - Intentar copiar desde plantilla default_inputs.json</span>
+<span class="sd">           - Si falla, crear estructura de emergencia (vital para tests)</span>
+
+<span class="sd">        2. Si archivo existe:</span>
+
+<span class="sd">           - Cargar JSON desde disco</span>
+
+<span class="sd">        3. Verificar estado de tutorial:</span>
+
+<span class="sd">           - Leer app_settings.json para onboarding_completed</span>
+<span class="sd">           - Marcar is_first_run_session según historial</span>
+<span class="sd">        </span>
+<span class="sd">        Nota: Este método se ejecuta automáticamente en __init__()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># === PARTE 1: CARGAR ESTRUCTURA DE GESTOS ===</span>
+        <span class="c1"># Si el archivo de guardado del usuario no existe (ej. primera ejecución o pruebas)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">json_path</span><span class="p">):</span>
+            <span class="c1"># Intentamos copiar la plantilla base si existe</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;default_json_path&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_json_path</span><span class="p">):</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_json_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">df</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">input_structure</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Alternativa de emergencia (Vital para que las pruebas pasen sin dependencias)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">input_structure</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;smile&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;category_type&quot;</span><span class="p">:</span> <span class="s2">&quot;system&quot;</span><span class="p">,</span> <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="s2">&quot;SYS_NAV_ENTER&quot;</span><span class="p">,</span> <span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+                    <span class="s2">&quot;mouthPucker&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;category_type&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+                    <span class="s2">&quot;mouthFunnel&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;category_type&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+                    <span class="s2">&quot;eyeBlinkRight&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;category_type&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+                    <span class="s2">&quot;eyeBlinkLeft&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;category_type&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+                    <span class="s2">&quot;eyesWide&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;category_type&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+                    <span class="s2">&quot;browDown&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;category_type&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+                    <span class="s2">&quot;jawOpen&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;category_type&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+                    <span class="s2">&quot;mouthLeft&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;category_type&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+                    <span class="s2">&quot;mouthRight&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;category_type&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+                    <span class="s2">&quot;mouthPress&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;category_type&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+                    <span class="s2">&quot;mouthShrug&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;category_type&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+                    <span class="s2">&quot;noseLeft&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="mf">0.6</span><span class="p">,</span><span class="s2">&quot;d-pad&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span><span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+                    <span class="s2">&quot;noseRight&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="mf">0.4</span><span class="p">,</span><span class="s2">&quot;d-pad&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span><span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+                    <span class="s2">&quot;noseUp&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="mf">0.4</span><span class="p">,</span><span class="s2">&quot;d-pad&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span><span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+                    <span class="s2">&quot;noseDown&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="mf">0.6</span><span class="p">,</span><span class="s2">&quot;d-pad&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span><span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+                <span class="p">}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save_inputs</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># === PARTE 2: CARGAR DESDE ARCHIVO EXISTENTE ===</span>
+            <span class="c1"># Si el archivo ya existe (ejecución normal, no primera vez)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">json_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">input_structure</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+        <span class="c1"># === PARTE 3: VERIFICACIÓN DE TUTORIAL ===</span>
+        <span class="c1"># Leer estado persistente del tutorial desde app_settings.json</span>
+        <span class="n">onboarding_completed</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings_path</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">settings</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                    <span class="c1"># Obtener estado: True si tutorial completado anteriormente</span>
+                    <span class="n">onboarding_completed</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;onboarding_completed&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+                    <span class="c1"># Detectar si el desarrollador ha activado el modo de pruebas</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">test_mode</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test_mode&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="c1"># Si archivo corrupto o no legible, asumir que no fue completado</span>
+                <span class="n">onboarding_completed</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># Solo si explícitamente se completó el tutorial, dejamos de marcar primera ejecución</span>
+        <span class="c1"># Esto permite mostrar el tutorial al usuario en su primera ejecución</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_first_run_session</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">onboarding_completed</span></div>
+
+
+<div class="viewcode-block" id="AppModel.complete_onboarding">
+<a class="viewcode-back" href="../model.html#model.AppModel.complete_onboarding">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">complete_onboarding</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Marcar tutorial como completado y guardar estado persistente.</span>
+<span class="sd">        Conserva el modo de pruebas y sortea el bloqueo de archivos ocultos de Windows.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_first_run_session</span> <span class="o">=</span> <span class="kc">False</span>
+        
+        <span class="c1"># 1. Preparamos los datos preservando el estado de test_mode</span>
+        <span class="n">settings_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;onboarding_completed&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;test_mode&quot;</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;test_mode&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="p">}</span>
+        
+        <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">ctypes</span>
+        
+        <span class="c1"># 2. ANTI-CRASHEO: Si el archivo existe, le quitamos el estado de &quot;Oculto&quot;</span>
+        <span class="c1"># temporalmente usando el código de Windows FILE_ATTRIBUTE_NORMAL (0x80)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings_path</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">ctypes</span><span class="o">.</span><span class="n">windll</span><span class="o">.</span><span class="n">kernel32</span><span class="o">.</span><span class="n">SetFileAttributesW</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings_path</span><span class="p">,</span> <span class="mh">0x80</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">pass</span>
+                
+        <span class="c1"># 3. Ahora Windows sí nos permite escribir y sobreescribir sin dar error de permisos (PermissionError)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">settings_data</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error menor al guardar ajustes: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            
+        <span class="c1"># 4. Volvemos a ocultar el archivo (Código 0x02)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ctypes</span><span class="o">.</span><span class="n">windll</span><span class="o">.</span><span class="n">kernel32</span><span class="o">.</span><span class="n">SetFileAttributesW</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings_path</span><span class="p">,</span> <span class="mh">0x02</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">pass</span></div>
+
+
+    
+<div class="viewcode-block" id="AppModel.save_inputs">
+<a class="viewcode-back" href="../model.html#model.AppModel.save_inputs">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Guardar estructura actual de mapeo de gestos a archivo JSON.</span>
+<span class="sd">        </span>
+<span class="sd">        Persiste el contenido de self.input_structure al archivo en self.json_path.</span>
+<span class="sd">        Se ejecuta automáticamente después de:</span>
+<span class="sd">        - Crear nuevo perfil (save_as_profile)</span>
+<span class="sd">        - Guardar mapeo de control (save_control_mapping)</span>
+<span class="sd">        - Completar cambios de configuración</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">json_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_structure</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AppModel.update_gesture_scores">
+<a class="viewcode-back" href="../model.html#model.AppModel.update_gesture_scores">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_gesture_scores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mediapipe_gestures_dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Actualizar puntuaciones internas de gestos basadas en datos crudos de MediaPipe.</span>
+<span class="sd">        </span>
+<span class="sd">        Esta función mapea BlendShapes crudos de MediaPipe a gestos de alto nivel</span>
+<span class="sd">        con lógica de suavizado, filtrado y combinación de valores.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            mediapipe_gestures_dict: dict - BlendShapes crudos de MediaPipe.</span>
+<span class="sd">                Ejemplo: {&quot;mouthSmileLeft&quot;: 0.85, &quot;mouthSmileRight&quot;: 0.90}</span>
+<span class="sd">        </span>
+<span class="sd">        Flujo de procesamiento:</span>
+
+<span class="sd">        1. EXTRACCIÓN: Obtener valores crudos de MediaPipe</span>
+<span class="sd">        2. CÁLCULO: Aplicar lógica de combinación y filtrado</span>
+
+<span class="sd">           - Suavizar puntuaciones (promedios, máximos)</span>
+<span class="sd">           - Restar interferencias (ej: pucker reduce funnel)</span>
+<span class="sd">           - Mantener solo valores positivos</span>
+
+<span class="sd">        3. ASIGNACIÓN: Actualizar input_structure con nuevos scores</span>
+<span class="sd">        </span>
+<span class="sd">        Gestos calculados:</span>
+
+<span class="sd">        - Ojos: eyesWide, eyeBlinkRight, eyeBlinkLeft, browDown</span>
+<span class="sd">        - Labios: smile, mouthPucker, mouthFunnel, mouthPress</span>
+<span class="sd">        - Otros: jawOpen, mouthShrug, mouthLeft, mouthRight</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">mediapipe_gestures_dict</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c1"># === PASO 1: EXTRACCIÓN DE VALORES BASE ===</span>
+        <span class="c1"># Extraer valores crudos de MediaPipe y guardar en variables temporales</span>
+        <span class="n">base_smile</span> <span class="o">=</span> <span class="p">(</span><span class="n">mediapipe_gestures_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mouthSmileLeft&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">mediapipe_gestures_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mouthSmileRight&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">base_funnel</span> <span class="o">=</span> <span class="n">mediapipe_gestures_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mouthFunnel&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">base_pucker</span> <span class="o">=</span> <span class="n">mediapipe_gestures_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mouthPucker&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">base_blink_l</span> <span class="o">=</span> <span class="n">mediapipe_gestures_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;eyeBlinkLeft&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">base_blink_r</span> <span class="o">=</span> <span class="n">mediapipe_gestures_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;eyeBlinkRight&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">base_shrug_lower</span> <span class="o">=</span> <span class="n">mediapipe_gestures_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mouthShrugLower&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        
+        <span class="c1"># === PASO 2: CÁLCULO DE SCORES FINALES ===</span>
+        <span class="c1"># Aplicar lógica de suavizado, filtrado e interferencia entre gestos</span>
+        
+        <span class="c1"># --- Gestos de Ojos ---</span>
+        <span class="c1"># Detectar ojos abiertos (máximo de ambos lados)</span>
+        <span class="n">score_eyes_wide</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">mediapipe_gestures_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;eyeWideLeft&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">mediapipe_gestures_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;eyeWideRight&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="c1"># Guiño derecho: diferencia entre ojo derecho e izquierdo (si dcho. más cerrado)</span>
+        <span class="n">score_blink_right</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">base_blink_r</span> <span class="o">-</span> <span class="n">base_blink_l</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># Guiño izquierdo: diferencia entre ojo izquierdo y derecho (si izq. más cerrado)</span>
+        <span class="n">score_blink_left</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">base_blink_l</span> <span class="o">-</span> <span class="n">base_blink_r</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># Cejas fruncidas (máximo de ambos lados)</span>
+        <span class="n">score_brow_down</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">mediapipe_gestures_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;browDownLeft&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">mediapipe_gestures_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;browDownRight&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+        <span class="c1"># --- Gestos de Labios y Sonrisa ---</span>
+        <span class="c1"># Sonrisa: promedio de ambos lados, reducido por encoger labios (interfiere)</span>
+        <span class="n">score_smile</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">base_smile</span> <span class="o">-</span> <span class="n">base_shrug_lower</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># Morritos: presión para fruncir, reducido por boca abierta (funnel)</span>
+        <span class="n">score_mouth_pucker</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">base_pucker</span> <span class="o">-</span> <span class="n">base_funnel</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># Boca en O: valor directo sin filtrado</span>
+        <span class="n">score_mouth_funnel</span> <span class="o">=</span> <span class="n">base_funnel</span> 
+        <span class="c1"># Apretar labios: promedio de ambos lados</span>
+        <span class="n">score_mouth_press</span> <span class="o">=</span> <span class="p">(</span><span class="n">mediapipe_gestures_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mouthPressLeft&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">mediapipe_gestures_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mouthPressRight&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span>
+
+        <span class="c1"># --- Gestos de Mandíbula y Expresión ---</span>
+        <span class="c1"># Abrir boca: valor directo reducido por boca en O (funnel)</span>
+        <span class="n">score_jaw_open</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">mediapipe_gestures_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;jawOpen&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="n">base_funnel</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># Encoger labios: complejo (reduce por pucker, funnel, press)</span>
+        <span class="n">score_mouth_shrug</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">base_shrug_lower</span> <span class="o">-</span> <span class="n">base_pucker</span> <span class="o">-</span> <span class="n">base_funnel</span> <span class="o">-</span> <span class="n">score_mouth_press</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># Mover boca a derecha: valor directo</span>
+        <span class="n">score_mouth_right</span> <span class="o">=</span> <span class="n">mediapipe_gestures_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mouthRight&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># Mover boca a izquierda: valor directo</span>
+        <span class="n">score_mouth_left</span> <span class="o">=</span> <span class="n">mediapipe_gestures_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mouthLeft&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        
+        <span class="c1"># === PASO 3: ASIGNACIÓN AL MODELO ===</span>
+        <span class="c1"># Actualizar input_structure con las puntuaciones calculadas</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_score</span><span class="p">(</span><span class="s2">&quot;smile&quot;</span><span class="p">,</span> <span class="n">score_smile</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_score</span><span class="p">(</span><span class="s2">&quot;mouthPucker&quot;</span><span class="p">,</span> <span class="n">score_mouth_pucker</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_score</span><span class="p">(</span><span class="s2">&quot;mouthFunnel&quot;</span><span class="p">,</span> <span class="n">score_mouth_funnel</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_score</span><span class="p">(</span><span class="s2">&quot;eyeBlinkRight&quot;</span><span class="p">,</span> <span class="n">score_blink_right</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_score</span><span class="p">(</span><span class="s2">&quot;eyeBlinkLeft&quot;</span><span class="p">,</span> <span class="n">score_blink_left</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_score</span><span class="p">(</span><span class="s2">&quot;eyesWide&quot;</span><span class="p">,</span> <span class="n">score_eyes_wide</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_score</span><span class="p">(</span><span class="s2">&quot;browDown&quot;</span><span class="p">,</span> <span class="n">score_brow_down</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_score</span><span class="p">(</span><span class="s2">&quot;jawOpen&quot;</span><span class="p">,</span> <span class="n">score_jaw_open</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_score</span><span class="p">(</span><span class="s2">&quot;mouthLeft&quot;</span><span class="p">,</span> <span class="n">score_mouth_left</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_score</span><span class="p">(</span><span class="s2">&quot;mouthRight&quot;</span><span class="p">,</span> <span class="n">score_mouth_right</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_score</span><span class="p">(</span><span class="s2">&quot;mouthPress&quot;</span><span class="p">,</span> <span class="n">score_mouth_press</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_score</span><span class="p">(</span><span class="s2">&quot;mouthShrug&quot;</span><span class="p">,</span> <span class="n">score_mouth_shrug</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="AppModel.set_score">
+<a class="viewcode-back" href="../model.html#model.AppModel.set_score">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_score</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gesture</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Establecer puntuación de un gesto en el modelo.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            gesture: str - nombre del gesto (ej: &quot;smile&quot;, &quot;eyeBlinkLeft&quot;)</span>
+<span class="sd">            value: float - puntuación del gesto (0.0 a 1.0)</span>
+<span class="sd">        </span>
+<span class="sd">        Si el gesto existe en input_structure, actualiza su campo &quot;score&quot;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">gesture</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_structure</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input_structure</span><span class="p">[</span><span class="n">gesture</span><span class="p">][</span><span class="s2">&quot;score&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="AppModel.get_score">
+<a class="viewcode-back" href="../model.html#model.AppModel.get_score">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_score</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gesture</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Obtener puntuación actual de un gesto.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            gesture: str - nombre del gesto (ej: &quot;smile&quot;, &quot;eyeBlinkLeft&quot;)</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            float - puntuación del gesto (0.0 a 1.0), o 0.0 si gesto no existe</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_structure</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">gesture</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;score&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="AppModel.get_input_from_gesture">
+<a class="viewcode-back" href="../model.html#model.AppModel.get_input_from_gesture">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_input_from_gesture</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gesture</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Obtener código de entrada de mando asociado a un gesto.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            gesture: str - nombre del gesto</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            str - código de botón (ej: &quot;XUSB_GAMEPAD_A&quot;), acción de sistema (ej: &quot;SYS_NAV_ENTER&quot;),</span>
+<span class="sd">                  o None si no está mapeado</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_structure</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">gesture</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="AppModel.get_type_from_gesture">
+<a class="viewcode-back" href="../model.html#model.AppModel.get_type_from_gesture">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_type_from_gesture</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gesture</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Devuelve el tipo de categoría (&#39;gamepad&#39;, &#39;system&#39;, &#39;none&#39;) asociada a un gesto.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_structure</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">gesture</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;category_type&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="AppModel.save_control_mapping">
+<a class="viewcode-back" href="../model.html#model.AppModel.save_control_mapping">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_control_mapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gesture_code</span><span class="p">,</span> <span class="n">input_code</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Actualiza el mapeo de los gestos exclusivamente en memoria RAM (no escribe en disco).</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            gesture_code: str - Código interno del gesto</span>
+<span class="sd">            input_code: str - Acción o botón a mapear</span>
+<span class="sd">            threshold: float - Sensibilidad deseada (0-100 desde la interfaz)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">gesture_code</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_structure</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input_structure</span><span class="p">[</span><span class="n">gesture_code</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># 1. El control deslizante de la interfaz va de 0 a 100, pero la IA usa de 0.0 a 1.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_structure</span><span class="p">[</span><span class="n">gesture_code</span><span class="p">][</span><span class="s2">&quot;threshold&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">threshold</span> <span class="o">/</span> <span class="mf">100.0</span>
+        
+        <span class="c1"># 2. Si el usuario selecciona &quot;Ninguna&quot; o desmarca todo</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">input_code</span> <span class="ow">or</span> <span class="n">input_code</span> <span class="o">==</span> <span class="s2">&quot;NONE&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input_structure</span><span class="p">[</span><span class="n">gesture_code</span><span class="p">][</span><span class="s2">&quot;category_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input_structure</span><span class="p">[</span><span class="n">gesture_code</span><span class="p">][</span><span class="s2">&quot;function&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input_structure</span><span class="p">[</span><span class="n">gesture_code</span><span class="p">][</span><span class="s2">&quot;input&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+            
+        <span class="c1"># 3. Si el usuario asignó un botón del mando</span>
+        <span class="k">elif</span> <span class="n">input_code</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;XUSB&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input_structure</span><span class="p">[</span><span class="n">gesture_code</span><span class="p">][</span><span class="s2">&quot;category_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;gamepad&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input_structure</span><span class="p">[</span><span class="n">gesture_code</span><span class="p">][</span><span class="s2">&quot;function&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;pushInputButton&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input_structure</span><span class="p">[</span><span class="n">gesture_code</span><span class="p">][</span><span class="s2">&quot;input&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">input_code</span>
+            
+        <span class="c1"># 4. Si el usuario asignó una acción de sistema (ej. Cambiar Modo)</span>
+        <span class="k">elif</span> <span class="n">input_code</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;SYS&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input_structure</span><span class="p">[</span><span class="n">gesture_code</span><span class="p">][</span><span class="s2">&quot;category_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;system&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input_structure</span><span class="p">[</span><span class="n">gesture_code</span><span class="p">][</span><span class="s2">&quot;input&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">input_code</span>
+            <span class="k">if</span> <span class="n">input_code</span> <span class="o">==</span> <span class="s2">&quot;SYS_CHANGE_MODE&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">input_structure</span><span class="p">[</span><span class="n">gesture_code</span><span class="p">][</span><span class="s2">&quot;function&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;changeMovementMode&quot;</span>
+            <span class="k">elif</span> <span class="n">input_code</span> <span class="o">==</span> <span class="s2">&quot;SYS_RESTORE_APP&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">input_structure</span><span class="p">[</span><span class="n">gesture_code</span><span class="p">][</span><span class="s2">&quot;function&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;restoreApp&quot;</span>
+            <span class="k">elif</span> <span class="n">input_code</span> <span class="o">==</span> <span class="s2">&quot;SYS_NAV_ENTER&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">input_structure</span><span class="p">[</span><span class="n">gesture_code</span><span class="p">][</span><span class="s2">&quot;function&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;click&quot;</span></div>
+
+                
+<div class="viewcode-block" id="AppModel.get_available_profiles">
+<a class="viewcode-back" href="../model.html#model.AppModel.get_available_profiles">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_available_profiles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Devuelve una lista con los nombres de los archivos .json en la carpeta de perfiles &#39;controls&#39;.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">controls_dir</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="c1"># Filtramos solo los archivos JSON</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">controls_dir</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.json&#39;</span><span class="p">)]</span></div>
+
+
+<div class="viewcode-block" id="AppModel.load_profile">
+<a class="viewcode-back" href="../model.html#model.AppModel.load_profile">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_profile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Cambia el archivo de configuración objetivo y recarga toda la estructura en la memoria RAM.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">json_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">controls_dir</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_inputs</span><span class="p">()</span></div>
+
+    
+<div class="viewcode-block" id="AppModel.save_as_profile">
+<a class="viewcode-back" href="../model.html#model.AppModel.save_as_profile">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_as_profile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_filename</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Crea un nuevo archivo JSON, vuelca la configuración actual y lo establece como el perfil activo.&quot;&quot;&quot;</span>
+        <span class="c1"># Asegurarnos de que termina en .json</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">new_filename</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.json&#39;</span><span class="p">):</span>
+            <span class="n">new_filename</span> <span class="o">+=</span> <span class="s1">&#39;.json&#39;</span>
+            
+        <span class="c1"># Actualizamos la ruta actual al nuevo archivo</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">json_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">controls_dir</span><span class="p">,</span> <span class="n">new_filename</span><span class="p">)</span>
+        
+        <span class="c1"># Llamamos al método interno para que vuelque la memoria al disco</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_inputs</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="AppModel.auto_detect_steam_games">
+<a class="viewcode-back" href="../model.html#model.AppModel.auto_detect_steam_games">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">auto_detect_steam_games</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Escanea la instalación local de Steam y consolida todos los perfiles de juegos detectados</span>
+<span class="sd">        en una única base de datos JSON estructurada.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            bool - True si hubo cambios (juegos nuevos o actualizaciones), False si todo sigue igual.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">os</span><span class="o">,</span><span class="w"> </span><span class="nn">glob</span><span class="o">,</span><span class="w"> </span><span class="nn">json</span><span class="o">,</span><span class="w"> </span><span class="nn">winreg</span>
+        
+        <span class="c1"># 1. Buscar la ruta de instalación principal de Steam en el Registro de Windows</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">winreg</span><span class="o">.</span><span class="n">OpenKey</span><span class="p">(</span><span class="n">winreg</span><span class="o">.</span><span class="n">HKEY_LOCAL_MACHINE</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;SOFTWARE\WOW6432Node\Valve\Steam&quot;</span><span class="p">)</span>
+            <span class="n">steam_path</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">winreg</span><span class="o">.</span><span class="n">QueryValueEx</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s2">&quot;InstallPath&quot;</span><span class="p">)</span>
+            <span class="n">winreg</span><span class="o">.</span><span class="n">CloseKey</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Steam no está instalado.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># Ruta hacia la caché de biblioteca donde se esconden los iconos/logos</span>
+        <span class="n">steam_library_cache</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">steam_path</span><span class="p">,</span> <span class="s2">&quot;appcache&quot;</span><span class="p">,</span> <span class="s2">&quot;librarycache&quot;</span><span class="p">)</span>
+
+        <span class="c1"># 2. Leer archivos VDF para descubrir si el usuario tiene múltiples bibliotecas en otros discos</span>
+        <span class="n">library_paths</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">vdf_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">steam_path</span><span class="p">,</span> <span class="s2">&quot;steamapps&quot;</span><span class="p">,</span> <span class="s2">&quot;libraryfolders.vdf&quot;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">vdf_path</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">vdf_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="s1">&#39;&quot;path&quot;&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                            <span class="n">partes</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">partes</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">4</span><span class="p">:</span>
+                                <span class="n">ruta_limpia</span> <span class="o">=</span> <span class="n">partes</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\\\</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">)</span>
+                                <span class="n">library_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ruta_limpia</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="n">library_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">steam_path</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">library_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">steam_path</span><span class="p">)</span>
+
+        <span class="c1"># --- CARGAMOS LA BASE DE DATOS ACTUAL A MEMORIA ---</span>
+        <span class="n">steam_data</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steam_games_file</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steam_games_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">steam_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="n">steam_data</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1"># Si no existe o está corrupto, empezamos de cero</span>
+
+        <span class="n">hubo_cambios</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># Comenzamos el escaneo iterando sobre cada biblioteca detectada</span>
+        <span class="k">for</span> <span class="n">lib_path</span> <span class="ow">in</span> <span class="n">library_paths</span><span class="p">:</span>
+            <span class="n">steamapps_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lib_path</span><span class="p">,</span> <span class="s2">&quot;steamapps&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">steamapps_path</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># Buscar los manifiestos individuales de cada juego instalado (.acf)</span>
+            <span class="k">for</span> <span class="n">file_path</span> <span class="ow">in</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">steamapps_path</span><span class="p">,</span> <span class="s2">&quot;*.acf&quot;</span><span class="p">)):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                        <span class="n">content</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+                    <span class="c1"># Analizar el archivo para extraer ID y Nombre del juego</span>
+                    <span class="n">name</span><span class="p">,</span> <span class="n">app_id</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span>
+                    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">content</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="s1">&#39;&quot;name&quot;&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                            <span class="n">name</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)[</span><span class="mi">3</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="s1">&#39;&quot;appid&quot;&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                            <span class="n">app_id</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)[</span><span class="mi">3</span><span class="p">]</span>
+
+                    <span class="k">if</span> <span class="n">name</span> <span class="ow">and</span> <span class="n">app_id</span><span class="p">:</span>
+                        <span class="n">app_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">app_id</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                        
+                        <span class="c1"># Excluir aplicaciones del sistema de Steam (ej. Steamworks Common Redistributables)</span>
+                        <span class="k">if</span> <span class="n">app_id</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;228980&quot;</span><span class="p">]:</span> <span class="c1"># Lista negra</span>
+                            <span class="k">continue</span>
+
+                        <span class="c1"># --- BÚSQUEDA DEL LOGO ---</span>
+                        <span class="c1"># Buscar la mejor imagen en la caché para mostrarla en el catálogo visual</span>
+                        <span class="n">best_image</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+                        <span class="n">app_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">steam_library_cache</span><span class="p">,</span> <span class="n">app_id</span><span class="p">)</span>
+                        
+                        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">app_folder</span><span class="p">)</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">app_folder</span><span class="p">):</span>
+                            <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">dirs</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">app_folder</span><span class="p">):</span>
+                                <span class="k">for</span> <span class="n">archivo</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+                                    <span class="k">if</span> <span class="n">archivo</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;logo.png&#39;</span><span class="p">:</span>
+                                        <span class="n">best_image</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">archivo</span><span class="p">)</span>
+                                        <span class="k">break</span>
+                                <span class="k">if</span> <span class="n">best_image</span><span class="p">:</span> <span class="k">break</span>
+                            
+                            <span class="c1"># Alternativa si no hay &quot;logo.png&quot; exacto</span>
+                            <span class="k">if</span> <span class="ow">not</span> <span class="n">best_image</span><span class="p">:</span>
+                                <span class="n">archivos</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">app_folder</span><span class="p">)</span>
+                                <span class="n">imagenes</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">archivos</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s1">&#39;.jpg&#39;</span><span class="p">,</span> <span class="s1">&#39;.jpeg&#39;</span><span class="p">,</span> <span class="s1">&#39;.png&#39;</span><span class="p">,</span> <span class="s1">&#39;.ico&#39;</span><span class="p">))]</span>
+                                <span class="k">if</span> <span class="n">imagenes</span><span class="p">:</span>
+                                    <span class="n">imagenes</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+                                    <span class="n">best_image</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">app_folder</span><span class="p">,</span> <span class="n">imagenes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                            
+                            <span class="k">if</span> <span class="n">best_image</span><span class="p">:</span>
+                                <span class="n">best_image</span> <span class="o">=</span> <span class="n">best_image</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\\\</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">)</span>
+
+                        <span class="c1"># Estructurar los datos unificados del juego</span>
+                        <span class="n">scanned_data</span> <span class="o">=</span> <span class="p">{</span>
+                            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+                            <span class="s2">&quot;exe_path&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;steam://rungameid/</span><span class="si">{</span><span class="n">app_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;icon&quot;</span><span class="p">:</span> <span class="n">best_image</span>
+                        <span class="p">}</span>
+
+                        <span class="c1"># LÓGICA DE ACTUALIZACIÓN DEL DICCIONARIO</span>
+                        <span class="k">if</span> <span class="n">app_id</span> <span class="ow">in</span> <span class="n">steam_data</span><span class="p">:</span>
+                            <span class="n">existing</span> <span class="o">=</span> <span class="n">steam_data</span><span class="p">[</span><span class="n">app_id</span><span class="p">]</span>
+                            <span class="c1"># Verificar si la ruta, icono o título han mutado desde la última vez</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="n">existing</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;exe_path&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="n">scanned_data</span><span class="p">[</span><span class="s2">&quot;exe_path&quot;</span><span class="p">]</span> <span class="ow">or</span> 
+                                <span class="n">existing</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;icon&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="n">scanned_data</span><span class="p">[</span><span class="s2">&quot;icon&quot;</span><span class="p">]</span> <span class="ow">or</span>
+                                <span class="n">existing</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="n">scanned_data</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]):</span>
+                                
+                                <span class="c1"># Actualizamos solo los datos que controlamos por si el usuario añadió campos manuales</span>
+                                <span class="n">steam_data</span><span class="p">[</span><span class="n">app_id</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">scanned_data</span><span class="p">)</span>
+                                <span class="n">hubo_cambios</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="c1"># Inserción de juego completamente nuevo</span>
+                            <span class="n">steam_data</span><span class="p">[</span><span class="n">app_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">scanned_data</span>
+                            <span class="n">hubo_cambios</span> <span class="o">=</span> <span class="kc">True</span>
+                            
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error procesando </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">continue</span>
+
+        <span class="c1"># --- ESCRITURA FINAL ---</span>
+        <span class="k">if</span> <span class="n">hubo_cambios</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># Guardamos la estructura entera 1 sola vez en el JSON maestro</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steam_games_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">steam_data</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error crítico al guardar steam_games.json: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">hubo_cambios</span></div>
+
+
+<div class="viewcode-block" id="AppModel.get_installed_games">
+<a class="viewcode-back" href="../model.html#model.AppModel.get_installed_games">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_installed_games</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Lee la BD unificada de Steam y la fusiona con la caché en tiempo real de las ROMs.&quot;&quot;&quot;</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">json</span><span class="o">,</span><span class="w"> </span><span class="nn">os</span>
+        <span class="n">games_list</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="c1"># 1. Cargar juegos de Steam (1 sola lectura a disco)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steam_games_file</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steam_games_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">steam_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                    
+                    <span class="c1"># Extraemos los valores del diccionario a formato lista</span>
+                    <span class="k">for</span> <span class="n">app_id</span><span class="p">,</span> <span class="n">datos_juego</span> <span class="ow">in</span> <span class="n">steam_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="n">datos_juego</span><span class="p">[</span><span class="s2">&quot;profile_file&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;steam_games.json&quot;</span>
+                        <span class="n">games_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">datos_juego</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error al leer la BD de Steam: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        
+        <span class="c1"># 2. Inyectar en memoria RAM los directorios de emuladores (las ROMs no van a archivo maestro)</span>
+        <span class="n">games_list</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_dynamic_roms</span><span class="p">())</span>
+                
+        <span class="k">return</span> <span class="n">games_list</span></div>
+
+        
+<div class="viewcode-block" id="AppModel.get_rom_folders">
+<a class="viewcode-back" href="../model.html#model.AppModel.get_rom_folders">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_rom_folders</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Devuelve la lista de rutas en disco guardadas por el usuario como directorios de ROMs.&quot;&quot;&quot;</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">json</span><span class="o">,</span><span class="w"> </span><span class="nn">os</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rom_folders_file</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rom_folders_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="k">return</span> <span class="p">[]</span></div>
+
+
+<div class="viewcode-block" id="AppModel.add_rom_folder">
+<a class="viewcode-back" href="../model.html#model.AppModel.add_rom_folder">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_rom_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Añade una nueva ruta a la lista de exploración y limpia la caché para forzar un re-escaneo.&quot;&quot;&quot;</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+        <span class="n">folders</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_rom_folders</span><span class="p">()</span>
+        
+        <span class="c1"># Si la ruta ya existe, la quitamos y la volvemos a poner para que pase al final de la lista</span>
+        <span class="k">if</span> <span class="n">folder_path</span> <span class="ow">in</span> <span class="n">folders</span><span class="p">:</span>
+            <span class="n">folders</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">folder_path</span><span class="p">)</span>
+        <span class="n">folders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">folder_path</span><span class="p">)</span>
+        
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rom_folders_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">folders</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+            
+        <span class="c1"># Al vaciar la caché, el próximo acceso a la pantalla de juegos forzará el escaneo recursivo</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cached_roms</span> <span class="o">=</span> <span class="kc">None</span> </div>
+
+
+<div class="viewcode-block" id="AppModel.get_dynamic_roms">
+<a class="viewcode-back" href="../model.html#model.AppModel.get_dynamic_roms">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dynamic_roms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Escanea las carpetas sobre la marcha en busca de extensiones válidas. Usa la caché interna si ya se escaneó antes.&quot;&quot;&quot;</span>
+        <span class="c1"># Si ya lo escaneamos en esta sesión, devolvemos la memoria directamente (0% latencia de interfaz)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cached_roms</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cached_roms</span>
+            
+        <span class="c1"># Extensiones asociadas a todas las consolas emuladas actualmente soportadas</span>
+        <span class="n">supported_extensions</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s1">&#39;.nes&#39;</span><span class="p">,</span> <span class="s1">&#39;.sfc&#39;</span><span class="p">,</span> <span class="s1">&#39;.smc&#39;</span><span class="p">,</span> <span class="s1">&#39;.fig&#39;</span><span class="p">,</span> 
+            <span class="s1">&#39;.gb&#39;</span><span class="p">,</span> <span class="s1">&#39;.gbc&#39;</span><span class="p">,</span> <span class="s1">&#39;.gba&#39;</span><span class="p">,</span> <span class="s1">&#39;.nds&#39;</span>
+        <span class="p">)</span>
+        
+        <span class="n">roms_encontradas</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+        
+        <span class="c1"># Escaneo profundo iterando sobre cada directorio configurado</span>
+        <span class="k">for</span> <span class="n">folder</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_rom_folders</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">folder</span><span class="p">):</span>
+                <span class="k">continue</span>
+                
+            <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">dirs</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">folder</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">archivo</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">archivo</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">supported_extensions</span><span class="p">):</span>
+                        <span class="n">rom_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">archivo</span><span class="p">)</span>
+                        <span class="n">titulo_limpio</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">archivo</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                        
+                        <span class="c1"># Generamos un formato estándar compatible con las vistas y la BD de Steam</span>
+                        <span class="n">roms_encontradas</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">titulo_limpio</span><span class="p">,</span>
+                            <span class="s2">&quot;exe_path&quot;</span><span class="p">:</span> <span class="n">rom_path</span><span class="p">,</span>
+                            <span class="s2">&quot;icon&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> 
+                            <span class="s2">&quot;profile_file&quot;</span><span class="p">:</span> <span class="s2">&quot;dinamico&quot;</span> <span class="c1"># Etiqueta interna de control para no fusionar a .json</span>
+                        <span class="p">})</span>
+                        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cached_roms</span> <span class="o">=</span> <span class="n">roms_encontradas</span> <span class="c1"># Guardamos el resultado en la RAM para optimizar siguientes llamadas</span>
+        <span class="k">return</span> <span class="n">roms_encontradas</span></div>
+
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_emulators_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Carga la configuración persistente de los emuladores o crea una plantilla base por defecto si no existe.&quot;&quot;&quot;</span>
+        
+        <span class="c1"># Lista exhaustiva de las consolas emparejadas con las extensiones de ROMs soportadas</span>
+        <span class="n">default_config</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;NES&quot;</span><span class="p">:</span> <span class="s2">&quot;Default&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;SNES&quot;</span><span class="p">:</span> <span class="s2">&quot;Default&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Game Boy&quot;</span><span class="p">:</span> <span class="s2">&quot;Default&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Game Boy Color&quot;</span><span class="p">:</span> <span class="s2">&quot;Default&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Game Boy Advance&quot;</span><span class="p">:</span> <span class="s2">&quot;Default&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Nintendo DS&quot;</span><span class="p">:</span> <span class="s2">&quot;Default&quot;</span>
+        <span class="p">}</span>
+        
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">emulators_file</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">emulators_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">pass</span>
+                
+        <span class="k">return</span> <span class="n">default_config</span>
+
+<div class="viewcode-block" id="AppModel.save_emulators_config">
+<a class="viewcode-back" href="../model.html#model.AppModel.save_emulators_config">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_emulators_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Vuelca la configuración actual de rutas de emuladores de la memoria RAM al disco duro.&quot;&quot;&quot;</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">emulators_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">emulators_config</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="AppModel.get_console_from_extension">
+<a class="viewcode-back" href="../model.html#model.AppModel.get_console_from_extension">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_console_from_extension</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extension</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Asigna una extensión de archivo detectada (como &#39;.nes&#39;) al nombre real de la consola correspondiente.&quot;&quot;&quot;</span>
+        <span class="n">ext</span> <span class="o">=</span> <span class="n">extension</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        
+        <span class="c1"># Mapeo basado en las extensiones de archivos de emuladores soportadas en el sistema</span>
+        <span class="n">mapping</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;.nes&#39;</span><span class="p">:</span> <span class="s1">&#39;NES&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;.sfc&#39;</span><span class="p">:</span> <span class="s1">&#39;SNES&#39;</span><span class="p">,</span> <span class="s1">&#39;.smc&#39;</span><span class="p">:</span> <span class="s1">&#39;SNES&#39;</span><span class="p">,</span> <span class="s1">&#39;.fig&#39;</span><span class="p">:</span> <span class="s1">&#39;SNES&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;.gb&#39;</span><span class="p">:</span> <span class="s1">&#39;Game Boy&#39;</span><span class="p">,</span> <span class="s1">&#39;.gbc&#39;</span><span class="p">:</span> <span class="s1">&#39;Game Boy Color&#39;</span><span class="p">,</span> <span class="s1">&#39;.gba&#39;</span><span class="p">:</span> <span class="s1">&#39;Game Boy Advance&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;.nds&#39;</span><span class="p">:</span> <span class="s1">&#39;Nintendo DS&#39;</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ext</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="AppModel.get_available_gestures_metadata">
+<a class="viewcode-back" href="../model.html#model.AppModel.get_available_gestures_metadata">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_available_gestures_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Devuelve el catálogo maestro inmutable de gestos con sus nombres en español legibles por la interfaz de usuario.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;smile&quot;</span><span class="p">:</span> <span class="s2">&quot;Sonrisa&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;mouthPucker&quot;</span><span class="p">:</span> <span class="s2">&quot;Morritos&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;mouthFunnel&quot;</span><span class="p">:</span> <span class="s2">&quot;Boca en O&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;eyeBlinkRight&quot;</span><span class="p">:</span> <span class="s2">&quot;Guiño Dcho&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;eyeBlinkLeft&quot;</span><span class="p">:</span> <span class="s2">&quot;Guiño Izq&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;eyesWide&quot;</span><span class="p">:</span> <span class="s2">&quot;Ojos Abiertos&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;jawOpen&quot;</span><span class="p">:</span> <span class="s2">&quot;Abrir Boca&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;mouthLeft&quot;</span><span class="p">:</span> <span class="s2">&quot;Boca Izq&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;mouthRight&quot;</span><span class="p">:</span> <span class="s2">&quot;Boca Dcha&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;mouthPress&quot;</span><span class="p">:</span> <span class="s2">&quot;Apretar Labios&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;mouthShrug&quot;</span><span class="p">:</span> <span class="s2">&quot;Encoger Labios&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;browDown&quot;</span><span class="p">:</span> <span class="s2">&quot;Cejas Fruncidas&quot;</span>
+        <span class="p">}</span></div>
+
+    
+
+    <span class="c1"># === MÉTODOS DE TELEMETRÍA ===</span>
+    
+<div class="viewcode-block" id="AppModel.log_telemetry">
+<a class="viewcode-back" href="../model.html#model.AppModel.log_telemetry">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_telemetry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Suma 1 a la métrica indicada si el modo de pruebas está activo.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_mode</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">telemetry</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">telemetry</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="AppModel.set_tutorial_time">
+<a class="viewcode-back" href="../model.html#model.AppModel.set_tutorial_time">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_tutorial_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seconds</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Registra el tiempo exacto que tardó el usuario en superar el tutorial.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_mode</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">telemetry</span><span class="p">[</span><span class="s2">&quot;tutorial_time_seconds&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">seconds</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AppModel.export_telemetry_csv">
+<a class="viewcode-back" href="../model.html#model.AppModel.export_telemetry_csv">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_telemetry_csv</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Añade la sesión actual a un archivo CSV global al cerrar la aplicación.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_mode</span><span class="p">:</span>
+            <span class="k">return</span>
+            
+        <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">csv</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+            
+        <span class="c1"># 1. Usar un nombre de archivo fijo para acumular todas las sesiones de prueba</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;UX_telemetry_results.csv&quot;</span>
+        <span class="n">csv_path</span> <span class="o">=</span> <span class="n">get_save_path</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;Fecha y Hora de la Sesion&quot;</span><span class="p">,</span> <span class="c1"># Crucial para distinguir usuarios en un archivo único</span>
+            <span class="s2">&quot;Tiempo Tutorial (s)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Volver (Menu Gestos)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Acciones Guardar/Cargar&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Volver (Asignacion Boton)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Entrar (Asignacion Boton)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Volver (Explorador)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Entrar (Explorador)&quot;</span>
+        <span class="p">]</span>
+        
+        <span class="n">current_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span>
+        
+        <span class="n">row</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">current_time</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">telemetry</span><span class="p">[</span><span class="s2">&quot;tutorial_time_seconds&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">telemetry</span><span class="p">[</span><span class="s2">&quot;back_from_gestures_count&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">telemetry</span><span class="p">[</span><span class="s2">&quot;save_load_actions_count&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">telemetry</span><span class="p">[</span><span class="s2">&quot;back_from_actions_count&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">telemetry</span><span class="p">[</span><span class="s2">&quot;enter_actions_count&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">telemetry</span><span class="p">[</span><span class="s2">&quot;back_from_explorer_count&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">telemetry</span><span class="p">[</span><span class="s2">&quot;enter_explorer_count&quot;</span><span class="p">]</span>
+        <span class="p">]</span>
+        
+        <span class="c1"># 2. Comprobar si el archivo ya existe ANTES de abrirlo</span>
+        <span class="c1"># Esto nos dirá si necesitamos escribir la fila de títulos o no</span>
+        <span class="n">file_exists</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">csv_path</span><span class="p">)</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># 3. Modo &#39;a&#39; (añadir). Esto inserta datos en la siguiente línea vacía sin borrar lo anterior.</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">csv_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8-sig&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;;&#39;</span><span class="p">)</span> 
+                
+                <span class="c1"># Solo escribimos las cabeceras si el archivo es totalmente nuevo</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">file_exists</span><span class="p">:</span>
+                    <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span>
+                    
+                <span class="c1"># Escribimos los datos del usuario actual</span>
+                <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+                
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;📊 Datos de la sesión guardados correctamente en el registro global: </span><span class="si">{</span><span class="n">csv_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error crítico al guardar la telemetría del usuario: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="AppModel.change_movement_mode">
+<a class="viewcode-back" href="../model.html#model.AppModel.change_movement_mode">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">change_movement_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Cambia el modo de movimiento entre &#39;discreto&#39; y &#39;continuo&#39; según la acción del usuario.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_continuous_mode</span> <span class="o">=</span> <span class="n">mode</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Derechos de autor 2026, Iván García García.</p>
+  </div>
+
+  Compilado con <a href="https://www.sphinx-doc.org/">Sphinx</a> usando un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    proporcionado por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,14 @@
+src
+===
+
+.. toctree::
+   :maxdepth: 4
+
+   CameraStream
+   custom_widgets
+   interface_ui
+   main
+   model
+   presenter
+   view
+   vision

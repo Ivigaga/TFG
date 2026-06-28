@@ -1,0 +1,184 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="es" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CameraStream &mdash; documentación de FaceDrive - 1.0</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=4936afed"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/translations.js?v=f85f4cfb"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="../genindex.html" />
+    <link rel="search" title="Búsqueda" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            FaceDrive
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Buscar documentos" aria-label="Buscar documentos" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">FaceDrive</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Código de módulo</a></li>
+      <li class="breadcrumb-item active">CameraStream</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Código fuente para CameraStream</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">MÓDULO CameraStream.py</span>
+<span class="sd">---------------------------------------------------------</span>
+<span class="sd">Implementa la captura de vídeo en un hilo (thread) independiente.</span>
+<span class="sd">Evita que el cuello de botella de lectura del hardware de la cámara (I/O) </span>
+<span class="sd">congele o ralentice el procesamiento de la Inteligencia Artificial y la UI.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
+
+<div class="viewcode-block" id="CameraStream">
+<a class="viewcode-back" href="../CameraStream.html#CameraStream.CameraStream">[documentos]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CameraStream</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Clase encargada de mantener un flujo constante de frames desde la cámara web</span>
+<span class="sd">    hacia la memoria RAM utilizando concurrencia (threading).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">target_fps</span><span class="o">=</span><span class="mi">60</span><span class="p">):</span>
+        <span class="c1"># 1. En Windows, CAP_DSHOW (DirectShow) acelera drásticamente el tiempo de inicio de la cámara</span>
+        <span class="c1"># y estabiliza el framerate en comparación con el backend por defecto.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">CAP_DSHOW</span><span class="p">)</span>
+        
+        <span class="c1"># 2. Forzamos el codec MJPG. Es vital para que las webcams por USB puedan superar </span>
+        <span class="c1"># el límite nativo de 30 FPS y alcanzar los 60 FPS deseados.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cap</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">CAP_PROP_FOURCC</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoWriter_fourcc</span><span class="p">(</span><span class="o">*</span><span class="s1">&#39;MJPG&#39;</span><span class="p">))</span>
+        
+        <span class="c1"># 3. Pedimos una resolución estándar de 640x480.</span>
+        <span class="c1"># Bajar la resolución de captura reduce la carga en el bus USB y aumenta los FPS disponibles.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cap</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">CAP_PROP_FRAME_WIDTH</span><span class="p">,</span> <span class="mi">640</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cap</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">CAP_PROP_FRAME_HEIGHT</span><span class="p">,</span> <span class="mi">480</span><span class="p">)</span>
+        
+        <span class="c1"># 4. Solicitamos físicamente a la lente de la cámara que opere a los FPS objetivo.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cap</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">CAP_PROP_FPS</span><span class="p">,</span> <span class="n">target_fps</span><span class="p">)</span>
+        
+        <span class="c1"># Leemos el primer frame para inicializar las variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ret</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cap</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stopped</span> <span class="o">=</span> <span class="kc">False</span>
+        
+        <span class="c1"># Un &#39;Lock&#39; (Candado) evita problemas de condición de carrera si la IA</span>
+        <span class="c1"># intenta leer un frame justo en el mismo milisegundo que la cámara lo está sobreescribiendo.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+
+<div class="viewcode-block" id="CameraStream.start">
+<a class="viewcode-back" href="../CameraStream.html#CameraStream.CameraStream.start">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Arranca el hilo secundario para comenzar a actualizar los frames en segundo plano.&quot;&quot;&quot;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">())</span>
+        <span class="n">t</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Al ser un hilo &#39;daemon&#39;, morirá automáticamente cuando se cierre el programa principal</span>
+        <span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="CameraStream.update">
+<a class="viewcode-back" href="../CameraStream.html#CameraStream.CameraStream.update">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Bucle infinito del hilo secundario que lee constantemente la cámara.&quot;&quot;&quot;</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">stopped</span><span class="p">:</span>
+            <span class="n">ret</span><span class="p">,</span> <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cap</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="c1"># Adquirimos el candado solo durante la micro-fracción de segundo que toma actualizar la variable</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ret</span> <span class="o">=</span> <span class="n">ret</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span>
+                
+        <span class="c1"># CRÍTICO: Una vez que el bucle se detiene, liberamos el hardware de la cámara físicamente</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;cap&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cap</span><span class="o">.</span><span class="n">isOpened</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cap</span><span class="o">.</span><span class="n">release</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="CameraStream.read">
+<a class="viewcode-back" href="../CameraStream.html#CameraStream.CameraStream.read">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Devuelve una copia segura del frame más reciente capturado.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span>
+            <span class="c1"># Usamos .copy() para que el consumidor (IA) manipule la imagen sin afectar el original</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="CameraStream.stop">
+<a class="viewcode-back" href="../CameraStream.html#CameraStream.CameraStream.stop">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Señaliza al bucle secundario que debe detenerse y liberar los recursos.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stopped</span> <span class="o">=</span> <span class="kc">True</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Derechos de autor 2026, Iván García García.</p>
+  </div>
+
+  Compilado con <a href="https://www.sphinx-doc.org/">Sphinx</a> usando un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    proporcionado por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

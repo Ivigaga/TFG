@@ -1,0 +1,419 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="es" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>presenter module &mdash; documentación de FaceDrive - 1.0</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=4936afed"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/translations.js?v=f85f4cfb"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="genindex.html" />
+    <link rel="search" title="Búsqueda" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            FaceDrive
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Buscar documentos" aria-label="Buscar documentos" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">presenter module</a><ul>
+<li><a class="reference internal" href="#presenter.MainPresenter"><code class="docutils literal notranslate"><span class="pre">MainPresenter</span></code></a><ul>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_application_restored"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_application_restored()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_controls_closed"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_controls_closed()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_controls_opened"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_controls_opened()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_emulator_exe_chosen"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_emulator_exe_chosen()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_emulator_settings_opened"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_emulator_settings_opened()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_emulator_setup_requested"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_emulator_setup_requested()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_explorer_cancel"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_explorer_cancel()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_explorer_folder_clicked"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_explorer_folder_clicked()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_explorer_opened"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_explorer_opened()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_explorer_select"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_explorer_select()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_explorer_up"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_explorer_up()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_game_launch"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_game_launch()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_games_catalog_requested"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_games_catalog_requested()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_gesture_selection"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_gesture_selection()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_load_profiles_requested"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_load_profiles_requested()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_mapping_canceled"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_mapping_canceled()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_navigation_settings_opened"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_navigation_settings_opened()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_open_save_as"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_open_save_as()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_platform_selected"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_platform_selected()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_platforms_screen_requested"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_platforms_screen_requested()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_profile_accepted"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_profile_accepted()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_remove_platform"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_remove_platform()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_save_as_requested"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_save_as_requested()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_save_navigation"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_save_navigation()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_scan_games"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_scan_games()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_selected_navigation_mode"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_selected_navigation_mode()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.handle_tutorial_click"><code class="docutils literal notranslate"><span class="pre">MainPresenter.handle_tutorial_click()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.has_windows_default_app"><code class="docutils literal notranslate"><span class="pre">MainPresenter.has_windows_default_app()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.navigate_interface"><code class="docutils literal notranslate"><span class="pre">MainPresenter.navigate_interface()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.obtain_current_platfor_games"><code class="docutils literal notranslate"><span class="pre">MainPresenter.obtain_current_platfor_games()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.refresh_explorer"><code class="docutils literal notranslate"><span class="pre">MainPresenter.refresh_explorer()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.save_control_mapping"><code class="docutils literal notranslate"><span class="pre">MainPresenter.save_control_mapping()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.save_control_mapping_current"><code class="docutils literal notranslate"><span class="pre">MainPresenter.save_control_mapping_current()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.shutdown"><code class="docutils literal notranslate"><span class="pre">MainPresenter.shutdown()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.start_video"><code class="docutils literal notranslate"><span class="pre">MainPresenter.start_video()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.staticMetaObject"><code class="docutils literal notranslate"><span class="pre">MainPresenter.staticMetaObject</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.stop_reading"><code class="docutils literal notranslate"><span class="pre">MainPresenter.stop_reading()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.stop_video"><code class="docutils literal notranslate"><span class="pre">MainPresenter.stop_video()</span></code></a></li>
+<li><a class="reference internal" href="#presenter.MainPresenter.toggle_video"><code class="docutils literal notranslate"><span class="pre">MainPresenter.toggle_video()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">FaceDrive</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">presenter module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/presenter.rst.txt" rel="nofollow"> Ver código fuente de la página</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-presenter">
+<span id="presenter-module"></span><h1>presenter module<a class="headerlink" href="#module-presenter" title="Link to this heading"></a></h1>
+<p>Módulo Presenter - Capa de Lógica de Negocio de la Arquitectura MVP</p>
+<dl class="simple">
+<dt>Responsabilidades principales:</dt><dd><ul class="simple">
+<li><p>Mediar la comunicación entre Vista (UI) y Modelo (datos/estado)</p></li>
+<li><p>Procesar datos de reconocimiento de gestos faciales desde MediaPipe</p></li>
+<li><p>Gestionar control virtual de mando Xbox 360 mediante vgamepad</p></li>
+<li><p>Orquestar lanzamiento de juegos, gestión de perfiles y configuración</p></li>
+<li><p>Manejar todos los eventos disparados por interacciones de usuario en la UI</p></li>
+<li><p>Mapear gestos a entrada de mando con lógica de umbrales configurables</p></li>
+<li><p>Implementar navegación direccional a través de la interfaz usando seguimiento facial</p></li>
+<li><p>Gestionar el estado de la aplicación (plataforma actual, ruta del explorador, progreso tutorial)</p></li>
+</ul>
+</dd>
+<dt>Características principales:</dt><dd><ul class="simple">
+<li><p>Control de mando en tiempo real via emulación de Xbox 360</p></li>
+<li><p>Monitoreo continuo de puntuación de gestos con umbrales configurables</p></li>
+<li><p>Selección de modo de navegación D-Pad vs Joystick</p></li>
+<li><p>Navegación inteligente de UI usando cálculos de proximidad geométrica</p></li>
+<li><p>Sistema de guardar/cargar perfiles y configuración</p></li>
+<li><p>Catálogo de juegos con soporte Steam + emuladores ROM</p></li>
+<li><p>Sistema de tutorial para incorporación de nuevos usuarios</p></li>
+<li><p>Monitoreo de FPS y gestión de velocidad de fotogramas</p></li>
+<li><p>Control de enfriamiento para prevenir navegación rápida repetida</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="presenter.MainPresenter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">presenter.</span></span><span class="sig-name descname"><span class="pre">MainPresenter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">view</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vision_engine</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+<p>Capa de lógica de negocio implementando el componente Presenter de la arquitectura MVP.</p>
+<p>Gestiona el flujo central de la aplicación: recibir datos de gestos del motor de visión,
+actualizar el estado del modelo, emitir comandos de mando, y orquestar actualizaciones de la vista.
+Actúa como el centro coordinador conectando todos los componentes de la aplicación.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_application_restored">
+<span class="sig-name descname"><span class="pre">handle_application_restored</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_application_restored"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_application_restored" title="Link to this definition"></a></dt>
+<dd><p>Se ejecuta cuando la ventana vuelve a primer plano. Cambia el modo de movimiento.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_controls_closed">
+<span class="sig-name descname"><span class="pre">handle_controls_closed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_controls_closed"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_controls_closed" title="Link to this definition"></a></dt>
+<dd><p>Se ejecuta al pulsar “Volver” en la pantalla de Gestos.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_controls_opened">
+<span class="sig-name descname"><span class="pre">handle_controls_opened</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_controls_opened"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_controls_opened" title="Link to this definition"></a></dt>
+<dd><p>Se ejecuta al pulsar “Controles”. Elige la imagen y muestra la página.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_emulator_exe_chosen">
+<span class="sig-name descname"><span class="pre">handle_emulator_exe_chosen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_index_return</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_emulator_exe_chosen"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_emulator_exe_chosen" title="Link to this definition"></a></dt>
+<dd><p>Se dispara cuando se hace clic en un .exe en el explorador.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_emulator_settings_opened">
+<span class="sig-name descname"><span class="pre">handle_emulator_settings_opened</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_emulator_settings_opened"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_emulator_settings_opened" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_emulator_setup_requested">
+<span class="sig-name descname"><span class="pre">handle_emulator_setup_requested</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">console_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_index_return</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_emulator_setup_requested"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_emulator_setup_requested" title="Link to this definition"></a></dt>
+<dd><p>Prepara el explorador para elegir un ejecutable para una consola específica.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_explorer_cancel">
+<span class="sig-name descname"><span class="pre">handle_explorer_cancel</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_explorer_cancel"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_explorer_cancel" title="Link to this definition"></a></dt>
+<dd><p>Vuelve a la página correcta dependiendo de desde dónde se lanzó el explorador.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_explorer_folder_clicked">
+<span class="sig-name descname"><span class="pre">handle_explorer_folder_clicked</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_explorer_folder_clicked"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_explorer_folder_clicked" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_explorer_opened">
+<span class="sig-name descname"><span class="pre">handle_explorer_opened</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_explorer_opened"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_explorer_opened" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_explorer_select">
+<span class="sig-name descname"><span class="pre">handle_explorer_select</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_explorer_select"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_explorer_select" title="Link to this definition"></a></dt>
+<dd><p>La acción depende del modo actual del explorador.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_explorer_up">
+<span class="sig-name descname"><span class="pre">handle_explorer_up</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_explorer_up"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_explorer_up" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_game_launch">
+<span class="sig-name descname"><span class="pre">handle_game_launch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exe_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_game_launch"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_game_launch" title="Link to this definition"></a></dt>
+<dd><p>Lanza asíncronamente el ejecutable del juego, URI de Steam o ROM con su emulador asignado.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_games_catalog_requested">
+<span class="sig-name descname"><span class="pre">handle_games_catalog_requested</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_games_catalog_requested"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_games_catalog_requested" title="Link to this definition"></a></dt>
+<dd><p>Solicita los juegos al modelo, ordena pintarlos y cambia a la pantalla de catálogo.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_gesture_selection">
+<span class="sig-name descname"><span class="pre">handle_gesture_selection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gesture_button</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_gesture_selection"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_gesture_selection" title="Link to this definition"></a></dt>
+<dd><p>Manejar usuario haciendo clic en botón de gesto (Sonrisa, Parpadeo, etc.).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_load_profiles_requested">
+<span class="sig-name descname"><span class="pre">handle_load_profiles_requested</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_load_profiles_requested"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_load_profiles_requested" title="Link to this definition"></a></dt>
+<dd><p>El usuario ha pulsado “Cargar Archivo”.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_mapping_canceled">
+<span class="sig-name descname"><span class="pre">handle_mapping_canceled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_mapping_canceled"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_mapping_canceled" title="Link to this definition"></a></dt>
+<dd><p>El usuario abortó la configuración saliendo con el botón Volver.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_navigation_settings_opened">
+<span class="sig-name descname"><span class="pre">handle_navigation_settings_opened</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_navigation_settings_opened"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_navigation_settings_opened" title="Link to this definition"></a></dt>
+<dd><p>Lee los datos del modelo, los invierte visualmente y abre la pantalla.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_open_save_as">
+<span class="sig-name descname"><span class="pre">handle_open_save_as</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_open_save_as"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_open_save_as" title="Link to this definition"></a></dt>
+<dd><p>Genera un nombre de archivo por defecto y abre el teclado virtual.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_platform_selected">
+<span class="sig-name descname"><span class="pre">handle_platform_selected</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">platform_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_platform_selected"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_platform_selected" title="Link to this definition"></a></dt>
+<dd><p>Filtra la base de datos por consola y ordena mostrar el catálogo.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_platforms_screen_requested">
+<span class="sig-name descname"><span class="pre">handle_platforms_screen_requested</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_platforms_screen_requested"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_platforms_screen_requested" title="Link to this definition"></a></dt>
+<dd><p>Prepara la lista de plataformas y ordena a la vista que las dibuje.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_profile_accepted">
+<span class="sig-name descname"><span class="pre">handle_profile_accepted</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_profile_accepted"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_profile_accepted" title="Link to this definition"></a></dt>
+<dd><p>El usuario ha seleccionado un perfil y pulsado “Aceptar”.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_remove_platform">
+<span class="sig-name descname"><span class="pre">handle_remove_platform</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_remove_platform"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_remove_platform" title="Link to this definition"></a></dt>
+<dd><p>Cuando el usuario pulsa el botón de volver desde el catálogo, eliminamos el filtro de plataforma para mostrar todo.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_save_as_requested">
+<span class="sig-name descname"><span class="pre">handle_save_as_requested</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_save_as_requested"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_save_as_requested" title="Link to this definition"></a></dt>
+<dd><p>Guarda la configuración actual en un nuevo archivo.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_save_navigation">
+<span class="sig-name descname"><span class="pre">handle_save_navigation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high_y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_save_navigation"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_save_navigation" title="Link to this definition"></a></dt>
+<dd><p>Guarda los valores de los sliders únicamente en la memoria RAM.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_scan_games">
+<span class="sig-name descname"><span class="pre">handle_scan_games</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_scan_games"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_scan_games" title="Link to this definition"></a></dt>
+<dd><p>Ejecuta el escáner del modelo y recarga la vista si encuentra algo nuevo.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_selected_navigation_mode">
+<span class="sig-name descname"><span class="pre">handle_selected_navigation_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_selected_navigation_mode"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_selected_navigation_mode" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.handle_tutorial_click">
+<span class="sig-name descname"><span class="pre">handle_tutorial_click</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">direction</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.handle_tutorial_click"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.handle_tutorial_click" title="Link to this definition"></a></dt>
+<dd><p>Avanza al siguiente paso del tutorial si el usuario pulsa el botón correcto.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.has_windows_default_app">
+<span class="sig-name descname"><span class="pre">has_windows_default_app</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.has_windows_default_app"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.has_windows_default_app" title="Link to this definition"></a></dt>
+<dd><p>Consulta a la API de Windows si existe un programa predeterminado
+asociado a la extensión de este archivo.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.navigate_interface">
+<span class="sig-name descname"><span class="pre">navigate_interface</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">direction</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.navigate_interface"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.navigate_interface" title="Link to this definition"></a></dt>
+<dd><p>Navegación geométrica absoluta calculando coordenadas en pantalla.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.obtain_current_platfor_games">
+<span class="sig-name descname"><span class="pre">obtain_current_platfor_games</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">platform_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.obtain_current_platfor_games"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.obtain_current_platfor_games" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.refresh_explorer">
+<span class="sig-name descname"><span class="pre">refresh_explorer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.refresh_explorer"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.refresh_explorer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.save_control_mapping">
+<span class="sig-name descname"><span class="pre">save_control_mapping</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gesture_code</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_code</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.save_control_mapping"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.save_control_mapping" title="Link to this definition"></a></dt>
+<dd><p>Recibe la señal del botón Guardar en la UI, actualiza la memoria y vuelve al menú.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.save_control_mapping_current">
+<span class="sig-name descname"><span class="pre">save_control_mapping_current</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.save_control_mapping_current"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.save_control_mapping_current" title="Link to this definition"></a></dt>
+<dd><p>Guardar mapeo de control actual y volver al catálogo de gestos.</p>
+<p>Llama a model.save_inputs() para persistir configuración en memoria a JSON.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.shutdown">
+<span class="sig-name descname"><span class="pre">shutdown</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.shutdown"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.shutdown" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.start_video">
+<span class="sig-name descname"><span class="pre">start_video</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.start_video"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.start_video" title="Link to this definition"></a></dt>
+<dd><p>Iniciar procesamiento de vídeo desde la cámara.</p>
+<p>Establece la bandera is_video_playing y lanza el hilo del motor de visión.
+Actualiza el texto del botón a «Parar Vídeo».</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="presenter.MainPresenter.staticMetaObject">
+<span class="sig-name descname"><span class="pre">staticMetaObject</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">PySide6.QtCore.QMetaObject(&quot;MainPresenter&quot;</span> <span class="pre">inherits</span> <span class="pre">&quot;QObject&quot;:</span> <span class="pre">)</span></em><a class="headerlink" href="#presenter.MainPresenter.staticMetaObject" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.stop_reading">
+<span class="sig-name descname"><span class="pre">stop_reading</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.stop_reading"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.stop_reading" title="Link to this definition"></a></dt>
+<dd><p>Detener monitoreo de puntuación de gesto durante mapeo de control.</p>
+<p>Establece is_reading_score a False, previniendo actualizaciones de barra de puntuación en _on_frame_processed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.stop_video">
+<span class="sig-name descname"><span class="pre">stop_video</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.stop_video"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.stop_video" title="Link to this definition"></a></dt>
+<dd><p>Pausar procesamiento de vídeo (fotogramas se ignoran).</p>
+<p>Establece is_video_playing a False, haciendo que _on_frame_processed salte procesamiento.
+Actualiza el texto del botón a «Reanudar Vídeo».
+Nota: No detiene el hilo del motor de visión; solo ignora su salida.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="presenter.MainPresenter.toggle_video">
+<span class="sig-name descname"><span class="pre">toggle_video</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/presenter.html#MainPresenter.toggle_video"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#presenter.MainPresenter.toggle_video" title="Link to this definition"></a></dt>
+<dd><p>Alternar procesamiento de vídeo encendido o apagado.</p>
+<p>Llama a start_video() o stop_video() dependiendo del estado actual.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Derechos de autor 2026, Iván García García.</p>
+  </div>
+
+  Compilado con <a href="https://www.sphinx-doc.org/">Sphinx</a> usando un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    proporcionado por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
