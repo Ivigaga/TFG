@@ -1,0 +1,9 @@
+# Interfaz Gráfica de Usuario (GUI)
+PySide6>=6.6.0
+
+# Motor de Inteligencia Artificial y Visión
+mediapipe>=0.10.9
+opencv-python>=4.9.0
+
+# Emulación a nivel de Kernel (Mando Xbox 360)
+vgamepad>=0.1.0

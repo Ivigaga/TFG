@@ -1,0 +1,2 @@
+# Herramienta para empaquetar el código en un ejecutable (.exe)
+pyinstaller>=6.4.0
